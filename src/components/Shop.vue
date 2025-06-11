@@ -249,7 +249,7 @@ const updateProduct = async () => {
                 class="edit-btn"
                 v-if="authStore.user && authStore.user.role === 'admin'"
               >
-                ✏️ Bearbeiten
+              ✏️
               </button>
               </div>
             </div>
@@ -582,10 +582,11 @@ const updateProduct = async () => {
 
 .product-price {
   font-size: 1rem;
-  font-weight: bold;
   color: #0c4b47;
+  font-weight: bold;
+  margin-right: 10px;
   margin-bottom: 10px;
-  margin-left: 2rem;
+  font-family: 'Helvetica', sans-serif;
   white-space: nowrap;
 
 }
@@ -605,7 +606,6 @@ const updateProduct = async () => {
   white-space: nowrap;
   text-align: center;
   display: block;
-  margin-left: 3rem;
   margin-bottom: 10px;
   align-items: center;
   justify-content: center;
@@ -792,5 +792,27 @@ const updateProduct = async () => {
   background: #ccc;
   cursor: not-allowed;
   opacity: 0.6;
+}
+.edit-btn {
+  position: relative;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.edit-btn:hover {
+transform: scale(1.38);
+transition: transform 0.3s ease;
+}
+.edit-btn .edit-form {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  width: 90%;
+  max-width: 600px;
 }
 </style>

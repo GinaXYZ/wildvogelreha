@@ -232,13 +232,13 @@
 }
 .stats-section {
   padding: 6rem 0;
-  background: #0c4b47;
-  color: white;
+  background: white;
+  color: #0c4b47;
   border-radius: 8px;
   margin-top: 3rem;
 }
 .stats-section h2 {
-  color: white;
+  color: #0c4b47;
   text-align: center;
   margin-bottom: 3rem;
 }

@@ -519,13 +519,18 @@ onMounted(() => {
   width: 100%; 
   border-collapse: collapse;
   margin-top: 1rem;
+  word-break: keep-all;
+  table-layout: auto;
 }
-
+.patients-table th:nth-child(4), 
+.patients-table td:nth-child(4) {
+  min-width: 160px;
+}
 .patients-table th, .patients-table td {
   border: 1px solid #ccc;
   padding: 0.75rem; 
-  text-align: left;
-  vertical-align: top; 
+  text-align: center;
+  vertical-align: center; 
   word-break: keep-all;
 }
 
@@ -775,21 +780,22 @@ onMounted(() => {
 }
 .status-select {
   width: 100%;
-  max-width: 120px;
   padding: 0.25rem 0.7rem;
   border: none;
   border-radius: 8px;
   background: #f3f3f3;
   font-size: 1rem;
-  text-align: center;
-  box-shadow: 0 1px 3px #0001;
   margin-left: 0.2em;
   flex-grow: 1; 
   color: #0c4b47;
+  word-break: keep-all;
+  font-family: 'Helvetica', sans-serif;
 }
 .status-select.option {
   color: #0c4b47;
   background-color: #ffffff;
+  word-break: keep-all;
+  text-align: center;
 }
 .status-select:focus {
   outline: 2px solid #0c4b47;
