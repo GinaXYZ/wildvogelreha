@@ -17,6 +17,7 @@ const newProduct = ref({
   amountLeft: '',
   image: ''
 });
+
 const products = ref([]);
 const productsPage = ref(1);
 const productsLimit = ref(20);
@@ -24,7 +25,8 @@ const totalProducts = ref(0);
 const errorMessage = ref('');
 const isLoading = ref(true);
 const categories = ref(['Alle']);
-
+const editingProduct = ref(null);
+const showEditForm = ref(false);
 const fetchProducts = async () => {
   isLoading.value = true;
   errorMessage.value = '';
@@ -79,7 +81,30 @@ watch([selectedCategory, searchQuery], () => {
   productsPage.value = 1;
   fetchProducts();
 });
-
+const toggleEditForm = (product) => {
+  if (showEditForm.value && editingProduct.value?.id === product.id) {
+    showEditForm.value = false;
+    editingProduct.value = null;
+  } else {
+    editingProduct.value = { ...product };
+    showEditForm.value = true;
+  }
+};
+const updateProduct = async () => {
+  try {
+    const res = await fetch(`http://localhost:3000/api/products/${editingProduct.value.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authStore.token}` },
+      body: JSON.stringify(editingProduct.value)
+    });
+    if (!res.ok) throw new Error('Update fehlgeschlagen');
+    
+    showEditForm.value = false;
+    await fetchProducts();
+  } catch (error) {
+    alert(`Fehler: ${error.message}`);
+  }
+};
 onMounted(async () => {
   await fetchProducts();
   try {
@@ -132,8 +157,7 @@ const EditProduct = (product) => {
     alert('Nur Admins können Produkte bearbeiten!');
   }
 };
-const editingProduct = ref(null);
-const showEditForm = ref(false);
+
 const handleAddToCart = (product) => {
   addToCart(product);
   toastMessage.value = `${product.title} wurde zum Warenkorb hinzugefügt!`;
@@ -142,36 +166,15 @@ const handleAddToCart = (product) => {
     showToast.value = false;
   }, 3000);
 };
-const updateProduct = async () => {
-  if (!editingProduct.value) return;
-  try {
-    const token = authStore.token || localStorage.getItem('token');
-    const response = await fetch(`http://localhost:3000/api/products/${editingProduct.value.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(editingProduct.value)
-    });
-    
-    if (response.ok) {
-      await fetchProducts();
-      showEditForm.value = false;
-      editingProduct.value = null;
-    }
-  } catch (error) {
-    console.error('Fehler beim Aktualisieren:', error);
-  }
-};
 </script>
 
 <template>
   <div class="shop-container">
-<div class="shop-header">
-  <h1>🦜Wildvogel-Reha Shop🦆</h1>
-  <p>Unterstützen Sie unsere Arbeit mit dem Kauf unserer Produkte</p>
-</div>
+    <div class="shop-header">
+      <h1>🦜Wildvogel-Reha Shop🦆</h1>
+      <p>Unterstützen Sie unsere Arbeit mit dem Kauf unserer Produkte</p>
+    </div>
+    
     <div class="shop-controls">
       <div class="search-container">
         <div class="search-box">
@@ -194,12 +197,11 @@ const updateProduct = async () => {
             @click="selectedCategory = category"
           >
             {{ category }}
-          
           </button>
         </div>
       </div>
-
     </div>
+
     <div v-if="isLoading" class="loading-state">
       <div class="loading-spinner"></div>
       <p>Lade Produkte...</p>
@@ -208,26 +210,30 @@ const updateProduct = async () => {
     <div v-else-if="errorMessage" class="error-state">
       <p>{{ errorMessage }}</p>
     </div>
+
     <div v-else class="products-section">
       <div class="products-header">
         <h2>
           {{ selectedCategory === 'Alle' ? 'Alle Produkte' : selectedCategory }}
-            <span class="product-count">({{ totalProducts }})</span>
+          <span class="product-count">({{ totalProducts }})</span>
         </h2>
       </div>
-        <div v-if="products.length === 0" class="no-products">
+
+      <div v-if="products.length === 0" class="no-products">
         <div class="no-products-icon">📦</div>
         <h3>Keine Produkte gefunden</h3>
         <p>Versuchen Sie eine andere Kategorie oder Suchbegriff</p>
       </div>
+
       <div v-else class="products-grid">
-      <div v-for="product in products" :key="product.id" class="product-card">
+        <div v-for="product in products" :key="product.id" class="product-card">
           <div class="product-image-container">
             <img :src="product.image" :alt="product.title" class="product-image" />
             <div class="product-badge" v-if="product.amountLeft < 5">
               Nur noch {{ product.amountLeft }} verfügbar
             </div>
           </div>
+          
           <div class="product-content">
             <h3 class="product-title">{{ product.title }}</h3>
             <p class="product-description">{{ product.description }}</p>
@@ -236,43 +242,71 @@ const updateProduct = async () => {
               <div class="product-price">
                 {{ (Number(product.price) || 0).toFixed(2) }} €
               </div>
-              <button 
-                @click="handleAddToCart(product)" 
-                class="add-to-cart-btn"
-                :disabled="product.amountLeft === 0"
-              >
-                <span v-if="product.amountLeft === 0">Ausverkauft</span>
-                <span v-else>In den Warenkorb</span>
-              </button>
-              <button
-                @click="EditProduct(product)"
-                class="edit-btn"
-                v-if="authStore.user && authStore.user.role === 'admin'"
-              >
-              ✏️
-              </button>
+              <div class="footer-buttons">
+                <button 
+                  @click="handleAddToCart(product)" 
+                  class="add-to-cart-btn"
+                  :disabled="product.amountLeft === 0"
+                >
+                  <span v-if="product.amountLeft === 0">Ausverkauft</span>
+                  <span v-else>In den Warenkorb</span>
+                </button>
+                <!-- Edit-Button und Edit-Form direkt darunter -->
+                <div class="edit-container" v-if="authStore.user && authStore.user.role === 'admin'">
+                  <button
+                    @click="toggleEditForm(product)"
+                    class="edit-btn"
+                    title="Produkt bearbeiten"
+                  >
+                    ✏️
+                  </button>
+                  <div 
+                    v-if="showEditForm && editingProduct?.id === product.id" 
+                    class="edit-form"
+                    @click.stop
+                  >
+                    <h4>Produkt bearbeiten</h4>
+                    <form @submit.prevent="updateProduct">
+                      <input v-model="editingProduct.title" placeholder="Titel" required />
+                      <input v-model="editingProduct.price" type="number" step="0.01" placeholder="Preis" required />
+                      <textarea v-model="editingProduct.description" placeholder="Beschreibung" required rows="3"></textarea>
+                      <select v-model="editingProduct.category" required>
+                        <option disabled value="">Kategorie wählen</option>
+                        <option v-for="category in categories.filter(c => c !== 'Alle')" :key="category" :value="category">
+                          {{ category }}
+                        </option>
+                      </select>
+                      <input v-model="editingProduct.amountLeft" type="number" placeholder="Verfügbare Menge" required />
+                      <input v-model="editingProduct.image" placeholder="Bild-URL" required />
+                      <div class="form-buttons">
+                        <button type="submit">💾 Speichern</button>
+                        <button type="button" @click="showEditForm = false">❌ Abbrechen</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      <div class="pagination">
+        <button @click="productsPage--" :disabled="productsPage === 1" class="pagination-btn">Zurück</button>
+        <span>Seite {{ productsPage }}</span>
+        <button @click="productsPage++" :disabled="productsPage * productsLimit >= totalProducts" class="pagination-btn">Weiter</button>
+      </div>
     </div>
-          <div class="pagination">
-          <button @click="productsPage--" :disabled="productsPage === 1">Zurück</button>
-          <span>Seite {{ productsPage }}</span>
-          <button @click="productsPage++" :disabled="productsPage * productsLimit >= totalProducts">Weiter</button>
-        </div>
+
     <div v-if="authStore.user && authStore.user.role === 'admin'" class="admin-section">
       <div class="admin-form">
         <h3>🔧 Neues Produkt hinzufügen</h3>
         <form @submit.prevent="addProduct" class="product-form">
           <div class="form-row">
             <input v-model="newProduct.title" placeholder="Produkttitel" required class="form-input" />
-            <input v-model="newProduct.price" placeholder="Preis (€)" required class="form-input" />
+            <input v-model="newProduct.price" type="number" step="0.01" placeholder="Preis (€)" required class="form-input" />
           </div>
-          
           <textarea v-model="newProduct.description" placeholder="Produktbeschreibung" required class="form-textarea"></textarea>
-          
           <div class="form-row">
             <select v-model="newProduct.category" required class="form-select">
               <option disabled value="">Kategorie auswählen</option>
@@ -282,12 +316,9 @@ const updateProduct = async () => {
             </select>
             <input v-model="newProduct.amountLeft" type="number" placeholder="Verfügbare Menge" required class="form-input" />
           </div>
-          
           <input v-model="newProduct.image" placeholder="Bild-URL" required class="form-input" />
-          
           <button type="submit" class="submit-btn">✨ Produkt hinzufügen</button>
         </form>
-        
         <p v-if="addProductMessage" class="form-message" :class="{ success: addProductMessage.includes('erfolgreich') }">
           {{ addProductMessage }}
         </p>
@@ -301,7 +332,7 @@ const updateProduct = async () => {
         </div>
       </div>
     </transition>
-
+  </div>
 </template>
 
 <style scoped>
@@ -518,6 +549,7 @@ const updateProduct = async () => {
   height: 100%;
   display: flex;
   flex-direction: column;
+  overflow: visible;
 }
 
 .product-image-container {
@@ -795,6 +827,9 @@ const updateProduct = async () => {
 }
 .edit-btn {
   position: relative;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
   top: 0;
   left: 0;
   width: 100%;
@@ -807,12 +842,77 @@ const updateProduct = async () => {
 transform: scale(1.38);
 transition: transform 0.3s ease;
 }
-.edit-btn .edit-form {
+.edit-form {
+  position: absolute;
+  top: 100%;
+  right: 0;
   background: white;
-  padding: 2rem;
+  padding: 1.5rem;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  width: 90%;
-  max-width: 600px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+  width: 300px;
+  z-index: 1000;
+  margin-top: 10px;
+}
+.edit-form {
+  position: absolute;
+  top: 110%;
+  right: 0;
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+  width: 300px;
+  z-index: 1000;
+  margin-top: 10px;
+}
+.edit-form::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  right: 20px;
+  border: 10px solid transparent;
+  border-bottom-color: white;
+}
+
+/* Form-Styles kompakt */
+.edit-form input,
+.edit-form textarea,
+.edit-form select {
+  width: 100%;
+  padding: 0.5rem;
+  margin-bottom: 0.8rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+}
+
+.edit-form .form-buttons {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.edit-form button {
+  flex: 1;
+  padding: 0.6rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.edit-form button[type="submit"] {
+  background: #0c4b47;
+  color: white;
+}
+
+.edit-form button[type="button"] {
+  background: #ccc;
+  color: #333;
+}
+.edit-container {
+  position: relative;
 }
 </style>
