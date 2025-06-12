@@ -52,10 +52,6 @@
       <div v-if="contactsLoading" class="loading">Lade Kontakte...</div>
       <div v-else-if="contactsError" class="error">{{ contactsError }}</div>
       <div v-else>
-        <div class="contacts-stats">
-          <p><strong>Gesamt:</strong> {{ contacts.length }} Kontakte</p>
-          <p><strong>Neue:</strong> {{ contacts.filter(c => c.status === 'neu').length }}</p>
-        </div>
         <table class="contacts-table">
           <thead>
             <tr>

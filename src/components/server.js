@@ -190,7 +190,7 @@ app.get('/api/profile', authenticateToken, async (req, res) => {
   }
 });
 
-// PRODUCTS
+
 app.get('/api/products', async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 20;
@@ -271,7 +271,7 @@ app.post('/api/products', authenticateToken,async (req, res) => {
   }
 });
 
-// CART
+
 app.get('/api/cart', authenticateToken, async (req, res) => {
   const userId = req.user.id;
   if (!userId) {
@@ -326,7 +326,7 @@ app.post('/api/cart', authenticateToken, async (req, res) => {
   }
 });
 
-// CATEGORY
+
 app.get('/api/category', async (req, res) => {
   const query = 'SELECT DISTINCT category FROM products';
   try {
@@ -339,7 +339,7 @@ app.get('/api/category', async (req, res) => {
   }
 });
 
-// ORDER
+
 app.post('/api/order', authenticateToken,async (req, res) => {
   const { firstname, lastname, email, address, city, country, payment, cart, userId } = req.body;
   if (!cart || !Array.isArray(cart) || cart.length === 0) {
@@ -476,7 +476,7 @@ app.get('/api/donations/top10', async (req, res) => {
   }
 });
 
-// BLOG LATEST
+
 app.get('/api/blog/latest', async (req, res) => {
   const limit = parseInt(req.query.limit, 10) || 5;
   try {
@@ -490,7 +490,7 @@ app.get('/api/blog/latest', async (req, res) => {
   }
 });
 
-// MAP ITEMS
+
 app.get('/api/map-items', async (req, res) => {
   const query = `
     SELECT id, label, class, x, y, image, name, species, age, description, status 

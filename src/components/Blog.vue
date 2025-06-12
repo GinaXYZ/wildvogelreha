@@ -102,7 +102,7 @@ const deletePost = async (postId) => {
   }
 
   try {
-    const token = authStore.token || localStorage.getItem('token'); // HINZUFÜGEN!
+    const token = authStore.token || localStorage.getItem('token'); 
     const response = await fetch(`http://localhost:3000/api/blog/${postId}`, {
       method: 'DELETE',
       headers: {
