@@ -42,7 +42,6 @@
           </div>
         <div class="donation-sums">
           <p><strong>Gesamt:</strong> {{ totalSum.toFixed(2) }} € ({{ donations.length }} Spenden)</p>
-          <p><strong>Gesamt diesen Monat:</strong> {{ monthSum.toFixed(2) }} €</p>
           <p><em>Seite {{ page }} von {{ Math.ceil(totalDonations / limit) }}</em></p>
         </div>
       </div>

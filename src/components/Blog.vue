@@ -172,11 +172,6 @@ const updatePost = async (postId) => {
 
 <template>
   <div class="blog-page">
-    <div class="user-info" v-if="authStore.user">
-      <p>Eingeloggt als <span class="username-display">{{ authStore.user.username }}</span> ({{ authStore.user.role }})</p>
-      <button @click="authStore.logout" class="logout-button">Logout</button>
-    </div>
-
     <div class="blog-editor" v-if="authStore.user && (authStore.user.role === 'admin' || authStore.user.role === 'staff')">
       <h2>Neuen Beitrag erstellen</h2>
       <form @submit.prevent="createBlogPost">
