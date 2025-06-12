@@ -200,15 +200,23 @@
         <div class="staff-management">
           <h4>Mitarbeiter verwalten</h4>
           <button @click="showStaffForm = true" class="btn-add-staff">+ Neuer Mitarbeiter</button>
-          
-          <div class="staff-pool">
-            <div v-for="staff in staffMembers" :key="staff.id" 
-                 class="staff-item draggable"
-                 @mousedown="onDragStart($event, staff)"
-                 :style="{ cursor: isAdmin ? 'grab' : 'default' }">
-              <span>{{ staff.name }}</span>
-            </div>
-          </div>
+          <div v-if="showStaffForm" class="staff-form">
+          <input v-model="newStaffMember.name" placeholder="Name" />
+          <input v-model="newStaffMember.role" placeholder="Rolle" />
+          <button @click="addStaffMember">Speichern</button>
+          <button @click="showStaffForm = false">Abbrechen</button>
+        </div>
+        <div class="staff-pool">
+          <div v-for="staff in staffMembers" :key="staff.id" 
+              class="staff-item draggable"
+              @mousedown="onDragStart($event, staff)"
+              :style="{ cursor: isAdmin ? 'grab' : 'default' }">
+            <span>{{ shortName(staff.name) }}</span>
+            <button class="remove-assignment-btn"
+                @click.stop="removeStaffMember(staff.id)"
+                title="Mitarbeiter löschen">✕</button>
+        </div>
+        </div>
         </div>
  <div class="week-calendar">
   <table class="schedule-table">
@@ -231,12 +239,12 @@
                :key="assignment.id"
                class="staff-assignment"
                @mousedown="onDragStart($event, assignment.staff)">
-            <span class="staff-name">{{ assignment.staff.name }}</span>
+            <span class="staff-name">{{ shortName(assignment.staff.name) }}</span>
             <button v-if="isAdmin"
                     @click="removeAssignment(assignment.id)"
                     @mousedown.stop
-                    class="remove-assignment-btn"
-                    title="Mitarbeiter entfernen">
+                    class="remove-staff-btn"
+                    title="x">
               ✕
             </button>
           </div>
@@ -260,7 +268,6 @@ const showStaffForm = ref(false);
 const newStaffMember = ref({
   name: '',
   role: 'staff',
-  image: '/default-staff.jpg',
 })
 let dragItem = null;
 let offset = { x: 0, y: 0};
@@ -270,7 +277,7 @@ const isAdmin = computed(() => {
 const activeStaffTab = ref('donations');
 const activeTaskTab = ref('aufgaben');
 const weekDays = ref(['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']);
-const timeSlots = ref(['06:00-12:00', '12:00-18:00', '18:00-00:00', '00:00-06:00']);
+const timeSlots = ref(['06:00 - 12:00', '12:00 - 18:00', '18:00 - 00:00', '00:00 - 06:00']);
 const weekSchedule = ref([]);
 const donations = ref([]);
 const donationsLoading = ref(false);
@@ -336,13 +343,11 @@ function onDrag(e) {
 
   if (cell) {
     cell.classList.add('drag-hover');
-    console.log('📍 Hover over cell:', cell.dataset.day, cell.dataset.time);
   }
 }
   
 function onDragStart(e, staff) {
   if (!isAdmin.value) return;
-  console.log('🎯 Drag Start:', staff.name);
   e.preventDefault();
   e.stopPropagation();
 
@@ -370,21 +375,23 @@ function onDragEnd(e) {
     const timeSlot = cell.dataset.time;
 
     if (day && timeSlot) {
-      weekSchedule.value = weekSchedule.value.filter(
-        a => a.staff.id !== dragItem.id
-      );
-      const assignment = {
-        id: `${dragItem.id}-${day}-${timeSlot}-${Date.now()}`,
-        staff: dragItem,
-        day: day,
-        timeSlot: timeSlot,
-        x: 50,
-        y: 50
-      };
+      const alreadyAssigned = weekSchedule.value.some(
+        a => a.staff.id === dragItem.id && a.day === day && a.timeSlot === timeSlot
+    );
+       if (!alreadyAssigned) {
+        const assignment = {
+          id: `${dragItem.id}-${day}-${timeSlot}-${Date.now()}`,
+          staff: dragItem,
+          day: day,
+          timeSlot: timeSlot,
+          x: 50,
+          y: 50
+        };
       weekSchedule.value.push(assignment);
+      localStorage.setItem('weekSchedule', JSON.stringify(weekSchedule.value));
+      }
     }
   }
-
   document.querySelectorAll('.schedule-cell').forEach(c => {
     c.classList.remove('drag-hover');
   });
@@ -582,9 +589,9 @@ const deleteContact = async (id) => {
 function removeAssignment(assignmentId) {
   const index = weekSchedule.value.findIndex(a => a.id === assignmentId);
   if (index >= 0) {
-    const removed = weekSchedule.value.splice(index, 1)[0];
-    console.log('🗑️ Assignment removed:', removed.staff.name, removed.day, removed.timeSlot);
-  }
+    weekSchedule.value.splice(index, 1);
+    localStorage.setItem('weekSchedule', JSON.stringify(weekSchedule.value));
+    }
 }
 onMounted(() => {
   fetchDonations();
@@ -594,12 +601,35 @@ onMounted(() => {
 document.addEventListener('mousemove', onDrag);
 document.addEventListener('mouseup', onDragEnd);
 
-  staffMembers.value = [
-    { id: 1, name: 'Max Mustermann', role: 'Tierarzt', image: '/image1.jpg' },
-    { id: 2, name: 'Erika Musterfrau', role: 'Pflegekraft', image: '/image2.jpg' },
-    { id: 3, name: 'Hans Müller', role: 'Verwaltung', image: '/image3.jpg' }
-  ];
+const storedSchedule = localStorage.getItem('weekSchedule');
+  if (storedSchedule) {
+    weekSchedule.value = JSON.parse(storedSchedule);
+  }
 
+  const storedShifts = localStorage.getItem('shifts');
+  if (storedShifts) {
+    shifts.value = JSON.parse(storedShifts);
+  } else {
+    shifts.value = [];
+  }
+const stored = localStorage.getItem('staffMembers');
+  if (stored) {
+    staffMembers.value = JSON.parse(stored);
+  } else {
+    staffMembers.value = [
+      { id: 1, name: 'Max Mustermann', role: 'Tierarzt' },
+      { id: 2, name: 'Erika Musterfrau', role: 'Pflegekraft'},
+      { id: 3, name: 'Hans Müller', role: 'Verwaltung'}
+    ];
+  }
+
+if (staffMembers.value.length === 0) {
+  staffMembers.value = [
+    { id: 1, name: 'Max Mustermann', role: 'Tierarzt' },
+    { id: 2, name: 'Erika Musterfrau', role: 'Pflegekraft'},
+    { id: 3, name: 'Hans Müller', role: 'Verwaltung'}
+  ];
+}
   tasks.value = [
     { text: 'Tierarzttermin planen', done: false },
     { text: 'Medikamente bestellen', done: false },
@@ -610,6 +640,29 @@ document.addEventListener('mouseup', onDragEnd);
     document.removeEventListener('mousemove', onDrag);
     document.removeEventListener('mouseup', onDragEnd);
   });
+  const addStaffMember = () => {
+  if (!newStaffMember.value.name.trim()) return;
+  staffMembers.value.push({
+    id: Date.now(),
+    name: newStaffMember.value.name,
+    role: newStaffMember.value.role,
+  });
+  localStorage.setItem('staffMembers', JSON.stringify(staffMembers.value));
+  showStaffForm.value = false;
+  newStaffMember.value = { name: '', role: 'staff'};
+};
+function removeStaffMember(id) {
+  staffMembers.value = staffMembers.value.filter(s => s.id !== id);
+  weekSchedule.value = weekSchedule.value.filter(a => a.staff.id !== id);
+  localStorage.setItem('staffMembers', JSON.stringify(staffMembers.value));
+  localStorage.setItem('weekSchedule', JSON.stringify(weekSchedule.value));
+}
+function shortName(name) {
+  if (!name) return '';
+  const parts = name.trim().split(' ');
+  if (parts.length === 1) return parts [0];
+  return `${parts[0]} ${parts[1][0]}.`;
+}
 </script>
 
 <style scoped>
@@ -1015,13 +1068,6 @@ document.addEventListener('mouseup', onDragEnd);
   box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 
-.staff-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
 .btn-add-staff {
   background: #0c4b47;
   color: white;
@@ -1118,11 +1164,8 @@ document.addEventListener('mouseup', onDragEnd);
 }
 
 .remove-assignment-btn {
-  background: transparent;
   border: 1px solid #0c4b47;
   color: #0c4b47;
-  width: 18px;
-  height: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1134,14 +1177,13 @@ document.addEventListener('mouseup', onDragEnd);
 }
 
 .remove-assignment-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
   transform: scale(1.1);
 }
 .subtab-container button {
   padding: 0.5rem 1.5rem;
   border: none;
   border-radius: 8px;
-  color: #0c4b47;
+  color: #444747;
   font-family: 'Helvetica', sans-serif;
   background: #eee;
   cursor: pointer;
@@ -1151,6 +1193,7 @@ document.addEventListener('mouseup', onDragEnd);
   white-space: nowrap;
   transition: background 0.2s, color 0.2s;
   margin-right: 1rem;
+  color: #0c4b47;
 }
 
 .subtab-container button.active {
@@ -1159,7 +1202,19 @@ document.addEventListener('mouseup', onDragEnd);
 }
 
 .subtab-container button:hover {
-  background: #0c4b47;
-  color: #fff;
+  transform: translateY(-2px);
+  font-weight: bold;
+}
+.remove-staff-btn {
+  border: 1px solid #0c4b47;
+  color: #0c4b47;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: bold;
+  flex-shrink: 0;
+  margin-left: 0.2rem;
 }
 </style>
