@@ -165,80 +165,113 @@
         <p><em>Seite {{ patientsPage }} von {{ Math.ceil(totalPatients / patientsLimit) }}</em></p>
       </div>
     </div>
-    <div v-else-if="activeStaffTab === 'tasks'">
-  <div class="subtab-container">
-    <button
-      :class="{ active: activeTaskTab === 'aufgaben' }"
-      @click="activeTaskTab = 'aufgaben'"
-    >
-      Aufgaben
-    </button>
-    <button
-      :class="{ active: activeTaskTab === 'schicht' }"
-      @click="activeTaskTab = 'schicht'"
-    >
-      Schichtplanung
-    </button>
-  </div>
-  <div class="tasks-shifts-container">
-    <div v-if="activeTaskTab === 'aufgaben'" class="tasks-section">
-      <h3>Aufgaben</h3>
-        <form @submit.prevent="addTask">
-          <input v-model="newTask" placeholder="Neue Aufgabe hinzufügen" required />
-          <button type="submit" class="action-btn">Hinzufügen</button>
-        </form>
-      <ul class="task-list">
-        <li v-for="(task, idx) in tasks" :key="idx" :class="{ done: task.done }">
-          <input type="checkbox" v-model="task.done" />
-          <span>{{ task.text }}</span>
-          <button @click="removeTask(idx)" class="delete-btn" title="Aufgabe löschen">🗑️</button>
-        </li>
-        <li v-if="tasks.length === 0" style="color: #888;">Keine Aufgaben.</li>
-      </ul>
-    </div>
-    <div v-if="activeTaskTab === 'schicht'" class="shifts-section">
-      <h3>Schichtplan (Woche)</h3>
-      <form @submit.prevent="addShift" class="shift-form">
-        <input type="date" v-model="newShift.date" required class="details-input" />
-        <input type="time" v-model="newShift.time" required class="details-input" />
-        <input v-model="newShift.staff" placeholder="Mitarbeiter" required class="details-input" />
-        <button type="submit" class="action-btn">Hinzufügen</button>
-      </form>
-      <table class="shifts-table">
-        <thead>
-          <tr>
-            <th>Datum</th>
-            <th>Zeit</th>
-            <th>Mitarbeiter</th>
-            <th>Aktion</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(shift, idx) in shifts" :key="idx">
-            <td>{{ shift.date }}</td>
-            <td>{{ shift.time }}</td>
-            <td>{{ shift.staff }}</td>
-            <td>
-              <button @click="removeShift(idx)" class="delete-btn" title="Schicht löschen">🗑️</button>
-            </td>
-          </tr>
-          <tr v-if="shifts.length === 0">
-            <td colspan="4" style="color: #888;">Keine Schichten geplant.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+        <div v-else-if="activeStaffTab === 'tasks'">
+      <div class="subtab-container">
+        <button
+          :class="{ active: activeTaskTab === 'aufgaben' }"
+          @click="activeTaskTab = 'aufgaben'"
+        >
+          Aufgaben
+        </button>
+        <button
+          :class="{ active: activeTaskTab === 'schicht' }"
+          @click="activeTaskTab = 'schicht'"
+        >
+          Schichtplanung
+        </button>
+      </div>
+
+      <div v-if="activeTaskTab === 'aufgaben'" class="tasks-section">
+        <h3>Aufgaben</h3>
+        <div class="task-form">
+          <input v-model="newTask" placeholder="Neue Aufgabe..." />
+          <button @click="addTask">Hinzufügen</button>
+        </div>
+        <ul class="task-list">
+          <li v-for="(task, index) in tasks" :key="index" :class="{ done: task.done }">
+            <input type="checkbox" v-model="task.done" />
+            <span>{{ task.text }}</span>
+            <button @click="removeTask(index)">❌</button>
+          </li>
+        </ul>
+      </div>
+      <div v-else-if="activeTaskTab === 'schicht'" class="schedule-section">
+        <h3>Schichtplanung</h3>
+        <div class="staff-management">
+          <h4>Mitarbeiter verwalten</h4>
+          <button @click="showStaffForm = true" class="btn-add-staff">+ Neuer Mitarbeiter</button>
+          
+          <div class="staff-pool">
+            <div v-for="staff in staffMembers" :key="staff.id" 
+                 class="staff-item draggable"
+                 @mousedown="onDragStart($event, staff)"
+                 :style="{ cursor: isAdmin ? 'grab' : 'default' }">
+              <span>{{ staff.name }}</span>
+            </div>
+          </div>
+        </div>
+ <div class="week-calendar">
+  <table class="schedule-table">
+    <thead>
+      <tr>
+        <th class="time-header">Zeit</th>
+        <th v-for="day in weekDays" :key="day" class="day-header">
+          {{ day }}
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="timeSlot in timeSlots" :key="timeSlot" class="time-row">
+        <td class="time-cell">{{ timeSlot }}</td>
+        <td v-for="day in weekDays" :key="day"
+            class="schedule-cell"
+            :data-day="day"
+            :data-time="timeSlot">
+          <div v-for="assignment in getScheduleForCell(day, timeSlot)"
+               :key="assignment.id"
+               class="staff-assignment"
+               @mousedown="onDragStart($event, assignment.staff)">
+            <span class="staff-name">{{ assignment.staff.name }}</span>
+            <button v-if="isAdmin"
+                    @click="removeAssignment(assignment.id)"
+                    @mousedown.stop
+                    class="remove-assignment-btn"
+                    title="Mitarbeiter entfernen">
+              ✕
+            </button>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
 </div>
-  </div>
+</div>
+</div>
+</div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted, computed, watch, onBeforeUnmount } from 'vue';
 import { useAuthStore } from './auth.js';
+const API_BASE = 'http://localhost:3000/api';
 const authStore = useAuthStore();
-
+const staffMembers = ref([]);
+const showStaffForm = ref(false);
+const newStaffMember = ref({
+  name: '',
+  role: 'staff',
+  image: '/default-staff.jpg',
+})
+let dragItem = null;
+let offset = { x: 0, y: 0};
+const isAdmin = computed(() => {
+  return authStore.user?.role === 'admin';
+});
 const activeStaffTab = ref('donations');
+const activeTaskTab = ref('aufgaben');
+const weekDays = ref(['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']);
+const timeSlots = ref(['06:00-12:00', '12:00-18:00', '18:00-00:00', '00:00-06:00']);
+const weekSchedule = ref([]);
 const donations = ref([]);
 const donationsLoading = ref(false);
 const donationsError = ref(null);
@@ -251,10 +284,6 @@ function addTask() {
   if (newTask.value.trim() === '') return;
   tasks.value.push({ text: newTask.value, done: false });
   newTask.value = '';
-}
-const activeTaskTab = ref('aufgaben');
-function removeTask(index) {
-  tasks.value.splice(index, 1);
 }
 const shifts = ref([]);
 const newShift = ref({ date: '', time: '', staff: '' });
@@ -277,27 +306,9 @@ const newContactsCount = computed(() => {
   }
   return 0;
 });
-const saveAllPatients = async () => {
-  try {
-    const token = authStore.token || localStorage.getItem('token'); 
-    for (const patient of patients.value) {
-      await fetch(`http://localhost:3000/api/patients/${patient.id}`, {
-        method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
-        },
-        body: JSON.stringify({
-          status: patient.status,
-          details: patient.details
-        }),
-      });
-    }
-    alert('Alle Änderungen wurden gespeichert.');
-  } catch (err) {
-    alert('Fehler beim Speichern der Patientendaten');
-  }
-};
+function removeTask(index) {
+  tasks.value.splice(index, 1);
+}
 const patientsPage = ref(1);
 const patientsLimit = 20;
 const totalPatients = ref(0);
@@ -311,10 +322,77 @@ const sortBy = (field) => {
     sortDirection.value = 'asc';
   }
 };
-const getSortArrowClass = (field) => {
-  if (sortField.value !== field) return 'inactive';
-  return sortDirection.value === 'desc' ? 'desc' : 'asc';
-};
+
+function onDrag(e) {
+  if (!dragItem || !isAdmin.value) return;
+  e.preventDefault();
+  
+  const elements = document.elementsFromPoint(e.clientX, e.clientY);
+  const cell = elements.find(el => el.classList.contains('schedule-cell'));
+  
+  document.querySelectorAll('.schedule-cell').forEach(c => {
+    c.classList.remove('drag-hover');
+  });
+
+  if (cell) {
+    cell.classList.add('drag-hover');
+    console.log('📍 Hover over cell:', cell.dataset.day, cell.dataset.time);
+  }
+}
+  
+function onDragStart(e, staff) {
+  if (!isAdmin.value) return;
+  console.log('🎯 Drag Start:', staff.name);
+  e.preventDefault();
+  e.stopPropagation();
+
+  dragItem = staff;
+  const rect = e.target.getBoundingClientRect();
+  offset.x = e.clientX - rect.left;
+  offset.y = e.clientY - rect.top;
+  document.body.style.userSelect = 'none';
+  document.body.style.cursor = 'grabbing';
+}
+
+function onDragEnd(e) {
+  if (!dragItem || !isAdmin.value) {
+    dragItem = null;
+    document.body.style.userSelect = '';
+    document.body.style.cursor = '';
+    return;
+  }
+
+  const elements = document.elementsFromPoint(e.clientX, e.clientY);
+  const cell = elements.find(el => el.classList.contains('schedule-cell'));
+
+  if (cell) {
+    const day = cell.dataset.day;
+    const timeSlot = cell.dataset.time;
+
+    if (day && timeSlot) {
+      weekSchedule.value = weekSchedule.value.filter(
+        a => a.staff.id !== dragItem.id
+      );
+      const assignment = {
+        id: `${dragItem.id}-${day}-${timeSlot}-${Date.now()}`,
+        staff: dragItem,
+        day: day,
+        timeSlot: timeSlot,
+        x: 50,
+        y: 50
+      };
+      weekSchedule.value.push(assignment);
+    }
+  }
+
+  document.querySelectorAll('.schedule-cell').forEach(c => {
+    c.classList.remove('drag-hover');
+  });
+
+  dragItem = null;
+  document.body.style.userSelect = '';
+  document.body.style.cursor = '';
+}
 
 const sortedDonations = computed(() => {
   return [...donations.value].sort((a, b) => {
@@ -358,6 +436,11 @@ const fetchPatients = async () => {
   }
 };
 watch(patientsPage, fetchPatients);
+function getScheduleForCell(day, timeSlot) {
+  return weekSchedule.value.filter(
+    assignment => assignment.day === day && assignment.timeSlot === timeSlot
+  );
+}
 
 const updatePatient = async (patient) => {
   try {
@@ -496,12 +579,37 @@ const deleteContact = async (id) => {
     alert('Fehler beim Löschen')
   }
 };
-
+function removeAssignment(assignmentId) {
+  const index = weekSchedule.value.findIndex(a => a.id === assignmentId);
+  if (index >= 0) {
+    const removed = weekSchedule.value.splice(index, 1)[0];
+    console.log('🗑️ Assignment removed:', removed.staff.name, removed.day, removed.timeSlot);
+  }
+}
 onMounted(() => {
   fetchDonations();
   fetchContacts();
   fetchPatients();
+
+document.addEventListener('mousemove', onDrag);
+document.addEventListener('mouseup', onDragEnd);
+
+  staffMembers.value = [
+    { id: 1, name: 'Max Mustermann', role: 'Tierarzt', image: '/image1.jpg' },
+    { id: 2, name: 'Erika Musterfrau', role: 'Pflegekraft', image: '/image2.jpg' },
+    { id: 3, name: 'Hans Müller', role: 'Verwaltung', image: '/image3.jpg' }
+  ];
+
+  tasks.value = [
+    { text: 'Tierarzttermin planen', done: false },
+    { text: 'Medikamente bestellen', done: false },
+    { text: 'Rechnungen prüfen', done: true }
+  ];
 });
+  onBeforeUnmount(() => {
+    document.removeEventListener('mousemove', onDrag);
+    document.removeEventListener('mouseup', onDragEnd);
+  });
 </script>
 
 <style scoped>
@@ -573,7 +681,7 @@ onMounted(() => {
 .staff-menu {
   display: flex;
   gap: 1rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: -1rem;
   color: #0c4b47;
   font-family: 'Helvetica', sans-serif;
   max-width: 100%;
@@ -868,123 +976,190 @@ onMounted(() => {
 .status-square.black {
   background: #000000;
 }
-.tasks-shifts-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2rem;
-  margin-top: 1.5rem;
+.schedule-section {
+  margin-top: 1rem;
 }
-.tasks-section, .shifts-section {
-  flex: 1 1 320px;
-  background: #fff;
+
+.staff-management {
+  background: white;
+  padding: 1rem;
   border-radius: 8px;
-  padding: 1.2rem 1rem 1.5rem 1rem;
-  min-width: 300px;
-  box-shadow: 0 2px 8px #0001;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
-.task-form, .shift-form {
+
+.staff-pool {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-.task-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.task-list li {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  padding: 0.3rem 0;
-  
-}
-.task-list li.done span {
-  text-decoration: line-through;
-  color: #888;
-}
-.shifts-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 0.5rem;
-}
-.shifts-table th, .shifts-table td {
-  border: 1px solid #ccc;
-  padding: 0.4rem;
-  text-align: left;
-}
-.shifts-table th {
-  background: #eee;
-}
-@media (max-width: 900px) {
-  .tasks-shifts-container {
-    flex-direction: column;
-    gap: 1rem;
-  }
-}
-.subtab-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
-  margin-bottom: 1.5rem;
-  margin-top: -1rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f9f9f9;
+  border-radius: 8px;
+  border: 2px dashed #ccc;
+}
+
+.staff-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: white;
+  border-radius: 8px;
+  border: 2px solid #0c4b47;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.staff-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.staff-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.btn-add-staff {
+  background: #0c4b47;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.week-calendar {
+  background: white;
+  border-radius: 8px;
+  overflow-x: auto;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.time-header {
+  background: #0c4b47;
+  color: white;
+  padding: 0.5rem;
+  text-align: center;
+  font-weight: bold;
+  width: 70px;
+  font-size: 0.9rem;
+}
+
+.day-header {
+  background: #0c4b47;
+  color: white;
+  padding: 0.5rem;
+  text-align: center;
+  font-weight: bold;
+  font-size: 0.95rem;
+}
+
+.time-cell {
+  background: #f5f5f5;
+  padding: 0.5rem;
+  text-align: center;
+  font-weight: bold;
+  border: 1px solid #ddd;
+  width: 70px;
+  font-size: 0.85rem;
+  vertical-align: middle;
+}
+
+.schedule-cell {
+  height: 70px;
+  border: 1px solid #ddd;
+  background: #fafafa;
+  vertical-align: middle;
+  text-align: center;
+  position: relative;
+  padding: 0;
+}
+
+.schedule-cell.drag-hover {
+  background: #e8f5e8 !important;
+  border-color: #0c4b47 !important;
+  border-width: 2px !important;
+}
+
+.staff-assignment {
+  display: flex;
+  align-items: center;
+  text-align:center;
+  justify-content: center;
+  color: #0c4b47;
+  background: transparent;
+  padding: 0.2rem;
+  font-size: 0.7rem;
+  word-break: keep-all;
+  cursor: grab;
+  user-select: none;
+  min-width: 100%;
+  max-width: 100%;
+  z-index: 10;
+}
+
+.staff-name {
+  font-size: 0.7rem;
+  font-weight: bold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.remove-assignment-btn {
+  background: transparent;
+  border: 1px solid #0c4b47;
+  color: #0c4b47;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: bold;
+  flex-shrink: 0;
+  margin-left: 0.2rem;
+}
+
+.remove-assignment-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
 }
 .subtab-container button {
   padding: 0.5rem 1.5rem;
   border: none;
   border-radius: 8px;
   color: #0c4b47;
+  font-family: 'Helvetica', sans-serif;
   background: #eee;
   cursor: pointer;
   font-weight: bold;
-  font-size: 1rem;
+  text-align: center;
+  box-sizing: border-box;
+  white-space: nowrap;
+  transition: background 0.2s, color 0.2s;
+  margin-right: 1rem;
 }
+
 .subtab-container button.active {
   background: #0c4b47;
-  color: #f0f0f0;
-  transform: translateY(-2px);
+  color: #fff;
 }
+
 .subtab-container button:hover {
-  transform: translateY(-2px);
+  background: #0c4b47;
+  color: #fff;
 }
-.action-btn {
-  margin-right: 0.3rem;
-  margin-left: 0.3rem;
-  border: 1px solid #0c4b47;
-  background-color: #0c4b47;
-  color: white;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 0.8rem;
-  font-family: 'Helvetica', sans-serif;
-  font-weight: bold;
-}
-
-.action-btn:hover {
-  background: linear-gradient(135deg, #097a6a 0%, #0c4b47 100%);
-}
-
-.sortable-header {
-  cursor: pointer;
-  user-select: none;
-  position: relative;
-  transition: background-color 0.2s;
-}
-
-.sortable-header:hover {
-  background: #ddd !important;
-}
-
-.sort-arrow {
-  margin-left: 0.5rem;
-  font-size: 0.8rem;
-  transition: transform 0.2s, opacity 0.2s;
-}
-
-.sort-arrow.inactive {
-  opacity: 0.3;
-}
-
 </style>

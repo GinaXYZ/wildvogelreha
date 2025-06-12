@@ -20,7 +20,6 @@ async function loadMapItems() {
     loading.value = false
   }
 }
-
 const isAdmin = computed(() => authStore.user?.role === 'admin')
 const isStaff = computed(() => authStore.user?.role === 'staff')
 const isCustomer = computed(() => authStore.user?.role === 'customer' || !authStore.user)
