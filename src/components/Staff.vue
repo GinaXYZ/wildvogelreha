@@ -23,25 +23,57 @@
                   {{ sortDirection === 'asc' ? '▲' : '▼' }}
                 </span>
               </th>
-              <th>Spender</th>
-              <th>Betrag (€)</th>
+                <th @click="sortBy('donor_name')" class="sortable-header" style="position: relative;">
+                  Name
+                  <span class="sort-arrow">
+                    {{ sortDirection === 'asc' ? '▲' : '▼' }}
+                  </span>
+                  <button
+                    class="search-btn"
+                    @click.stop="showSearchPopup($event)"
+                    style="margin-left: 0.2rem;"
+                    title="Nach Namen suchen"
+                  >
+                    🔍
+                  </button>
+                </th>
+                <th @click="sortBy('amount')" class="sortable-header">
+                  Betrag 
+                  <span class="sort-arrow">
+                    {{ sortDirection === 'asc' ? '▲' : '▼' }}
+                  </span>
+                </th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="donation in sortedDonations" :key="donation.id">
+              <tr v-for="donation in paginatedDonations" :key="donation.id">
               <td>{{ formatDate(donation.created_at) }}</td>
               <td>{{ donation.donor_name || 'Anonym' }}</td>
               <td>{{ (+donation.amount).toFixed(2) }}</td>
             </tr>
           </tbody>
         </table>
+        <div 
+            v-if="searchPopupVisible"
+            class="search-popup"
+            :style="{ top: popupY + 'px', left: popupX + 'px' }"
+          >
+            <input
+              v-model="donationSearch"
+              type="text"
+              placeholder="Suchen"
+              class="donation-search-input"
+              autofocus
+            />
+            <button @click="closeSearchPopup" style="margin-left:0.5em;">✖</button>
+          </div>
           <div class="pagination">
             <button @click="page--" :disabled="page === 1">Zurück</button>
             <span>Seite {{ page }}</span>
             <button @click="page++" :disabled="page * limit >= totalDonations">Weiter</button>
           </div>
         <div class="donation-sums">
-          <p><strong>Gesamt:</strong> {{ totalSum.toFixed(2) }} € ({{ donations.length }} Spenden)</p>
+          <p><strong>Gesamt:</strong> {{ totalSum.toFixed(2) }} € ({{ allDonations.length }} Spenden)</p>
           <p><em>Seite {{ page }} von {{ Math.ceil(totalDonations / limit) }}</em></p>
         </div>
       </div>
@@ -166,21 +198,18 @@
       </div>
     </div>
         <div v-else-if="activeStaffTab === 'tasks'">
-      <div class="subtab-container">
-        <button
-          :class="{ active: activeTaskTab === 'aufgaben' }"
-          @click="activeTaskTab = 'aufgaben'"
-        >
-          Aufgaben
-        </button>
-        <button
-          :class="{ active: activeTaskTab === 'schicht' }"
-          @click="activeTaskTab = 'schicht'"
-        >
-          Schichtplanung
-        </button>
-      </div>
-          <h3>Aufgaben</h3>
+          <div class="subtab-container">
+            <button
+              :class="{ active: activeTaskTab === 'aufgaben' }"
+              @click="activeTaskTab = 'aufgaben'"
+            >Aufgaben</button>
+            <button
+              :class="{ active: activeTaskTab === 'schicht' }"
+              @click="activeTaskTab = 'schicht'"
+            >Schichtplanung</button>
+          </div>
+          <div v-if="activeTaskTab === 'aufgaben'">
+            <h3>Aufgaben</h3>
           <div class="task-form">
             <input v-model="newTask" placeholder="Neue Aufgabe..." />
             <button @click="addTask">Hinzufügen</button>
@@ -228,6 +257,7 @@
             <button class="remove-assignment-btn"
                 @click.stop="removeStaffMember(staff.id)"
                 title="Mitarbeiter löschen">✕</button>
+        </div>
         </div>
         </div>
  <div class="week-calendar">
@@ -413,20 +443,49 @@ function onDragEnd(e) {
   document.body.style.cursor = '';
 }
 
+const donationSearch = ref('');
+const searchPopupVisible = ref(false);
+const popupX = ref(0);
+const popupY = ref(0);
+
+function showSearchPopup(event) {
+  searchPopupVisible.value = true;
+  popupX.value = event.clientX;
+  popupY.value = event.clientY;
+}
+function closeSearchPopup() {
+  searchPopupVisible.value = false;
+  donationSearch.value = '';
+}
+const paginatedDonations = computed(() => {
+  const start = (page.value - 1) * limit;
+  return sortedDonations.value.slice(start, start + limit);
+});
 const sortedDonations = computed(() => {
-  return [...donations.value].sort((a, b) => {
+  let filtered = [...allDonations.value];
+  if (donationSearch.value.trim()) {
+    filtered = filtered.filter(d =>
+      (d.donor_name || '').toLowerCase().includes(donationSearch.value.trim().toLowerCase())
+    );
+  }
+  return filtered.sort((a, b) => {
     let aVal = a[sortField.value];
     let bVal = b[sortField.value];
 
-    if (aVal == null) aVal = '';
-    if (bVal == null) bVal = '';
-
-    if (sortField.value === 'created_at') {
+    if (sortField.value === 'amount') {
+      aVal = Number(String(aVal).replace(',', '.'));
+      bVal = Number(String(bVal).replace(',', '.'));
+    } else if (sortField.value === 'created_at') {
       aVal = new Date(aVal);
       bVal = new Date(bVal);
-
       if (isNaN(aVal)) aVal = new Date(0);
       if (isNaN(bVal)) bVal = new Date(0);
+    } else if (sortField.value === 'donor_name') {
+      aVal = (aVal || '').toLowerCase();
+      bVal = (bVal || '').toLowerCase();
+    } else {
+      if (aVal == null) aVal = '';
+      if (bVal == null) bVal = '';
     }
 
     if (aVal < bVal) return sortDirection.value === 'asc' ? -1 : 1;
@@ -486,7 +545,7 @@ const formatDate = (dateString) => {
 };
 
 const totalSum = computed(() =>
-  donations.value.reduce((sum, d) => sum + Number(d.amount), 0)
+  allDonations.value.reduce((sum, d) => sum + Number(d.amount), 0)
 );
 
 const monthSum = computed(() => {
@@ -515,7 +574,7 @@ const fetchDonations = async () => {
     if (!res.ok) throw new Error('Fehler beim Laden der Spenden');
     const data = await res.json();
     donations.value = data.results;
-    totalDonations.value = data.count;
+    totalDonations.value = allDonations.value.length;
   } catch (err) {
     donationsError.value = err.message;
   } finally {
@@ -605,11 +664,38 @@ function removeAssignment(assignmentId) {
     localStorage.setItem('weekSchedule', JSON.stringify(weekSchedule.value));
     }
 }
+const allDonations = ref([]);
+const fetchAllDonations = async () => {
+  try {
+    const token = authStore.token || localStorage.getItem('token'); 
+    const res = await fetch(`${API_BASE}/donations/all`, {
+      headers: {
+        'Authorization': `Bearer ${token}` 
+            }});
+                if (!res.ok) throw new Error('Fehler beim Laden aller Spenden');
+    const data = await res.json();
+    allDonations.value = data || [];
+  } catch (err) {
+  }
+};
 onMounted(() => {
+  fetchAllDonations();
   fetchDonations();
   fetchContacts();
   fetchPatients();
 
+const totalSum = computed(() => {
+  return allDonations.value.reduce((sum, d) => sum + Number(d.amount), 0);
+});
+  const monthSum = computed(() => {
+    const now = new Date();
+    return allDonations.value
+      .filter(d => {
+        const date = new Date(d.created_at);
+        return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+      })
+      .reduce((sum, d) => sum + Number(d.amount), 0);
+  });
 document.addEventListener('mousemove', onDrag);
 document.addEventListener('mouseup', onDragEnd);
 
@@ -847,15 +933,14 @@ function shortName(name) {
   height: 50px;
 }
 .pagination-btn {
-  background: #0c4b47;
-  color: white;
+  background: #f3f3f3;
+  color: #0c4b47;
   border: none;
   padding: 0.8rem 1.2rem;
   border-radius: 8px;
   cursor: pointer;
   font-size: 0.9rem;
   font-weight: bold;
-  transition: background-color 0.2s;
   min-width: 80px; 
   height: 40px; 
   display: flex;
@@ -863,7 +948,7 @@ function shortName(name) {
   justify-content: center;
 }
 .pagination-btn:hover:not(.disabled) {
-  background: #0a3a36;
+  scale: 1.2;
 }
 .pagination-btn.disabled {
   background: #ccc;
@@ -894,8 +979,7 @@ function shortName(name) {
   flex-shrink: 0; 
 }
 .page-btn:hover {
-  background: #0c4b47;
-  color: white;
+  scale: 1.05;
 }
 .page-btn.active {
   background: #0c4b47;
@@ -1250,5 +1334,32 @@ function shortName(name) {
 .task-done {
   text-decoration: line-through;
   color: #888;
+}
+.sort-arrow:hover {
+  cursor: pointer;
+}
+.search-popup {
+  position: fixed;
+  background: #fff;
+  border-radius: 8px;
+  padding: 0.7em 1em;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  z-index: 99999;
+  font-size: 1em;
+  color: #0c4b47;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+.donation-search-input {
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  padding: 0.2em 0.5em;
+  font-size: 1em;
+}
+.search-btn {
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
 }
 </style>

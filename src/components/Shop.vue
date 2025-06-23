@@ -243,16 +243,16 @@ const handleAddToCart = (product) => {
                 {{ (Number(product.price) || 0).toFixed(2) }} €
               </div>
               <div class="footer-buttons">
-                 <button 
-                    v-if="authStore.user && authStore.user.role === 'customer'"
-                    @click="handleAddToCart(product)" 
-                    class="add-to-cart-btn"
-                    :disabled="product.amountLeft === 0"
-                  >
-                    <span v-if="product.amountLeft === 0">Ausverkauft</span>
-                    <span v-else>In den Warenkorb</span>
-                  </button>
-                  <div class="edit-container" v-if="authStore.user && authStore.user.role === 'admin'">
+                <button 
+                  v-if="!authStore.user || (authStore.user && authStore.user.role === 'customer')"
+                  @click="handleAddToCart(product)" 
+                  class="add-to-cart-btn"
+                  :disabled="product.amountLeft === 0"
+                >
+                  <span v-if="product.amountLeft === 0">Ausverkauft</span>
+                  <span v-else>In den Warenkorb</span>
+                </button>
+                  <div class="edit-container" v-if="authStore.user && (authStore.user.role === 'admin' || authStore.user.role === 'staff')">
                     <button
                       @click="toggleEditForm(product)"
                       class="edit-btn"
@@ -365,12 +365,8 @@ const handleAddToCart = (product) => {
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  padding: .5rem 1rem;
   transition: all 0.3s ease;
-  text-align: right;
   display: flex;
-  justify-content: right;
-  align-items: right;
   width: auto;
   height: auto;
   position: static;
@@ -380,7 +376,6 @@ const handleAddToCart = (product) => {
   margin: 0;
   font-size: 1rem;
   vertical-align: middle;
-  padding-top: 0.2rem;
 }
 .shop-header {
   text-align: center;
@@ -830,7 +825,8 @@ const handleAddToCart = (product) => {
   flex-shrink: 0; 
 }
 .pagination-btn:hover:not(.disabled) {
-  background: #0a3a36;
+  scale: 1.2;
+  transition: transform 0.3s ease;
 }
 .pagination-btn.disabled {
   background: #ccc;

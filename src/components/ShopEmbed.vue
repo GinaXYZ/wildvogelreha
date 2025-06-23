@@ -207,6 +207,7 @@ background: linear-gradient(135deg, #097a6a 0%, #0a3a36 100%);
 .item-price {
   color: #0c4b47;
   margin-top: 0.25rem;
+  font-weight: bold;
 }
 
 .scroll-btn {

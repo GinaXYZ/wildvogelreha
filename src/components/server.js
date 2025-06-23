@@ -447,7 +447,16 @@ app.post('/api/order-status', authenticateToken,async (req, res) => {
     res.status(500).json({ error: 'Fehler beim Aktualisieren des Status' });
   }
 });
-
+app.get('/api/donations/all', authenticateToken, async (req, res) => {
+  try {
+    const [results] = await pool.query(
+      'SELECT id, donor_name, amount, created_at FROM donations ORDER BY created_at DESC'
+    );
+    res.json(results);
+  } catch (err) {
+    res.status(500).json({ error: 'Fehler beim Laden aller Spenden' });
+  }
+});
 
 app.get('/api/donations', authenticateToken, async (req, res) => {
   const page = parseInt(req.query.page) || 1;
