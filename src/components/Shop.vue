@@ -243,23 +243,23 @@ const handleAddToCart = (product) => {
                 {{ (Number(product.price) || 0).toFixed(2) }} €
               </div>
               <div class="footer-buttons">
-                <button 
-                  @click="handleAddToCart(product)" 
-                  class="add-to-cart-btn"
-                  :disabled="product.amountLeft === 0"
-                >
-                  <span v-if="product.amountLeft === 0">Ausverkauft</span>
-                  <span v-else>In den Warenkorb</span>
-                </button>
-                <!-- Edit-Button und Edit-Form direkt darunter -->
-                <div class="edit-container" v-if="authStore.user && authStore.user.role === 'admin'">
-                  <button
-                    @click="toggleEditForm(product)"
-                    class="edit-btn"
-                    title="Produkt bearbeiten"
+                 <button 
+                    v-if="authStore.user && authStore.user.role === 'customer'"
+                    @click="handleAddToCart(product)" 
+                    class="add-to-cart-btn"
+                    :disabled="product.amountLeft === 0"
                   >
-                    ✏️
+                    <span v-if="product.amountLeft === 0">Ausverkauft</span>
+                    <span v-else>In den Warenkorb</span>
                   </button>
+                  <div class="edit-container" v-if="authStore.user && authStore.user.role === 'admin'">
+                    <button
+                      @click="toggleEditForm(product)"
+                      class="edit-btn"
+                      title="Produkt bearbeiten"
+                    >
+                      ✏️
+                    </button>
                   <div 
                     v-if="showEditForm && editingProduct?.id === product.id" 
                     class="edit-form"
@@ -365,10 +365,22 @@ const handleAddToCart = (product) => {
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  padding: 0.5rem 1rem;
-  font-weight: bold;
+  padding: .5rem 1rem;
   transition: all 0.3s ease;
-  font-size: 0.8rem;
+  text-align: right;
+  display: flex;
+  justify-content: right;
+  align-items: right;
+  width: auto;
+  height: auto;
+  position: static;
+  top: unset;
+  left: unset;
+  align-self: center;
+  margin: 0;
+  font-size: 1rem;
+  vertical-align: middle;
+  padding-top: 0.2rem;
 }
 .shop-header {
   text-align: center;
@@ -825,19 +837,6 @@ const handleAddToCart = (product) => {
   cursor: not-allowed;
   opacity: 0.6;
 }
-.edit-btn {
-  position: relative;
-  background: transparent;
-  border: none;
-  border-radius: 8px;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
 .edit-btn:hover {
 transform: scale(1.38);
 transition: transform 0.3s ease;
@@ -914,5 +913,10 @@ transition: transform 0.3s ease;
 }
 .edit-container {
   position: relative;
+}
+.footer-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 </style>

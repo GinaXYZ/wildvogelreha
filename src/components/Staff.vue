@@ -180,21 +180,34 @@
           Schichtplanung
         </button>
       </div>
-
-      <div v-if="activeTaskTab === 'aufgaben'" class="tasks-section">
-        <h3>Aufgaben</h3>
-        <div class="task-form">
-          <input v-model="newTask" placeholder="Neue Aufgabe..." />
-          <button @click="addTask">Hinzufügen</button>
+          <h3>Aufgaben</h3>
+          <div class="task-form">
+            <input v-model="newTask" placeholder="Neue Aufgabe..." />
+            <button @click="addTask">Hinzufügen</button>
+          </div>
+          <table class="task-table">
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Aufgabe</th>
+                <th>Aktion</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(task, index) in tasks" :key="index">
+                <td>
+                  <input type="checkbox" v-model="task.done" />
+                </td>
+                <td>
+                  <span :class="{ 'task-done': task.done }">{{ task.text }}</span>
+                </td>
+                <td>
+                  <button @click="removeTask(index)">❌</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-        <ul class="task-list">
-          <li v-for="(task, index) in tasks" :key="index" :class="{ done: task.done }">
-            <input type="checkbox" v-model="task.done" />
-            <span>{{ task.text }}</span>
-            <button @click="removeTask(index)">❌</button>
-          </li>
-        </ul>
-      </div>
       <div v-else-if="activeTaskTab === 'schicht'" class="schedule-section">
         <h3>Schichtplanung</h3>
         <div class="staff-management">
@@ -215,7 +228,6 @@
             <button class="remove-assignment-btn"
                 @click.stop="removeStaffMember(staff.id)"
                 title="Mitarbeiter löschen">✕</button>
-        </div>
         </div>
         </div>
  <div class="week-calendar">
@@ -1216,5 +1228,27 @@ function shortName(name) {
   font-weight: bold;
   flex-shrink: 0;
   margin-left: 0.2rem;
+}
+.task-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px #0001;
+}
+.task-table th, .task-table td {
+  border: 1px solid #eee;
+  padding: 0.7rem 0.5rem;
+  text-align: left;
+}
+.task-table th {
+  background: #f7fafb;
+  color: #0c4b47;
+  font-weight: 600;
+}
+.task-done {
+  text-decoration: line-through;
+  color: #888;
 }
 </style>
