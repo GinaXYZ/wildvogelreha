@@ -38,17 +38,10 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     command: sh -c "npm install && node server.js"
     networks:
       - wildvogelreha-network
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/blog"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
 
   frontend:
     image: nginx:alpine
