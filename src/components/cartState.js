@@ -58,7 +58,7 @@ if (!token) return;
     }
   }
   try {
-    const res = await fetch('http://localhost:3000/api/cart', {
+    const res = await fetch('/api/cart', {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json', 
@@ -88,7 +88,7 @@ export const loadCartFromDB = async () => {
   }
 
   try {
-    const res = await fetch('http://localhost:3000/api/cart', {
+    const res = await fetch('/api/cart', {
       headers: {
           'Authorization': `Bearer ${token}`
       },
