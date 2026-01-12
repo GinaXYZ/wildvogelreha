@@ -154,21 +154,21 @@ INSERT IGNORE INTO blog_posts (id, title, content, author, category, date) VALUE
 
 -- Products
 INSERT IGNORE INTO products (title, price, description, category, amountLeft, image) VALUES
-('Vogelfutter Premium Mix', 19.99, 'Hochwertiges Mischfutter für verschiedene Vogelarten', 'Futter', 50, 'image1.jpg'),
-('Nistkästen Holz', 34.99, 'Natürliche Nistkästen aus Massivholz', 'Nistplätze', 20, 'image2.jpg'),
-('Wärmlampe 100W', 24.99, 'Infrarot-Wärmlampe für Inkubation', 'Ausrüstung', 15, 'image3.jpg'),
-('Medikament Antibiotika Set', 49.99, 'Veterinär-Antibiotikaset', 'Medikamente', 10, 'image4.jpg'),
-('Futternapf Edelstahl 5L', 14.99, 'Robuster Futternapf aus Edelstahl', 'Zubehör', 30, 'image5.jpg'),
-('Wildvogel T-Shirt', 29.99, 'Bio-Baumwolle T-Shirt mit Vogelmotiv', 'Merchandise', 40, 'image6.jpg'),
-('Vogelbestimmungsbuch', 22.50, 'Umfassendes Nachschlagewerk heimischer Vögel', 'Bücher', 25, 'image7.jpg'),
-('Transportbox klein', 39.99, 'Sichere Transportbox für kleine Vögel', 'Transport', 12, 'image8.jpg'),
-('Transportbox groß', 59.99, 'Sichere Transportbox für größere Vögel', 'Transport', 8, 'image9.jpg'),
-('Pipetten Set 10er', 8.99, 'Fütterungspipetten für Jungvögel', 'Zubehör', 60, 'image10.jpg'),
-('Desinfektionsmittel 1L', 12.99, 'Spezielles Desinfektionsmittel für Volieren', 'Hygiene', 35, 'image11.jpg'),
-('Wildvogel Tasse', 15.99, 'Keramiktasse mit Eulenmotiv', 'Merchandise', 50, 'image12.jpg'),
-('Erste-Hilfe-Set Vögel', 44.99, 'Komplettes Set für Notfallversorgung', 'Medizin', 18, 'image13.jpg'),
-('Mehlwürmer getrocknet 500g', 16.99, 'Proteinreiches Zusatzfutter', 'Futter', 45, 'image14.jpg'),
-('Kalender 2026', 18.99, 'Wandkalender mit Vogelfotos', 'Merchandise', 30, 'image15.jpg');
+('Vogelfutter Premium Mix', 19.99, 'Hochwertiges Mischfutter für verschiedene Vogelarten', 'Futter', 50, '/api/images/image1.jpg'),
+('Nistkästen Holz', 34.99, 'Natürliche Nistkästen aus Massivholz', 'Nistplätze', 20, '/api/images/image1.jpg'),
+('Wärmlampe 100W', 24.99, 'Infrarot-Wärmlampe für Inkubation', 'Ausrüstung', 15, '/api/images/image1.jpg'),
+('Medikament Antibiotika Set', 49.99, 'Veterinär-Antibiotikaset', 'Medikamente', 10, '/api/images/image1.jpg'),
+('Futternapf Edelstahl 5L', 14.99, 'Robuster Futternapf aus Edelstahl', 'Zubehör', 30, '/api/images/image1.jpg'),
+('Wildvogel T-Shirt', 29.99, 'Bio-Baumwolle T-Shirt mit Vogelmotiv', 'Merchandise', 40, '/api/images/image1.jpg'),
+('Vogelbestimmungsbuch', 22.50, 'Umfassendes Nachschlagewerk heimischer Vögel', 'Bücher', 25, '/api/images/image1.jpg'),
+('Transportbox klein', 39.99, 'Sichere Transportbox für kleine Vögel', 'Transport', 12, '/api/images/image1.jpg'),
+('Transportbox groß', 59.99, 'Sichere Transportbox für größere Vögel', 'Transport', 8, '/api/images/image1.jpg'),
+('Pipetten Set 10er', 8.99, 'Fütterungspipetten für Jungvögel', 'Zubehör', 60, '/api/images/image1.jpg'),
+('Desinfektionsmittel 1L', 12.99, 'Spezielles Desinfektionsmittel für Volieren', 'Hygiene', 35, '/api/images/image1.jpg'),
+('Wildvogel Tasse', 15.99, 'Keramiktasse mit Eulenmotiv', 'Merchandise', 50, '/api/images/image1.jpg'),
+('Erste-Hilfe-Set Vögel', 44.99, 'Komplettes Set für Notfallversorgung', 'Medizin', 18, '/api/images/image1.jpg'),
+('Mehlwürmer getrocknet 500g', 16.99, 'Proteinreiches Zusatzfutter', 'Futter', 45, '/api/images/image1.jpg'),
+('Kalender 2026', 18.99, 'Wandkalender mit Vogelfotos', 'Merchandise', 30, '/api/images/image1.jpg');
 
 -- Donations
 INSERT IGNORE INTO donations (id, donor_name, amount, created_at) VALUES

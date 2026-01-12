@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const path = require('path');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
@@ -103,6 +104,9 @@ app.use(helmet({
   contentSecurityPolicy: false, // Für Vue SPA deaktivieren
   crossOriginEmbedderPolicy: false
 }));
+
+// Static file serving for images from public directory
+app.use('/api/images', express.static(path.join(__dirname, '..', '..', 'public')));
 
 // Rate Limiting - Allgemein
 const generalLimiter = rateLimit({
