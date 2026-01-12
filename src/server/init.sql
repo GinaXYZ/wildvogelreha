@@ -76,7 +76,16 @@ CREATE TABLE IF NOT EXISTS donations (
 
 -- Insert sample data
 INSERT IGNORE INTO users (id, username, password, firstname, lastname, email, role) VALUES
-('admin-1', 'admin', '$2b$10$yRvvAaQxxRxaLQfP8l4DZuV/3wZg5Pz2KGqKz2YqKz2KGqKz2YqKq', 'Admin', 'User', 'admin@wildvogelreha.de', 'admin');
+('admin-1', 'admin', '$2b$10$yRvvAaQxxRxaLQfP8l4DZuV/3wZg5Pz2KGqKz2YqKz2KGqKz2YqKq', 'Admin', 'User', 'admin@wildvogelreha.de', 'admin'),
+('user-1', 'testuser', '$2b$10$yRvvAaQxxRxaLQfP8l4DZuV/3wZg5Pz2KGqKz2YqKz2KGqKz2YqKq', 'Test', 'User', 'user@wildvogelreha.de', 'user');
 
 INSERT IGNORE INTO blog_posts (id, title, content, author, category, date) VALUES
-('post-1', 'Willkommen auf unserer Seite', 'Herzlich willkommen zur Wildvogel Rehastation Waabs!', 'Admin', 'Allgemein', NOW());
+('post-1', 'Willkommen auf unserer Seite', 'Herzlich willkommen zur Wildvogel Rehastation Waabs!', 'Admin', 'Allgemein', NOW()),
+('post-2', 'Neue Behandlungen verfügbar', 'Wir haben neue Behandlungsmethoden implementiert', 'Admin', 'News', NOW());
+
+INSERT IGNORE INTO products (title, price, description, category, amountLeft, image) VALUES
+('Vogelfutter Premium Mix', 19.99, 'Hochwertiges Mischfutter für verschiedene Vogelarten', 'Futter', 50, 'vogelfutter.jpg'),
+('Nistkästen Holz', 34.99, 'Natürliche Nistkästen aus Massivholz', 'Nistplätze', 20, 'nistkasten.jpg'),
+('Wärmlampe 100W', 24.99, 'Infrarot-Wärmlampe für Inkubation', 'Ausrüstung', 15, 'waermlampe.jpg'),
+('Medikament Antibiotika Set', 49.99, 'Veterinär-Antibiotikaset', 'Medikamente', 10, 'medikament.jpg'),
+('Futternapf Edelstahl 5L', 14.99, 'Robuster Futternapf aus Edelstahl', 'Zubehör', 30, 'napf.jpg');
