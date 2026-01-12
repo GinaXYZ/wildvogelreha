@@ -74,6 +74,42 @@ CREATE TABLE IF NOT EXISTS donations (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS contacts (
+  id VARCHAR(36) PRIMARY KEY,
+  firstname VARCHAR(100),
+  lastname VARCHAR(100),
+  email VARCHAR(100),
+  telefon VARCHAR(50),
+  msg LONGTEXT,
+  status ENUM('neu', 'bearbeitet', 'erledigt') DEFAULT 'neu',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS patients (
+  id VARCHAR(36) PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  species VARCHAR(100) NOT NULL,
+  status ENUM('in Behandlung', 'stabil', 'kritisch', 'ausgewildert', 'verstorben') DEFAULT 'in Behandlung',
+  admission_date DATE NOT NULL,
+  details LONGTEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS map_items (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  label VARCHAR(100),
+  class VARCHAR(50),
+  x DECIMAL(10, 6),
+  y DECIMAL(10, 6),
+  image VARCHAR(255),
+  name VARCHAR(100),
+  species VARCHAR(100),
+  age VARCHAR(50),
+  description LONGTEXT,
+  status VARCHAR(50),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Insert sample data
 
 -- Users (password = 'test123' für alle)
@@ -187,3 +223,47 @@ INSERT IGNORE INTO order_items (id, order_id, product_id, quantity, price) VALUE
 ('item-13', 'order-8', 15, 1, 18.99),
 ('item-14', 'order-9', 4, 1, 49.99),
 ('item-15', 'order-10', 9, 1, 59.99);
+
+-- Contacts (Kontaktanfragen)
+INSERT IGNORE INTO contacts (id, firstname, lastname, email, telefon, msg, status, created_at) VALUES
+(1, 'Hans', 'Meier', 'hans.meier@email.de', '0431-123456', 'Ich habe einen verletzten Vogel gefunden. Was soll ich tun?', 'new', '2026-01-10 09:30:00'),
+(2, 'Sabine', 'Koch', 'sabine.koch@web.de', '0461-789012', 'Kann ich bei Ihnen ehrenamtlich mitarbeiten?', 'answered', '2026-01-08 14:15:00'),
+(3, 'Michael', 'Berg', 'm.berg@gmail.com', '0170-1234567', 'Wann sind Ihre Öffnungszeiten für Besucher?', 'answered', '2026-01-05 11:00:00'),
+(4, 'Petra', 'Schulz', 'petra.schulz@gmx.de', '04351-55667', 'Ich möchte eine Führung für unsere Schulklasse buchen.', 'new', '2026-01-11 16:45:00'),
+(5, 'Klaus', 'Jansen', 'k.jansen@t-online.de', '0152-9876543', 'Nehmen Sie auch Tauben auf?', 'answered', '2026-01-03 10:20:00');
+
+-- Patients (Vogelpatienten)
+INSERT IGNORE INTO patients (id, name, species, status, admission_date, details, created_at) VALUES
+(1, 'Rico', 'Rotmilan', 'in_treatment', '2026-01-02', 'Flügelverletzung durch Stromleitung. Wird operiert.', '2026-01-02 14:30:00'),
+(2, 'Ella', 'Schleiereule', 'recovered', '2025-12-15', 'Unterernährt aufgefunden. Vollständig erholt.', '2025-12-15 09:00:00'),
+(3, 'Max', 'Mäusebussard', 'in_treatment', '2026-01-05', 'Kollision mit Auto. Leichte Gehirnerschütterung.', '2026-01-05 11:20:00'),
+(4, 'Kroni', 'Kranich', 'in_treatment', '2025-12-20', 'Bleivergiftung. Langzeitbehandlung erforderlich.', '2025-12-20 08:45:00'),
+(5, 'Adler', 'Seeadler', 'critical', '2026-01-12', 'Schwere Verletzungen. Intensivbehandlung.', '2026-01-12 08:30:00'),
+(6, 'Fips', 'Waldkauz', 'released', '2025-11-10', 'Jungvogel aus Nest gefallen. Erfolgreich aufgezogen.', '2025-11-10 15:00:00'),
+(7, 'Luna', 'Uhu', 'in_treatment', '2026-01-08', 'Flügelbruch. OP erfolgreich, Reha läuft.', '2026-01-08 10:00:00'),
+(8, 'Sturmi', 'Weißstorch', 'recovered', '2025-10-01', 'Hat Zugtermin verpasst. Überwintert bei uns.', '2025-10-01 14:00:00'),
+(9, 'Felix', 'Turmfalke', 'released', '2025-12-28', 'Leichte Prellungen. Schnell erholt.', '2025-12-28 16:30:00'),
+(10, 'Greif', 'Habicht', 'in_treatment', '2026-01-09', 'Vergiftungsverdacht. Unter Beobachtung.', '2026-01-09 12:00:00'),
+(11, 'Schnippi', 'Waldschnepfe', 'released', '2025-12-05', 'Kollision mit Fenster. Vollständig genesen.', '2025-12-05 09:15:00'),
+(12, 'Olga', 'Steinkauz', 'in_treatment', '2026-01-06', 'Unterernährt. Wird aufgepäppelt.', '2026-01-06 13:45:00'),
+(13, 'Blitz', 'Wanderfalke', 'recovered', '2025-11-20', 'Kollision mit Glasscheibe. Erholt sich gut.', '2025-11-20 11:30:00'),
+(14, 'Rudi', 'Rotkehlchen', 'released', '2026-01-03', 'Von Katze angegriffen. Kleine Wunden verheilt.', '2026-01-03 10:00:00'),
+(15, 'Hilde', 'Graureiher', 'in_treatment', '2026-01-11', 'Angelschnur um Bein gewickelt. Wird behandelt.', '2026-01-11 14:00:00'),
+(16, 'Korax', 'Kolkrabe', 'in_treatment', '2026-01-07', 'Flügelverletzung. Gute Prognose.', '2026-01-07 10:30:00'),
+(17, 'Amsel', 'Amsel', 'released', '2025-12-30', 'Jungvogel, aus Nest gefallen.', '2025-12-30 08:00:00'),
+(18, 'Specht', 'Buntspecht', 'recovered', '2025-12-18', 'Leichte Verletzung. Fast wieder fit.', '2025-12-18 15:30:00'),
+(19, 'Walli', 'Waldohreule', 'critical', '2026-01-10', 'Schwere Infektion. Intensivpflege.', '2026-01-10 09:00:00'),
+(20, 'Möwe', 'Silbermöwe', 'in_treatment', '2026-01-04', 'Ölverschmutzung. Wird gereinigt.', '2026-01-04 16:00:00');
+
+-- Map Items (Vogelkarte/Stationsübersicht)
+INSERT IGNORE INTO map_items (id, label, class, x, y, image, name, species, age, description, status, created_at) VALUES
+(1, 'Voliere 1', 'voliere', 54.523410, 9.954230, NULL, 'Rico', 'Rotmilan', '3 Jahre', 'Großvoliere für Greifvögel', 'occupied', '2026-01-02 14:30:00'),
+(2, 'Voliere 2', 'voliere', 54.523520, 9.954350, NULL, 'Ella', 'Schleiereule', '2 Jahre', 'Nachtvogelvoliere', 'occupied', '2025-12-15 09:00:00'),
+(3, 'Intensivstation', 'station', 54.523300, 9.954100, NULL, 'Adler', 'Seeadler', '5 Jahre', 'Kritische Fälle', 'occupied', '2026-01-12 08:30:00'),
+(4, 'Voliere 3', 'voliere', 54.523630, 9.954470, NULL, 'Luna', 'Uhu', '4 Jahre', 'Große Eulenvoliere', 'occupied', '2026-01-08 10:00:00'),
+(5, 'Aufzuchtstation', 'station', 54.523200, 9.954000, NULL, NULL, NULL, NULL, 'Für Jungvögel', 'available', '2026-01-01 08:00:00'),
+(6, 'Voliere 4', 'voliere', 54.523740, 9.954590, NULL, 'Kroni', 'Kranich', '2 Jahre', 'Großvogelvoliere', 'occupied', '2025-12-20 08:45:00'),
+(7, 'Quarantäne', 'station', 54.523100, 9.953900, NULL, 'Greif', 'Habicht', '3 Jahre', 'Isolierstation', 'occupied', '2026-01-09 12:00:00'),
+(8, 'Voliere 5', 'voliere', 54.523850, 9.954710, NULL, 'Sturmi', 'Weißstorch', '1 Jahr', 'Storchvoliere', 'occupied', '2025-10-01 14:00:00'),
+(9, 'Freiflugvoliere', 'voliere', 54.523960, 9.954830, NULL, 'Blitz', 'Wanderfalke', '2 Jahre', 'Trainingsvoliere', 'occupied', '2025-11-20 11:30:00'),
+(10, 'Teich', 'teich', 54.524070, 9.954950, NULL, 'Hilde', 'Graureiher', '3 Jahre', 'Wasservogelbereich', 'occupied', '2026-01-11 14:00:00');
