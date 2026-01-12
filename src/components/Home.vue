@@ -10,7 +10,7 @@ const fetchTopDonations = async () => {
   donationsLoading.value = true;
   donationsError.value = null;
   try {
-    const res = await fetch('http://localhost:3000/api/donations/top10');
+    const res = await fetch('/api/donations/top10');
     if (!res.ok) throw new Error('Fehler beim Laden der Spenden');
     topDonations.value = await res.json();
   } catch (err) {
@@ -27,7 +27,7 @@ const fetchLatestPosts = async () => {
   postsLoading.value = true;
   postsError.value = null;
   try {
-    const res = await fetch('http://localhost:3000/api/blog/latest?limit=5');
+    const res = await fetch('/api/blog/latest?limit=5');
     if (!res.ok) throw new Error('Fehler beim Laden der Blogposts');
     latestPosts.value = await res.json();
   } catch (err) {

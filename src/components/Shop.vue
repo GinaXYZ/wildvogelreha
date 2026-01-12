@@ -31,7 +31,7 @@ const fetchProducts = async () => {
   isLoading.value = true;
   errorMessage.value = '';
   try {
-    let apiUrl = `http://localhost:3000/api/products?page=${productsPage.value}&limit=${productsLimit.value}`;
+    let apiUrl = `/api/products?page=${productsPage.value}&limit=${productsLimit.value}`;
     if (selectedCategory.value !== 'Alle') {
       apiUrl += `&category=${encodeURIComponent(selectedCategory.value)}`;
     }
@@ -92,7 +92,7 @@ const toggleEditForm = (product) => {
 };
 const updateProduct = async () => {
   try {
-    const res = await fetch(`http://localhost:3000/api/products/${editingProduct.value.id}`, {
+    const res = await fetch(`/api/products/${editingProduct.value.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authStore.token}` },
       body: JSON.stringify(editingProduct.value)
@@ -108,7 +108,7 @@ const updateProduct = async () => {
 onMounted(async () => {
   await fetchProducts();
   try {
-    const resCategories = await fetch('http://localhost:3000/api/category');
+    const resCategories = await fetch('/api/category');
     if (!resCategories.ok) {
       let errorText = `HTTP-Status ${resCategories.status}: ${resCategories.statusText}`;
         try {
@@ -132,7 +132,7 @@ onMounted(async () => {
 
 const addProduct = async () => {
   try {
-    const res = await fetch('http://localhost:3000/api/products', {
+    const res = await fetch('/api/products', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authStore.token}` },
       body: JSON.stringify(newProduct.value)

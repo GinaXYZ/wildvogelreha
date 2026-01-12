@@ -32,7 +32,7 @@ const showToast = ref(false);
 const container = ref(null);
 const fetchItems = async () => {
   try {
-    const res = await fetch('http://localhost:3000/api/products'); 
+    const res = await fetch('/api/products'); 
     if (!res.ok) throw new Error('Fehler beim Laden der Produkte');
     const data = await res.json();
     if (data && Array.isArray(data.results)) {

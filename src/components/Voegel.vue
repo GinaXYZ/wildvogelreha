@@ -4,7 +4,7 @@ import { useAuthStore } from './auth.js'
 
 const authStore = useAuthStore()
 const loading = ref(false)
-const API_BASE = 'http://localhost:3000/api'
+const API_BASE = '/api'
 async function loadMapItems() {
   try {
     loading.value = true

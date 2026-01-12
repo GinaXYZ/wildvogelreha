@@ -303,7 +303,7 @@
 <script setup>
 import { ref, onMounted, computed, watch, onBeforeUnmount } from 'vue';
 import { useAuthStore } from './auth.js';
-const API_BASE = 'http://localhost:3000/api';
+const API_BASE = '/api';
 const authStore = useAuthStore();
 const staffMembers = ref([]);
 const showStaffForm = ref(false);
@@ -498,7 +498,7 @@ const fetchPatients = async () => {
   patientsError.value = null;
   try {
     const token = authStore.token || localStorage.getItem('token'); 
-    const res = await fetch(`http://localhost:3000/api/patients?page=${patientsPage.value}&limit=${patientsLimit}`, {
+    const res = await fetch(`/api/patients?page=${patientsPage.value}&limit=${patientsLimit}`, {
       headers: {
         'Authorization': `Bearer ${token}` 
       }
@@ -523,7 +523,7 @@ function getScheduleForCell(day, timeSlot) {
 const updatePatient = async (patient) => {
   try {
     const token = authStore.token || localStorage.getItem('token'); 
-    await fetch(`http://localhost:3000/api/patients/${patient.id}`, {
+    await fetch(`/api/patients/${patient.id}`, {
       method: 'PUT',
       headers: { 
         'Content-Type': 'application/json',
@@ -566,7 +566,7 @@ const fetchDonations = async () => {
   donationsError.value = null;
   try {
     const token = authStore.token || localStorage.getItem('token');
-    const res = await fetch(`http://localhost:3000/api/donations?page=${page.value}&limit=${limit}`, {
+    const res = await fetch(`/api/donations?page=${page.value}&limit=${limit}`, {
       headers: {
         'Authorization': `Bearer ${token}` 
       }
@@ -591,7 +591,7 @@ const fetchContacts = async () => {
   contactsError.value = null;
   try {
     const token = authStore.token || localStorage.getItem('token'); 
-    const res = await fetch(`http://localhost:3000/api/contacts?page=${contactsPage.value}&limit=${contactsLimit}`, {
+    const res = await fetch(`/api/contacts?page=${contactsPage.value}&limit=${contactsLimit}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -629,7 +629,7 @@ const getStatusSquareClass = (status) => {
 const updateContactStatus = async (contact) => {
   try {
     const token = authStore.token || localStorage.getItem('token'); 
-    const response = await fetch(`http://localhost:3000/api/contacts/${contact.id}`, {
+    const response = await fetch(`/api/contacts/${contact.id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -646,7 +646,7 @@ const deleteContact = async (id) => {
   if (!confirm('Kontakt wirklich löschen?')) return;
   try {
     const token = authStore.token || localStorage.getItem('token'); 
-    const response = await fetch(`http://localhost:3000/api/contacts/${id}`, { 
+    const response = await fetch(`/api/contacts/${id}`, { 
       headers: { 'Authorization': `Bearer ${token}` }
     });
     

@@ -109,7 +109,7 @@ const fetchOrders = async () => {
   ordersError.value = null;
   try {
     const token = localStorage.getItem('token');
-    const res = await fetch('http://localhost:3000/api/orders', {
+    const res = await fetch('/api/orders', {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -128,7 +128,7 @@ const fetchProfile = async () => {
   error.value = null;
   try {
     const token = localStorage.getItem('token');
-    const res = await fetch('http://localhost:3000/api/profile', {
+    const res = await fetch('/api/profile', {
       headers: { Authorization: `Bearer ${token}` }
     });
     if (!res.ok) {
@@ -162,7 +162,7 @@ const statusText = (status) => {
 };
 const updateOrderStatus = async (order) => {
   try {
-    await fetch('http://localhost:3000/api/order-status', {
+    await fetch('/api/order-status', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ orderId: order.id, status: order.status }),

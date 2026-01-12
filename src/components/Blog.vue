@@ -23,7 +23,7 @@ const showToast = ref(false);
 
 onMounted(async () => {
   try {
-    const response = await fetch('http://localhost:3000/api/blog', {
+    const response = await fetch('/api/blog', {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
     });
@@ -62,7 +62,7 @@ const createBlogPost = async () => {
     };
 
  const token = authStore.token || localStorage.getItem('token');
-    const response = await fetch('http://localhost:3000/api/blog', {
+    const response = await fetch('/api/blog', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -103,7 +103,7 @@ const deletePost = async (postId) => {
 
   try {
     const token = authStore.token || localStorage.getItem('token'); 
-    const response = await fetch(`http://localhost:3000/api/blog/${postId}`, {
+    const response = await fetch(`/api/blog/${postId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -138,7 +138,7 @@ const updatePost = async (postId) => {
   }
 
   try {
-    const response = await fetch(`http://localhost:3000/api/blog/${postId}`, {
+    const response = await fetch(`/api/blog/${postId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(editedPost.value)
