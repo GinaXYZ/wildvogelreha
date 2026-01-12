@@ -197,7 +197,7 @@ app.post('/api/register', registerLimiter, async (req, res) => {
     return res.status(400).json({ error: pwValidation.error });
   }
   
-  const assignedRole = 'customer';
+  const assignedRole = 'user'; // Muss mit ENUM in DB übereinstimmen: 'user', 'staff', 'admin'
   const id = uuidv4();
   const hashedPassword = await bcrypt.hash(password, saltRounds);
   
