@@ -32,13 +32,14 @@ function authenticateToken(req, res, next) {
 const app = express();
 
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: ['http://localhost:5173', 'http://localhost:80', 'http://ginaxyz.site', 'https://ginaxyz.site', 'http://0.0.0.0:80'],
   methods: ['GET', 'POST', 'PUT', 'DELETE']
 }));
 app.use(express.json());
 
-app.listen(3000, () => {
-  console.log('API läuft auf http://localhost:3000');
+app.listen(3000, '0.0.0.0', () => {
+  console.log('API läuft auf http://0.0.0.0:3000');
+  console.log('DB Host:', process.env.DB_HOST);
 });
 
 app.get('/api/blog', async (req, res) => {

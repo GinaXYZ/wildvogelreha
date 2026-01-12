@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  db:
+    image: mariadb:latest
+    container_name: wildvogelreha-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_secure_pw_2024!
+      MYSQL_DATABASE: wildvogelreha
+      MYSQL_USER: wildvogelreha_user
+      MYSQL_PASSWORD: wildvogelreha_secure_pw_2024!
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - wildvogelreha-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: node:18-alpine
+    container_name: wildvogelreha-backend
+    restart: always
+    working_dir: /app
+    volumes:
+      - ./src/server:/app
+    env_file:
+      - .env
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      NODE_ENV: production
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: sh -c "npm install && node server.js"
+    networks:
+      - wildvogelreha-network
+
+  frontend:
+    image: nginx:alpine
+    container_name: wildvogelreha-frontend
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./dist:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+    networks:
+      - wildvogelreha-network
+
+volumes:
+  db_data:
+    driver: local
+
+networks:
+  wildvogelreha-network:
+    driver: bridge
