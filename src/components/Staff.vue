@@ -6,6 +6,7 @@
       <span v-if="newContactsCount > 0" class="notification-badge">{{ newContactsCount }}</span>
     </button>
     <button :class="{active: activeStaffTab === 'patients'}" @click="activeStaffTab = 'patients'">Tier-/Patientenverwaltung</button>
+    <button :class="{active: activeStaffTab === 'appointments'}" @click="activeStaffTab = 'appointments'">Terminverwaltung</button>
     <button :class="{active: activeStaffTab === 'tasks'}" @click="activeStaffTab = 'tasks'">Aufgaben & Schichtplanung</button>
   </div>
   <div class="staff-content">
@@ -197,6 +198,11 @@
         <p><em>Seite {{ patientsPage }} von {{ Math.ceil(totalPatients / patientsLimit) }}</em></p>
       </div>
     </div>
+    <!-- Terminverwaltung Tab -->
+    <div v-else-if="activeStaffTab === 'appointments'">
+      <h2>Terminverwaltung (IHK-Projekt)</h2>
+      <Appointments />
+    </div>
         <div v-else-if="activeStaffTab === 'tasks'">
           <div class="subtab-container">
             <button
@@ -303,6 +309,7 @@
 <script setup>
 import { ref, onMounted, computed, watch, onBeforeUnmount } from 'vue';
 import { useAuthStore } from './auth.js';
+import Appointments from './Appointments.vue';
 const API_BASE = '/api';
 const authStore = useAuthStore();
 const staffMembers = ref([]);

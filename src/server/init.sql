@@ -267,3 +267,43 @@ INSERT IGNORE INTO map_items (id, label, class, x, y, image, name, species, age,
 (8, 'Sturmi', 'voliere', 0.25, 0.70, '/image1.jpg', 'Sturmi', 'Weißstorch', '1 Jahr', 'Überwintert bei uns', 'recovered', '2025-10-01 14:00:00'),
 (9, 'Blitz', 'voliere', 0.50, 0.65, '/image1.jpg', 'Blitz', 'Wanderfalke', '2 Jahre', 'Kollision mit Glasscheibe', 'recovered', '2025-11-20 11:30:00'),
 (10, 'Hilde', 'teich', 0.75, 0.75, '/image1.jpg', 'Hilde', 'Graureiher', '3 Jahre', 'Angelschnur um Bein', 'in_treatment', '2026-01-11 14:00:00');
+
+-- Appointments (Terminverwaltungssystem - IHK Projekt)
+CREATE TABLE IF NOT EXISTS appointments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  description LONGTEXT,
+  appointment_date DATE NOT NULL,
+  appointment_time TIME NOT NULL,
+  end_time TIME,
+  category ENUM('behandlung', 'fuetterung', 'medikation', 'reinigung', 'auswilderung', 'kontrolle', 'sonstiges') DEFAULT 'sonstiges',
+  priority ENUM('niedrig', 'mittel', 'hoch', 'dringend') DEFAULT 'mittel',
+  status ENUM('geplant', 'in_bearbeitung', 'erledigt', 'abgesagt') DEFAULT 'geplant',
+  patient_id INT,
+  assigned_to VARCHAR(36),
+  recurring BOOLEAN DEFAULT FALSE,
+  recurring_interval ENUM('taeglich', 'woechentlich', 'monatlich') DEFAULT NULL,
+  notes LONGTEXT,
+  created_by VARCHAR(36),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE SET NULL
+);
+
+-- Appointments Testdaten
+INSERT IGNORE INTO appointments (id, title, description, appointment_date, appointment_time, end_time, category, priority, status, patient_id, assigned_to, recurring, recurring_interval, notes, created_by) VALUES
+(1, 'Flügelverband Rico wechseln', 'Verband am linken Flügel kontrollieren und erneuern', '2026-01-13', '08:00:00', '08:30:00', 'behandlung', 'hoch', 'geplant', 1, 'staff-1', FALSE, NULL, 'Vorsicht: Vogel ist noch sehr gestresst', 'admin-1'),
+(2, 'Morgenfütterung Greifvögel', 'Alle Greifvögel in den Volieren 1-4 füttern', '2026-01-13', '07:00:00', '08:00:00', 'fuetterung', 'mittel', 'geplant', NULL, 'staff-2', TRUE, 'taeglich', 'Futter im Kühlschrank vorbereitet', 'admin-1'),
+(3, 'Medikation Seeadler Adler', 'Antibiotika-Injektion verabreichen', '2026-01-13', '10:00:00', '10:15:00', 'medikation', 'dringend', 'geplant', 5, 'staff-1', TRUE, 'taeglich', 'Handschuhe tragen! Dosis: 2ml', 'admin-1'),
+(4, 'Voliere 3 reinigen', 'Grundreinigung der Eulenvoliere', '2026-01-13', '14:00:00', '15:30:00', 'reinigung', 'niedrig', 'geplant', NULL, 'staff-3', FALSE, NULL, NULL, 'admin-1'),
+(5, 'Kontrolluntersuchung Ella', 'Abschlusskontrolle vor Auswilderung', '2026-01-14', '09:00:00', '09:30:00', 'kontrolle', 'mittel', 'geplant', 2, 'staff-1', FALSE, NULL, 'Gewicht und Flugfähigkeit prüfen', 'admin-1'),
+(6, 'Auswilderung Ella', 'Schleiereule in Naturschutzgebiet entlassen', '2026-01-15', '16:00:00', '18:00:00', 'auswilderung', 'hoch', 'geplant', 2, 'staff-2', FALSE, NULL, 'Transport zum Naturschutzgebiet Schwansen', 'admin-1'),
+(7, 'Wundkontrolle Kranich Kroni', 'Heilungsfortschritt der Bleivergiftung überprüfen', '2026-01-13', '11:00:00', '11:30:00', 'behandlung', 'hoch', 'geplant', 4, 'staff-1', TRUE, 'woechentlich', 'Blutprobe für Labor vorbereiten', 'admin-1'),
+(8, 'Fütterung Wasservögel', 'Graureiher und Möwen am Teich füttern', '2026-01-13', '12:00:00', '12:30:00', 'fuetterung', 'mittel', 'geplant', NULL, 'staff-3', TRUE, 'taeglich', NULL, 'admin-1'),
+(9, 'Besprechung Wochenplanung', 'Team-Meeting für kommende Woche', '2026-01-13', '15:00:00', '16:00:00', 'sonstiges', 'mittel', 'geplant', NULL, 'admin-1', TRUE, 'woechentlich', 'Besprechungsraum reservieren', 'admin-1'),
+(10, 'Röntgenkontrolle Uhu Luna', 'Kontrollröntgen des heilenden Flügels', '2026-01-14', '10:00:00', '10:45:00', 'kontrolle', 'hoch', 'geplant', 7, 'staff-1', FALSE, NULL, 'Tierarzt Dr. Meier ist informiert', 'admin-1'),
+(11, 'Medikation Waldohreule Walli', 'Antibiotikabehandlung fortsetzen', '2026-01-13', '08:30:00', '08:45:00', 'medikation', 'dringend', 'geplant', 19, 'staff-2', TRUE, 'taeglich', 'Kritischer Patient - engmaschige Kontrolle', 'admin-1'),
+(12, 'Abendkontrolle alle Patienten', 'Rundgang und Sichtkontrolle aller Vögel', '2026-01-13', '19:00:00', '20:00:00', 'kontrolle', 'mittel', 'geplant', NULL, 'staff-3', TRUE, 'taeglich', NULL, 'admin-1'),
+(13, 'Gefieder-Pflege Korax', 'Gefieder bürsten und auf Parasiten prüfen', '2026-01-14', '14:00:00', '14:30:00', 'behandlung', 'niedrig', 'geplant', 16, 'staff-3', FALSE, NULL, NULL, 'admin-1'),
+(14, 'Neuzugang eingewöhnen', 'Neuer Patient angemeldet - Fundvogel', '2026-01-14', '11:00:00', '12:00:00', 'sonstiges', 'mittel', 'geplant', NULL, 'staff-1', FALSE, NULL, 'Quarantänestation vorbereiten', 'admin-1'),
+(15, 'Flugtraining Wanderfalke Blitz', 'Flugübungen in der Freiflugvoliere', '2026-01-15', '10:00:00', '11:00:00', 'behandlung', 'mittel', 'geplant', 9, 'staff-2', TRUE, 'woechentlich', 'Auswilderung in 2 Wochen geplant', 'admin-1');

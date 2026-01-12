@@ -810,3 +810,297 @@ app.delete('/api/products/:id', authenticateToken, async (req, res) => {
     res.status(500).json({ error: 'Fehler beim Löschen des Produkts' });
   }
 });
+
+// ============================================
+// TERMINVERWALTUNG API (IHK-Projekt)
+// ============================================
+
+// GET alle Termine (mit Filteroptionen)
+app.get('/api/appointments', authenticateToken, async (req, res) => {
+  if (!['admin', 'staff'].includes(req.user.role)) {
+    return res.status(403).json({ error: 'Keine Berechtigung' });
+  }
+  
+  const { date, week, month, year, status, category, assigned_to, patient_id } = req.query;
+  let query = `
+    SELECT a.*, 
+           p.name as patient_name, 
+           p.species as patient_species,
+           u.firstname as assigned_firstname,
+           u.lastname as assigned_lastname
+    FROM appointments a
+    LEFT JOIN patients p ON a.patient_id = p.id
+    LEFT JOIN users u ON a.assigned_to = u.id
+    WHERE 1=1
+  `;
+  const params = [];
+
+  if (date) {
+    query += ' AND a.appointment_date = ?';
+    params.push(date);
+  }
+  if (week) {
+    query += ' AND YEARWEEK(a.appointment_date, 1) = YEARWEEK(?, 1)';
+    params.push(week);
+  }
+  if (month && year) {
+    query += ' AND MONTH(a.appointment_date) = ? AND YEAR(a.appointment_date) = ?';
+    params.push(month, year);
+  }
+  if (status) {
+    query += ' AND a.status = ?';
+    params.push(status);
+  }
+  if (category) {
+    query += ' AND a.category = ?';
+    params.push(category);
+  }
+  if (assigned_to) {
+    query += ' AND a.assigned_to = ?';
+    params.push(assigned_to);
+  }
+  if (patient_id) {
+    query += ' AND a.patient_id = ?';
+    params.push(patient_id);
+  }
+
+  query += ' ORDER BY a.appointment_date ASC, a.appointment_time ASC';
+
+  try {
+    const [results] = await pool.query(query, params);
+    res.json(results);
+  } catch (err) {
+    console.error('Fehler beim Laden der Termine:', err);
+    res.status(500).json({ error: 'Fehler beim Laden der Termine' });
+  }
+});
+
+// GET einzelner Termin
+app.get('/api/appointments/:id', authenticateToken, async (req, res) => {
+  if (!['admin', 'staff'].includes(req.user.role)) {
+    return res.status(403).json({ error: 'Keine Berechtigung' });
+  }
+  
+  try {
+    const [results] = await pool.query(`
+      SELECT a.*, 
+             p.name as patient_name, 
+             p.species as patient_species,
+             u.firstname as assigned_firstname,
+             u.lastname as assigned_lastname
+      FROM appointments a
+      LEFT JOIN patients p ON a.patient_id = p.id
+      LEFT JOIN users u ON a.assigned_to = u.id
+      WHERE a.id = ?
+    `, [req.params.id]);
+    
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Termin nicht gefunden' });
+    }
+    res.json(results[0]);
+  } catch (err) {
+    console.error('Fehler beim Laden des Termins:', err);
+    res.status(500).json({ error: 'Fehler beim Laden des Termins' });
+  }
+});
+
+// POST neuer Termin
+app.post('/api/appointments', authenticateToken, async (req, res) => {
+  if (!['admin', 'staff'].includes(req.user.role)) {
+    return res.status(403).json({ error: 'Keine Berechtigung' });
+  }
+  
+  const { 
+    title, description, appointment_date, appointment_time, end_time,
+    category, priority, status, patient_id, assigned_to,
+    recurring, recurring_interval, notes 
+  } = req.body;
+
+  if (!title || !appointment_date || !appointment_time) {
+    return res.status(400).json({ error: 'Titel, Datum und Uhrzeit sind erforderlich' });
+  }
+
+  try {
+    const [result] = await pool.query(`
+      INSERT INTO appointments 
+      (title, description, appointment_date, appointment_time, end_time,
+       category, priority, status, patient_id, assigned_to,
+       recurring, recurring_interval, notes, created_by)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      title, description || null, appointment_date, appointment_time, end_time || null,
+      category || 'sonstiges', priority || 'mittel', status || 'geplant',
+      patient_id || null, assigned_to || null,
+      recurring || false, recurring_interval || null, notes || null, req.user.id
+    ]);
+    
+    res.status(201).json({ id: result.insertId, message: 'Termin erstellt' });
+  } catch (err) {
+    console.error('Fehler beim Erstellen des Termins:', err);
+    res.status(500).json({ error: 'Fehler beim Erstellen des Termins' });
+  }
+});
+
+// PUT Termin bearbeiten
+app.put('/api/appointments/:id', authenticateToken, async (req, res) => {
+  if (!['admin', 'staff'].includes(req.user.role)) {
+    return res.status(403).json({ error: 'Keine Berechtigung' });
+  }
+  
+  const { id } = req.params;
+  const { 
+    title, description, appointment_date, appointment_time, end_time,
+    category, priority, status, patient_id, assigned_to,
+    recurring, recurring_interval, notes 
+  } = req.body;
+
+  try {
+    const [result] = await pool.query(`
+      UPDATE appointments SET
+        title = ?, description = ?, appointment_date = ?, appointment_time = ?, end_time = ?,
+        category = ?, priority = ?, status = ?, patient_id = ?, assigned_to = ?,
+        recurring = ?, recurring_interval = ?, notes = ?
+      WHERE id = ?
+    `, [
+      title, description, appointment_date, appointment_time, end_time,
+      category, priority, status, patient_id || null, assigned_to || null,
+      recurring, recurring_interval, notes, id
+    ]);
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Termin nicht gefunden' });
+    }
+    res.json({ message: 'Termin aktualisiert' });
+  } catch (err) {
+    console.error('Fehler beim Aktualisieren des Termins:', err);
+    res.status(500).json({ error: 'Fehler beim Aktualisieren des Termins' });
+  }
+});
+
+// DELETE Termin löschen
+app.delete('/api/appointments/:id', authenticateToken, async (req, res) => {
+  if (!['admin', 'staff'].includes(req.user.role)) {
+    return res.status(403).json({ error: 'Keine Berechtigung' });
+  }
+  
+  try {
+    const [result] = await pool.query('DELETE FROM appointments WHERE id = ?', [req.params.id]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Termin nicht gefunden' });
+    }
+    res.json({ message: 'Termin gelöscht' });
+  } catch (err) {
+    console.error('Fehler beim Löschen des Termins:', err);
+    res.status(500).json({ error: 'Fehler beim Löschen des Termins' });
+  }
+});
+
+// GET Statistiken für Dashboard
+app.get('/api/appointments/stats/overview', authenticateToken, async (req, res) => {
+  if (!['admin', 'staff'].includes(req.user.role)) {
+    return res.status(403).json({ error: 'Keine Berechtigung' });
+  }
+  
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const [[todayCount]] = await pool.query(
+      'SELECT COUNT(*) as count FROM appointments WHERE appointment_date = ?', [today]
+    );
+    const [[pendingCount]] = await pool.query(
+      "SELECT COUNT(*) as count FROM appointments WHERE status = 'geplant'"
+    );
+    const [[urgentCount]] = await pool.query(
+      "SELECT COUNT(*) as count FROM appointments WHERE priority = 'dringend' AND status = 'geplant'"
+    );
+    
+    res.json({
+      today: todayCount.count,
+      pending: pendingCount.count,
+      urgent: urgentCount.count
+    });
+  } catch (err) {
+    console.error('Fehler beim Laden der Statistiken:', err);
+    res.status(500).json({ error: 'Fehler beim Laden der Statistiken' });
+  }
+});
+
+// GET Staff-Mitarbeiter für Zuweisung
+app.get('/api/staff-users', authenticateToken, async (req, res) => {
+  if (!['admin', 'staff'].includes(req.user.role)) {
+    return res.status(403).json({ error: 'Keine Berechtigung' });
+  }
+  
+  try {
+    const [results] = await pool.query(
+      "SELECT id, username, firstname, lastname FROM users WHERE role IN ('admin', 'staff')"
+    );
+    res.json(results);
+  } catch (err) {
+    console.error('Fehler beim Laden der Mitarbeiter:', err);
+    res.status(500).json({ error: 'Fehler beim Laden der Mitarbeiter' });
+  }
+});
+
+// CSV Export
+app.get('/api/appointments/export/csv', authenticateToken, async (req, res) => {
+  if (!['admin', 'staff'].includes(req.user.role)) {
+    return res.status(403).json({ error: 'Keine Berechtigung' });
+  }
+  
+  const { start_date, end_date } = req.query;
+  let query = `
+    SELECT a.id, a.title, a.description, a.appointment_date, a.appointment_time, 
+           a.end_time, a.category, a.priority, a.status, 
+           p.name as patient_name, u.firstname as assigned_firstname, u.lastname as assigned_lastname,
+           a.recurring, a.notes
+    FROM appointments a
+    LEFT JOIN patients p ON a.patient_id = p.id
+    LEFT JOIN users u ON a.assigned_to = u.id
+    WHERE 1=1
+  `;
+  const params = [];
+
+  if (start_date) {
+    query += ' AND a.appointment_date >= ?';
+    params.push(start_date);
+  }
+  if (end_date) {
+    query += ' AND a.appointment_date <= ?';
+    params.push(end_date);
+  }
+  query += ' ORDER BY a.appointment_date, a.appointment_time';
+
+  try {
+    const [results] = await pool.query(query, params);
+    
+    const headers = ['ID', 'Titel', 'Beschreibung', 'Datum', 'Startzeit', 'Endzeit', 
+                     'Kategorie', 'Priorität', 'Status', 'Patient', 'Zugewiesen an', 
+                     'Wiederkehrend', 'Notizen'];
+    
+    let csv = headers.join(';') + '\n';
+    results.forEach(row => {
+      csv += [
+        row.id,
+        `"${(row.title || '').replace(/"/g, '""')}"`,
+        `"${(row.description || '').replace(/"/g, '""')}"`,
+        row.appointment_date,
+        row.appointment_time,
+        row.end_time || '',
+        row.category,
+        row.priority,
+        row.status,
+        row.patient_name || '',
+        `${row.assigned_firstname || ''} ${row.assigned_lastname || ''}`.trim(),
+        row.recurring ? 'Ja' : 'Nein',
+        `"${(row.notes || '').replace(/"/g, '""')}"`
+      ].join(';') + '\n';
+    });
+    
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename=termine.csv');
+    res.send('\ufeff' + csv); // BOM für Excel
+  } catch (err) {
+    console.error('Fehler beim CSV-Export:', err);
+    res.status(500).json({ error: 'Fehler beim CSV-Export' });
+  }
+});
