@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 
 const username = ref('');
@@ -12,14 +12,38 @@ const message = ref('');
 const error = ref('');
 const router = useRouter();
 
+// Passwort-Validierung
+const passwordErrors = computed(() => {
+  const errors = [];
+  if (password.value.length > 0) {
+    if (password.value.length < 8) errors.push('Min. 8 Zeichen');
+    if (!/[A-Z]/.test(password.value)) errors.push('Ein Großbuchstabe');
+    if (!/[a-z]/.test(password.value)) errors.push('Ein Kleinbuchstabe');
+    if (!/[0-9]/.test(password.value)) errors.push('Eine Zahl');
+  }
+  return errors;
+});
+
+const passwordValid = computed(() => passwordErrors.value.length === 0 && password.value.length >= 8);
+
 const register = async () => {
 
   error.value = '';
   message.value = '';
   
+  // Frontend Validierung
+  if (!passwordValid.value) {
+    error.value = 'Passwort erfüllt nicht die Anforderungen.';
+    return;
+  }
 
   if (password.value !== confirmPassword.value) {
     error.value = 'Die Passwörter stimmen nicht überein.';
+    return;
+  }
+  
+  if (username.value.length < 3 || username.value.length > 30) {
+    error.value = 'Benutzername muss 3-30 Zeichen lang sein.';
     return;
   }
 
@@ -56,8 +80,14 @@ const register = async () => {
   <div class="register">
     <h1>Registrierung</h1>
     <form @submit.prevent="register">
-      <input v-model="username" type="text" placeholder="Benutzername" required />
-      <input v-model="password" type="password" placeholder="Passwort" required />
+      <input v-model="username" type="text" placeholder="Benutzername (3-30 Zeichen)" required minlength="3" maxlength="30" />
+      <input v-model="password" type="password" placeholder="Passwort" required minlength="8" />
+      <div v-if="password.length > 0" class="password-requirements">
+        <span :class="{ valid: password.length >= 8 }">✓ Min. 8 Zeichen</span>
+        <span :class="{ valid: /[A-Z]/.test(password) }">✓ Großbuchstabe</span>
+        <span :class="{ valid: /[a-z]/.test(password) }">✓ Kleinbuchstabe</span>
+        <span :class="{ valid: /[0-9]/.test(password) }">✓ Zahl</span>
+      </div>
       <input v-model="confirmPassword" type="password" placeholder="Passwort wiederholen" required />
       <input v-model="firstname" type="text" placeholder="Vorname" required />
       <input v-model="lastname" type="text" placeholder="Nachname" required />
@@ -150,5 +180,26 @@ select {
 
 .submit:hover {
   background-color: #083330;
+}
+
+.password-requirements {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.8rem;
+  width: 100%;
+}
+
+.password-requirements span {
+  color: #c62828;
+  padding: 0.2rem 0.5rem;
+  background: #ffebee;
+  border-radius: 4px;
+}
+
+.password-requirements span.valid {
+  color: #2e7d32;
+  background: #e8f5e9;
 }
 </style>

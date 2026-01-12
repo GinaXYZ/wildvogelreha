@@ -5,8 +5,18 @@ const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const validator = require('validator');
+
 const saltRounds = 10;
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_for_development_only_2024!';
+
+// JWT_SECRET MUSS in .env gesetzt sein - kein unsicherer Fallback!
+if (!process.env.JWT_SECRET) {
+  console.error('FATAL: JWT_SECRET nicht in Umgebungsvariablen gesetzt!');
+  process.exit(1);
+}
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST || '127.0.0.1',
@@ -15,6 +25,29 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'shop',
 });
+
+// Passwort-Validierung
+function validatePassword(password) {
+  if (!password || password.length < 8) {
+    return { valid: false, error: 'Passwort muss mindestens 8 Zeichen lang sein' };
+  }
+  if (!/[A-Z]/.test(password)) {
+    return { valid: false, error: 'Passwort muss mindestens einen Großbuchstaben enthalten' };
+  }
+  if (!/[a-z]/.test(password)) {
+    return { valid: false, error: 'Passwort muss mindestens einen Kleinbuchstaben enthalten' };
+  }
+  if (!/[0-9]/.test(password)) {
+    return { valid: false, error: 'Passwort muss mindestens eine Zahl enthalten' };
+  }
+  return { valid: true };
+}
+
+// Input Sanitization
+function sanitizeInput(input) {
+  if (typeof input !== 'string') return input;
+  return validator.escape(validator.trim(input));
+}
 
 function authenticateToken(req, res, next) {
   const authHeader = req.headers.authorization;
@@ -31,15 +64,50 @@ function authenticateToken(req, res, next) {
 
 const app = express();
 
+// Security Headers mit Helmet
+app.use(helmet({
+  contentSecurityPolicy: false, // Für Vue SPA deaktivieren
+  crossOriginEmbedderPolicy: false
+}));
+
+// Rate Limiting - Allgemein
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 Minuten
+  max: 100, // Max 100 Requests pro IP
+  message: { error: 'Zu viele Anfragen, bitte später erneut versuchen' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Rate Limiting - Login (strenger)
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 Minuten
+  max: 5, // Max 5 Login-Versuche
+  message: { error: 'Zu viele Login-Versuche, bitte 15 Minuten warten' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Rate Limiting - Registrierung
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 Stunde
+  max: 3, // Max 3 Registrierungen pro Stunde
+  message: { error: 'Zu viele Registrierungen, bitte später erneut versuchen' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 app.use(cors({
   origin: ['http://localhost:5173', 'http://localhost:80', 'http://ginaxyz.site', 'https://ginaxyz.site', 'http://0.0.0.0:80'],
   methods: ['GET', 'POST', 'PUT', 'DELETE']
 }));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' })); // Limit request body size
+app.use(generalLimiter); // Allgemeines Rate Limiting
 
 app.listen(3000, '0.0.0.0', () => {
   console.log('API läuft auf http://0.0.0.0:3000');
   console.log('DB Host:', process.env.DB_HOST);
+  console.log('Security: Helmet, Rate Limiting aktiv');
 });
 
 app.get('/api/blog', async (req, res) => {
@@ -104,19 +172,41 @@ app.delete('/api/blog/:id',authenticateToken, async (req, res) => {
 });
 
 
-app.post('/api/register', async (req, res) => {
+app.post('/api/register', registerLimiter, async (req, res) => {
   const { username, password, firstname, lastname, email } = req.body;
   if (!username || !password || !firstname || !lastname || !email) {
     return res.status(400).json({ error: 'Alle Felder (Benutzername, Passwort, Vorname, Nachname, E-Mail) sind erforderlich' });
   }
+  
+  // E-Mail Validierung
+  if (!validator.isEmail(email)) {
+    return res.status(400).json({ error: 'Ungültige E-Mail-Adresse' });
+  }
+  
+  // Benutzername Validierung (alphanumerisch, 3-30 Zeichen)
+  if (!validator.isAlphanumeric(username) || username.length < 3 || username.length > 30) {
+    return res.status(400).json({ error: 'Benutzername muss 3-30 alphanumerische Zeichen sein' });
+  }
+  
+  // Passwort Validierung
+  const pwValidation = validatePassword(password);
+  if (!pwValidation.valid) {
+    return res.status(400).json({ error: pwValidation.error });
+  }
+  
   const assignedRole = 'customer';
   const id = uuidv4();
-  const hashedPassword = await bcrypt.hash(password, 10);
+  const hashedPassword = await bcrypt.hash(password, saltRounds);
+  
+  // Sanitize inputs
+  const safeFirstname = sanitizeInput(firstname);
+  const safeLastname = sanitizeInput(lastname);
+  
   const query = `
     INSERT INTO users (id, username, password, firstname, lastname, email, role) 
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
-  const values = [id, username, hashedPassword, firstname, lastname, email, assignedRole];
+  const values = [id, username, hashedPassword, safeFirstname, safeLastname, email, assignedRole];
   try {
     await pool.query(query, values);
     res.status(201).json({ message: 'Benutzer erfolgreich registriert', id });
@@ -129,7 +219,7 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
-app.post('/api/login',async (req, res) => {
+app.post('/api/login', loginLimiter, async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
     return res.status(400).json({ error: 'Benutzername und Passwort sind erforderlich' });
