@@ -106,8 +106,8 @@ app.use(helmet({
 }));
 
 // Static file serving for images from public directory
-// In Docker: public folder is mounted at /app/public
-app.use('/api/images', express.static(path.join(__dirname, '../../public')));
+// In Docker: public folder is mounted at /app/public (server.js is in /app)
+app.use('/api/images', express.static(path.join(__dirname, 'public')));
 
 // Rate Limiting - Allgemein
 const generalLimiter = rateLimit({
