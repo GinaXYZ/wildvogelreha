@@ -180,12 +180,45 @@ const newBirds = [
 <style scoped>
 .home-main-row {
   display: grid;
-  grid-template-columns: minmax(120px, 150px) 1fr minmax(120px, 150px);
+  grid-template-columns: minmax(120px, 180px) 1fr minmax(120px, 180px);
   align-items: flex-start;
-  gap: 2rem;
+  gap: 1.5rem;
   width: 100%;
   max-width: 1200px;
   margin: 10rem auto 2rem auto;
+  padding: 0 1rem;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1024px) {
+  .home-main-row {
+    grid-template-columns: 1fr 1fr;
+    margin-top: 12rem;
+  }
+  .slideshow-center {
+    grid-column: 1 / -1;
+    order: -1;
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .home-main-row {
+    grid-template-columns: 1fr;
+    margin-top: 14rem;
+    gap: 1rem;
+  }
+  .blogposts-container,
+  .donation-table-container {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-main-row {
+    margin-top: 16rem;
+    padding: 0 0.5rem;
+  }
 }
 .slideshow-center {
   grid-column: 2;
@@ -263,11 +296,12 @@ const newBirds = [
 }
 .newBirds {
   display: grid;
-  grid-template-columns: repeat(3, minmax(300px, 1fr));
-  gap: 2rem;
-  padding: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  padding: 1.5rem;
   border-radius: 8px;
-  width: 65%;
+  width: 90%;
+  max-width: 1000px;
   min-height: 180px;
   margin: 1rem auto;
   place-items: center;
@@ -275,6 +309,23 @@ const newBirds = [
   border-radius: 24px;
   justify-items: center;
   justify-content: center;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .newBirds {
+    grid-template-columns: repeat(2, 1fr);
+    width: 95%;
+    gap: 1rem;
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .newBirds {
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
 }
 .bird-link {
   display: flex;
@@ -302,10 +353,20 @@ const newBirds = [
   display: block;
   width: 100%; 
   max-width: 250px; 
-  height: 250px; 
+  height: 0;
+  padding-bottom: 100%; /* 1:1 aspect ratio */
   margin: 0 auto;
   overflow: hidden;
-   border-radius: 8px;
+  border-radius: 8px;
+}
+
+.bird-img-wrapper .bird-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .news-overlay {
   position: absolute;

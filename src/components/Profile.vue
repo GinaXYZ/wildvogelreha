@@ -266,4 +266,35 @@ const updateOrderStatus = async (order) => {
 .status-square.black {
   background: #000000;
 }
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .profile {
+    padding: 1rem;
+    margin: 14rem auto 2rem auto;
+    width: 95%;
+  }
+  .tabs {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .tabs button {
+    padding: 0.4rem 1rem;
+    font-size: 0.9rem;
+  }
+  .order-box {
+    padding: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile {
+    margin-top: 16rem;
+    padding: 0.5rem;
+  }
+  .tabs button {
+    padding: 0.3rem 0.7rem;
+    font-size: 0.8rem;
+  }
+}
 </style>

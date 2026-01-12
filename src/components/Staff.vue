@@ -1362,4 +1362,82 @@ function shortName(name) {
   cursor: pointer;
   font-weight: bold;
 }
+
+/* Responsive Styles for Staff Component */
+@media (max-width: 1024px) {
+  .staff-content {
+    width: 95%;
+    padding: 1rem;
+  }
+  .contacts-table,
+  .patients-table,
+  .donations-table {
+    font-size: 0.95rem;
+  }
+  .schedule-table {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .staff-menu {
+    gap: 0.5rem;
+  }
+  .staff-menu button {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+  }
+  .staff-content {
+    width: 100%;
+    padding: 0.5rem;
+  }
+  .contacts-table,
+  .patients-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .contacts-table th,
+  .contacts-table td,
+  .patients-table th,
+  .patients-table td {
+    padding: 0.5rem 0.3rem;
+    font-size: 0.85rem;
+  }
+  .week-calendar {
+    max-width: 100%;
+  }
+  .schedule-table {
+    font-size: 0.75rem;
+  }
+  .time-header,
+  .day-header {
+    padding: 0.3rem;
+    font-size: 0.75rem;
+  }
+  .schedule-cell {
+    height: 50px;
+  }
+  .staff-assignment {
+    font-size: 0.6rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .staff-menu {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .staff-menu button {
+    width: 100%;
+    text-align: center;
+  }
+  .pagination {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .donations-table {
+    width: 100%;
+  }
+}
 </style>

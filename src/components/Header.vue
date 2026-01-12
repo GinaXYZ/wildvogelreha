@@ -237,4 +237,74 @@ transform: scale(1.1);
 .header.compact .logo {
   height: 25px; 
 }
+
+/* Responsive Styles */
+@media (max-width: 1024px) {
+  .header {
+    padding: 1.5rem 1rem;
+    flex-wrap: wrap;
+  }
+  .nav {
+    gap: 0.5rem;
+  }
+  .nav-link {
+    font-size: 1.1rem;
+  }
+  .title {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: 1rem 0.5rem;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .logo-and-title {
+    width: 100%;
+    justify-content: center;
+  }
+  .nav {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+  .nav-link {
+    font-size: 0.9rem;
+    padding: 0.3rem 0.5rem;
+  }
+  .user-actions {
+    width: 100%;
+    justify-content: center;
+  }
+  .title {
+    font-size: 1rem;
+  }
+  .logo {
+    height: 28px;
+  }
+  .login-button {
+    margin-right: 0;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding: 0.5rem;
+  }
+  .nav-link {
+    font-size: 0.8rem;
+    padding: 0.2rem 0.4rem;
+  }
+  .title {
+    font-size: 0.85rem;
+  }
+  .logo {
+    height: 22px;
+  }
+}
 </style>;

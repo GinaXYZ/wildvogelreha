@@ -1,17 +1,64 @@
-body {
-    margin: 0;
-    padding: 0;
-  }
-  @media (max-width: 600px) {
-  h1 { font-size: 1.5rem; }
-  h2 { font-size: 1.2rem; }
-  h3 { font-size: 1rem; }
-  p, li, label, input, button { font-size: 1rem; }
+* {
+  box-sizing: border-box;
 }
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-width: 320px;
+  overflow-x: hidden;
+}
+
 :root {
   --main-color: #0c4b47;
   --accent-color: #2196f3;
   --danger-color: #f44336;
   --border-radius: 8px;
   --font-main: 'Helvetica', sans-serif;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 2rem;
+}
+
+/* Responsive Typography */
+@media (max-width: 768px) {
+  html {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 600px) {
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.2rem; }
+  h3 { font-size: 1rem; }
+  p, li, label, input, button { font-size: 1rem; }
+}
+
+/* Utility classes */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.text-center {
+  text-align: center;
 }

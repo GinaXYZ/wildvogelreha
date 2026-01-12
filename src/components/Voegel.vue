@@ -921,6 +921,7 @@ onBeforeUnmount(() => {
 @media (max-width: 640px) {
   .main-layout {
     padding: 0 0.5rem;
+    margin-top: 14rem;
   }
   .map-container {
     border-radius: 0; 
@@ -932,8 +933,30 @@ onBeforeUnmount(() => {
     border-left: none;
     border-right: none;
   }
-  .admin-panel{
-    max-width: 100%; 
+  .admin-panel {
+    max-width: 100%;
+    padding: 1rem;
+  }
+  .add-btn {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+  }
+  .bird-tooltip {
+    max-width: 280px;
+    padding: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-layout {
+    margin-top: 16rem;
+  }
+  .map-item {
+    width: 35px;
+    height: 35px;
+  }
+  .item-label {
+    font-size: 0.65rem;
   }
 }
 </style>

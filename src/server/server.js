@@ -673,8 +673,19 @@ app.get('/api/contacts', authenticateToken, async (req, res) => {
   const limit = parseInt(req.query.limit) || 20;
   const offset = (page - 1) * limit;
   try {
+    // Sortiert: "neu" zuerst, dann "notfall", dann nach Datum
     const [results] = await pool.query(
-      'SELECT * FROM contacts ORDER BY created_at DESC LIMIT ? OFFSET ?',
+      `SELECT * FROM contacts ORDER BY 
+        CASE status 
+          WHEN 'neu' THEN 1 
+          WHEN 'new' THEN 1
+          WHEN 'notfall' THEN 2 
+          WHEN 'Wichtig' THEN 3 
+          WHEN 'Mittel' THEN 4 
+          WHEN 'niedrig' THEN 5 
+          WHEN 'fertig' THEN 6 
+          ELSE 7 
+        END, created_at DESC LIMIT ? OFFSET ?`,
       [limit, offset]
     );
     const [[{ count }]] = await pool.query('SELECT COUNT(*) as count FROM contacts');

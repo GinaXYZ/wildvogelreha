@@ -348,4 +348,19 @@ textarea {
   background-color: #f44336;
   color: white;
 }
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .posts-container {
+    gap: 1rem;
+  }
+  .blog-post {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+  .create-post-form input,
+  .create-post-form textarea {
+    font-size: 1rem;
+  }
+}
 </style>
