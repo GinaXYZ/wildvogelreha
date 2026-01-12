@@ -106,12 +106,13 @@ const headerStyle = computed(() => ({
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 2.8rem 1rem;
+  padding: 2.8rem 1.5rem;
   background-size: cover;
   background-position: top center;
   background-repeat: no-repeat;
   transition: all 0.2s ease-in-out;
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+  gap: 1rem;
 }
 .main-content, .home-main-row {
   margin-top: 64px; 
@@ -119,12 +120,15 @@ const headerStyle = computed(() => ({
 .user-actions {
   display: flex;
   align-items: center;
-  gap: 1rem; 
+  gap: 1rem;
+  flex-shrink: 0;
 }
 .logo-and-title {
   display: flex;
   align-items: center; 
   gap: 0.5rem;
+  flex-shrink: 0;
+  min-width: max-content;
 }
 .header.compact .nav-link {
   font-size: 1rem;
@@ -145,11 +149,11 @@ const headerStyle = computed(() => ({
   align-items: center;
   justify-content: center;
   flex-wrap: nowrap;
-  overflow-x: auto;
   white-space: nowrap;
-  flex-grow: 1;
-  gap: 1rem;
-  margin: 0;
+  flex: 1 1 auto;
+  gap: 1.2rem;
+  margin: 0 1rem;
+  min-width: 0;
 }
 .nav::-webkit-scrollbar {
   height: 6px; 
@@ -239,19 +243,41 @@ transform: scale(1.1);
 }
 
 /* Responsive Styles */
+@media (max-width: 1200px) {
+  .title {
+    font-size: 1.1rem;
+  }
+  .nav-link {
+    font-size: 1.1rem;
+  }
+  .nav {
+    gap: 0.8rem;
+  }
+}
+
 @media (max-width: 1024px) {
   .header {
     padding: 1.5rem 1rem;
     flex-wrap: wrap;
   }
+  .logo-and-title {
+    order: 1;
+  }
+  .user-actions {
+    order: 2;
+  }
   .nav {
-    gap: 0.5rem;
+    order: 3;
+    width: 100%;
+    margin: 0.5rem 0 0 0;
+    gap: 0.8rem;
+    flex-wrap: wrap;
   }
   .nav-link {
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
   .title {
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
 }
 
