@@ -97,6 +97,9 @@ const registerLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Trust proxy für Rate Limiting hinter nginx
+app.set('trust proxy', 1);
+
 app.use(cors({
   origin: ['http://localhost:5173', 'http://localhost:80', 'http://ginaxyz.site', 'https://ginaxyz.site', 'http://0.0.0.0:80'],
   methods: ['GET', 'POST', 'PUT', 'DELETE']
