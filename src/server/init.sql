@@ -255,15 +255,15 @@ INSERT IGNORE INTO patients (id, name, species, status, admission_date, details,
 (19, 'Walli', 'Waldohreule', 'critical', '2026-01-10', 'Schwere Infektion. Intensivpflege.', '2026-01-10 09:00:00'),
 (20, 'Möwe', 'Silbermöwe', 'in_treatment', '2026-01-04', 'Ölverschmutzung. Wird gereinigt.', '2026-01-04 16:00:00');
 
--- Map Items (Vogelkarte/Stationsübersicht)
+-- Map Items (Vogelkarte/Stationsübersicht) - x,y sind relative Positionen 0.0-1.0
 INSERT IGNORE INTO map_items (id, label, class, x, y, image, name, species, age, description, status, created_at) VALUES
-(1, 'Voliere 1', 'voliere', 54.523410, 9.954230, NULL, 'Rico', 'Rotmilan', '3 Jahre', 'Großvoliere für Greifvögel', 'occupied', '2026-01-02 14:30:00'),
-(2, 'Voliere 2', 'voliere', 54.523520, 9.954350, NULL, 'Ella', 'Schleiereule', '2 Jahre', 'Nachtvogelvoliere', 'occupied', '2025-12-15 09:00:00'),
-(3, 'Intensivstation', 'station', 54.523300, 9.954100, NULL, 'Adler', 'Seeadler', '5 Jahre', 'Kritische Fälle', 'occupied', '2026-01-12 08:30:00'),
-(4, 'Voliere 3', 'voliere', 54.523630, 9.954470, NULL, 'Luna', 'Uhu', '4 Jahre', 'Große Eulenvoliere', 'occupied', '2026-01-08 10:00:00'),
-(5, 'Aufzuchtstation', 'station', 54.523200, 9.954000, NULL, NULL, NULL, NULL, 'Für Jungvögel', 'available', '2026-01-01 08:00:00'),
-(6, 'Voliere 4', 'voliere', 54.523740, 9.954590, NULL, 'Kroni', 'Kranich', '2 Jahre', 'Großvogelvoliere', 'occupied', '2025-12-20 08:45:00'),
-(7, 'Quarantäne', 'station', 54.523100, 9.953900, NULL, 'Greif', 'Habicht', '3 Jahre', 'Isolierstation', 'occupied', '2026-01-09 12:00:00'),
-(8, 'Voliere 5', 'voliere', 54.523850, 9.954710, NULL, 'Sturmi', 'Weißstorch', '1 Jahr', 'Storchvoliere', 'occupied', '2025-10-01 14:00:00'),
-(9, 'Freiflugvoliere', 'voliere', 54.523960, 9.954830, NULL, 'Blitz', 'Wanderfalke', '2 Jahre', 'Trainingsvoliere', 'occupied', '2025-11-20 11:30:00'),
-(10, 'Teich', 'teich', 54.524070, 9.954950, NULL, 'Hilde', 'Graureiher', '3 Jahre', 'Wasservogelbereich', 'occupied', '2026-01-11 14:00:00');
+(1, 'Rico', 'voliere', 0.15, 0.20, '/image1.jpg', 'Rico', 'Rotmilan', '3 Jahre', 'Flügelverletzung, wird behandelt', 'in_treatment', '2026-01-02 14:30:00'),
+(2, 'Ella', 'voliere', 0.35, 0.15, '/image1.jpg', 'Ella', 'Schleiereule', '2 Jahre', 'Unterernährt aufgefunden', 'recovered', '2025-12-15 09:00:00'),
+(3, 'Adler', 'station', 0.55, 0.25, '/image1.jpg', 'Adler', 'Seeadler', '5 Jahre', 'Intensivbehandlung', 'critical', '2026-01-12 08:30:00'),
+(4, 'Luna', 'voliere', 0.75, 0.20, '/image1.jpg', 'Luna', 'Uhu', '4 Jahre', 'Flügelbruch, Reha läuft', 'in_treatment', '2026-01-08 10:00:00'),
+(5, 'Aufzucht', 'station', 0.20, 0.45, '/image1.jpg', NULL, NULL, NULL, 'Aufzuchtstation für Jungvögel', 'available', '2026-01-01 08:00:00'),
+(6, 'Kroni', 'voliere', 0.45, 0.40, '/image1.jpg', 'Kroni', 'Kranich', '2 Jahre', 'Bleivergiftung, Langzeitbehandlung', 'in_treatment', '2025-12-20 08:45:00'),
+(7, 'Greif', 'station', 0.65, 0.50, '/image1.jpg', 'Greif', 'Habicht', '3 Jahre', 'Vergiftungsverdacht, Quarantäne', 'in_treatment', '2026-01-09 12:00:00'),
+(8, 'Sturmi', 'voliere', 0.25, 0.70, '/image1.jpg', 'Sturmi', 'Weißstorch', '1 Jahr', 'Überwintert bei uns', 'recovered', '2025-10-01 14:00:00'),
+(9, 'Blitz', 'voliere', 0.50, 0.65, '/image1.jpg', 'Blitz', 'Wanderfalke', '2 Jahre', 'Kollision mit Glasscheibe', 'recovered', '2025-11-20 11:30:00'),
+(10, 'Hilde', 'teich', 0.75, 0.75, '/image1.jpg', 'Hilde', 'Graureiher', '3 Jahre', 'Angelschnur um Bein', 'in_treatment', '2026-01-11 14:00:00');
