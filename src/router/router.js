@@ -3,7 +3,7 @@ import Home from '../components/Home.vue';
 import AboutUs from '../components/AboutUs.vue'; 
 import AppLayout from '../components/AppLayout.vue';
 import Shop from '../components/Shop.vue';
-import Cart from '../components/Cart.vue'; 
+import Cart from '../components/cart.vue'; 
 import Voegel from '../components/Voegel.vue';
 import Blog from '../components/Blog.vue';
 import Spenden from '../components/Spenden.vue';
