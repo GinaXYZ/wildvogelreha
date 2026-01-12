@@ -1,8 +1,8 @@
 <template>
   <div :class="['top-section', { compact: isCompact }]">
-    <header :class="['header', { compact: isCompact }]">
+    <header :class="['header', { compact: isCompact }]" :style="headerStyle">
       <div class="logo-and-title">
-        <img src="C:\Users\Georg\source\repos\Wildvogelreha\src\assets\Logo_Website-removebg-preview.png" alt="Logo" class="logo" />
+        <img :src="Logo" alt="Logo" class="logo" />
         <router-link class="title" to="/">Wildvogel Rehastation Waabs e.V.</router-link>
       </div>
       <nav class="nav">
@@ -33,11 +33,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import Logo from '../assets/Logo_Website-removebg-preview.png'
+import HeaderBg from '../assets/pexels-markusspiske-113338.jpg'
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { cart } from './cartState.js';
 import { useAuthStore } from './auth.js';
 import { useRouter } from 'vue-router';
-import { computed } from 'vue';
 
 const authStore = useAuthStore();
 const router = useRouter();
@@ -70,8 +71,12 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll);
 });
+
+const headerStyle = computed(() => ({
+  backgroundImage: `linear-gradient(to top, rgba(255,255,255,0.9), rgba(255,255,255,0)), url(${HeaderBg})`
+}));
 </script>
- 
+
 <style scoped>
 .top-section {
   background-size: contain;
@@ -102,9 +107,6 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 2.8rem 1rem;
-  background-image: 
-    linear-gradient(to top, rgba(255,255,255,0.9), rgba(255,255,255,0)),
-    url('C:\Users\Georg\source\repos\Wildvogelreha\src\assets\pexels-markusspiske-113338.jpg');
   background-size: cover;
   background-position: top center;
   background-repeat: no-repeat;

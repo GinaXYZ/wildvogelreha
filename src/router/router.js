@@ -1,18 +1,16 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Home from '../components/Home.vue';
-import AboutUs from '../components/AbousUs.vue'; 
+import AboutUs from '../components/AboutUs.vue'; 
 import AppLayout from '../components/AppLayout.vue';
 import Shop from '../components/Shop.vue';
-import Cart from '../components/cart.vue'; 
+import Cart from '../components/Cart.vue'; 
 import Voegel from '../components/Voegel.vue';
 import Blog from '../components/Blog.vue';
 import Spenden from '../components/Spenden.vue';
 import Login from '../components/Login.vue';
 import Profile from '../components/Profile.vue';
 import Register from '../components/Register.vue';
-import Category from '../components/Shop.vue';
 import Checkout from '../components/Checkout.vue';
-import Orders from '../components/Checkout.vue';
 import Contact from '../components/Contact.vue';
 
 const routes = [

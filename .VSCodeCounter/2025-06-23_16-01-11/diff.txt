@@ -1,0 +1,39 @@
+Date : 2025-06-23 16:01:11
+Directory : c:\Users\Georg\source\repos\Wildvogelreha
+Total : 10 files,  571 codes, -9 comments, 46 blanks, all 608 lines
+
+Languages
++------------+------------+------------+------------+------------+------------+
+| language   | files      | code       | comment    | blank      | total      |
++------------+------------+------------+------------+------------+------------+
+| vue        |          7 |        465 |          0 |         27 |        492 |
+| JavaScript |          1 |         92 |         -9 |         19 |        102 |
+| JSON       |          2 |         14 |          0 |          0 |         14 |
++------------+------------+------------+------------+------------+------------+
+
+Directories
++------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                   | files      | code       | comment    | blank      | total      |
++------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                      |         10 |        571 |         -9 |         46 |        608 |
+| . (Files)                                                              |          2 |         14 |          0 |          0 |         14 |
+| src                                                                    |          8 |        557 |         -9 |         46 |        594 |
+| src\components                                                         |          8 |        557 |         -9 |         46 |        594 |
++------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| filename                                                               | language   | code       | comment    | blank      | total      |
++------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| c:\Users\Georg\source\repos\Wildvogelreha\package-lock.json            | JSON       |         13 |          0 |          0 |         13 |
+| c:\Users\Georg\source\repos\Wildvogelreha\package.json                 | JSON       |          1 |          0 |          0 |          1 |
+| c:\Users\Georg\source\repos\Wildvogelreha\src\components\Blog.vue      | vue        |          0 |          0 |         -1 |         -1 |
+| c:\Users\Georg\source\repos\Wildvogelreha\src\components\Checkout.vue  | vue        |          2 |          0 |          0 |          2 |
+| c:\Users\Georg\source\repos\Wildvogelreha\src\components\Contact.vue   | vue        |          6 |          0 |          1 |          7 |
+| c:\Users\Georg\source\repos\Wildvogelreha\src\components\Shop.vue      | vue        |        143 |          0 |          4 |        147 |
+| c:\Users\Georg\source\repos\Wildvogelreha\src\components\ShopEmbed.vue | vue        |          1 |          0 |          0 |          1 |
+| c:\Users\Georg\source\repos\Wildvogelreha\src\components\Staff.vue     | vue        |        394 |          0 |         24 |        418 |
+| c:\Users\Georg\source\repos\Wildvogelreha\src\components\Voegel.vue    | vue        |        -81 |          0 |         -1 |        -82 |
+| c:\Users\Georg\source\repos\Wildvogelreha\src\components\server.js     | JavaScript |         92 |         -9 |         19 |        102 |
+| Total                                                                  |            |        571 |         -9 |         46 |        608 |
++------------------------------------------------------------------------+------------+------------+------------+------------+------------+

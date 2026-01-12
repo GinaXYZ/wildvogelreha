@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useAuthStore } from 'C:/Users/Georg/source/repos/Wildvogelreha/src/components/auth.js';
+import { useAuthStore } from './auth.js';
 
 const authStore = useAuthStore();
 const message = ref('');
