@@ -56,10 +56,44 @@ function authenticateToken(req, res, next) {
   }
   const token = authHeader.split(' ')[1];
   jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ error: 'Bitte erst anmelden.' });
+    if (err) {
+      // Token abgelaufen vs. ungültig unterscheiden
+      if (err.name === 'TokenExpiredError') {
+        return res.status(401).json({ error: 'Token abgelaufen', code: 'TOKEN_EXPIRED' });
+      }
+      return res.status(403).json({ error: 'Bitte erst anmelden.' });
+    }
     req.user = user;
     next();
   });
+}
+
+// Middleware: Nur Staff/Admin
+function requireStaff(req, res, next) {
+  if (!['admin', 'staff'].includes(req.user.role)) {
+    return res.status(403).json({ error: 'Keine Berechtigung' });
+  }
+  next();
+}
+
+// Middleware: Nur Admin
+function requireAdmin(req, res, next) {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Nur Admins haben Zugriff' });
+  }
+  next();
+}
+
+// Audit-Log Funktion
+async function logAudit(action, entityType, entityId, userId, details = null) {
+  try {
+    await pool.query(
+      'INSERT INTO audit_logs (id, action, entity_type, entity_id, user_id, details, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())',
+      [uuidv4(), action, entityType, entityId, userId, details ? JSON.stringify(details) : null]
+    );
+  } catch (err) {
+    console.error('Audit-Log Fehler:', err.message);
+  }
 }
 
 const app = express();
@@ -114,40 +148,50 @@ app.listen(3000, '0.0.0.0', () => {
 });
 
 app.get('/api/blog', async (req, res) => {
-  const query = `
-    SELECT id, title, content, imageUrl, category, author, date 
-    FROM blog_posts 
-    ORDER BY date DESC
-  `;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 50;
+  const offset = (page - 1) * limit;
+  
   try {
-    const [results] = await pool.query(query);
-    res.json(results);
+    const [results] = await pool.query(`
+      SELECT id, title, content, imageUrl, category, author, date 
+      FROM blog_posts 
+      WHERE deleted_at IS NULL
+      ORDER BY date DESC
+      LIMIT ? OFFSET ?
+    `, [limit, offset]);
+    const [[{ count }]] = await pool.query('SELECT COUNT(*) as count FROM blog_posts WHERE deleted_at IS NULL');
+    res.json({ results, count, page, limit });
   } catch (err) {
     console.error('Fehler beim Abrufen der Blog-Einträge:', err);
     res.status(500).json({ error: 'Fehler beim Abrufen der Blog-Einträge' });
   }
 });
 
-app.post('/api/blog', authenticateToken,async (req, res) => {
-  if (!['admin', 'staff'].includes(req.user.role)) {
-    return res.status(403).json({ error: 'Keine Berechtigung für Blog-Posts' });
-  }
-
+app.post('/api/blog', authenticateToken, requireStaff, async (req, res) => {
   const { title, content, imageUrl, category, author } = req.body;
   
   if (!title || !content) {
     return res.status(400).json({ error: 'Titel und Inhalt sind erforderlich' });
   }
+  
+  // Sanitize Inputs
+  const safeTitle = sanitizeInput(title);
+  const safeContent = sanitizeInput(content);
+  const safeAuthor = sanitizeInput(author || req.user.username);
+  const safeCategory = category ? sanitizeInput(category) : null;
+  
   const id = uuidv4();
   const date = new Date().toISOString().slice(0, 19).replace('T', ' ');
   const query = `
     INSERT INTO blog_posts (id, title, content, imageUrl, category, author, date)
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
-  const values = [id, title, content, imageUrl || null, category || null, author, date];
+  const values = [id, safeTitle, safeContent, imageUrl || null, safeCategory, safeAuthor, date];
   try {
     await pool.query(query, values);
-    const newPost = { id, title, content, imageUrl, category, author, date };
+    await logAudit('CREATE', 'blog_post', id, req.user.id, { title: safeTitle });
+    const newPost = { id, title: safeTitle, content: safeContent, imageUrl, category: safeCategory, author: safeAuthor, date };
     res.status(201).json(newPost);
   } catch (err) {
     console.error('Fehler beim Erstellen des Blog-Eintrags:', err);
@@ -155,18 +199,16 @@ app.post('/api/blog', authenticateToken,async (req, res) => {
   }
 });
 
-app.delete('/api/blog/:id',authenticateToken, async (req, res) => {
-    if (!['admin', 'staff'].includes(req.user.role)) {
-    return res.status(403).json({ error: 'Keine Berechtigung zum Löschen' });
-  }
-
+app.delete('/api/blog/:id', authenticateToken, requireStaff, async (req, res) => {
   const { id } = req.params;
-  const query = 'DELETE FROM blog_posts WHERE id = ?';
+  // Soft-Delete statt Hard-Delete
+  const query = 'UPDATE blog_posts SET deleted_at = NOW() WHERE id = ? AND deleted_at IS NULL';
   try {
     const [result] = await pool.query(query, [id]);
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Blog-Eintrag nicht gefunden' });
     }
+    await logAudit('DELETE', 'blog_post', id, req.user.id);
     res.status(200).json({ message: 'Blog-Eintrag erfolgreich gelöscht' });
   } catch (err) {
     console.error('Fehler beim Löschen des Blog-Eintrags:', err);
@@ -241,7 +283,7 @@ app.post('/api/login', loginLimiter, async (req, res) => {
     const token = jwt.sign(
       { id: user.id, username: user.username, role: user.role },
       JWT_SECRET,
-      { expiresIn: '2h' }
+      { expiresIn: '8h' } // Verlängert von 2h auf 8h
     );
     res.json({
       token, 
@@ -252,6 +294,27 @@ app.post('/api/login', loginLimiter, async (req, res) => {
   } catch (err) {
     console.error('Fehler beim Login:', err);
     res.status(500).json({ error: 'Fehler beim Login' });
+  }
+});
+
+// Token Refresh Endpoint
+app.post('/api/refresh-token', authenticateToken, async (req, res) => {
+  try {
+    // Neues Token mit aktualisierten User-Daten erstellen
+    const [results] = await pool.query('SELECT id, username, role FROM users WHERE id = ?', [req.user.id]);
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Benutzer nicht gefunden' });
+    }
+    const user = results[0];
+    const newToken = jwt.sign(
+      { id: user.id, username: user.username, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '8h' }
+    );
+    res.json({ token: newToken, expiresIn: '8h' });
+  } catch (err) {
+    console.error('Fehler beim Token-Refresh:', err);
+    res.status(500).json({ error: 'Fehler beim Token-Refresh' });
   }
 });
 
@@ -292,7 +355,7 @@ app.get('/api/products', async (req, res) => {
   const category = req.query.category; 
   const searchTerm = req.query.search; 
 
-  let whereClauses = [];
+  let whereClauses = ['deleted_at IS NULL']; // Soft-Delete Filter
   let queryParams = [];
 
   if (category && category !== 'Alle') {
@@ -306,7 +369,7 @@ app.get('/api/products', async (req, res) => {
     queryParams.push(`%${searchTerm}%`);
   }
 
-  const whereCondition = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
+  const whereCondition = `WHERE ${whereClauses.join(' AND ')}`;
 
   const productsQuery = `
     SELECT idproducts AS id, title, price, description, category, amountLeft, image
@@ -342,26 +405,47 @@ app.get('/api/products', async (req, res) => {
   }
 });
 
-app.post('/api/products', authenticateToken,async (req, res) => {
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Nur Admins können Produkte hinzufügen' });
-  }
-
+app.post('/api/products', authenticateToken, requireAdmin, async (req, res) => {
   const { title, price, description, category, amountLeft, image } = req.body;
-  if (!title || !price || !description || !category || !amountLeft || !image) {
+  if (!title || !price || !description || !category || amountLeft === undefined || !image) {
     return res.status(400).json({ error: 'Alle Felder müssen ausgefüllt sein.' });
   }
-  const id = uuidv4();
-  const query = `
-    INSERT INTO products (idproducts, title, price, description, category, amountLeft, image)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `;
+  
+  // Sanitize und Validierung
+  const safeTitle = sanitizeInput(title);
+  const safeDescription = sanitizeInput(description);
+  const safeCategory = sanitizeInput(category);
+  const parsedPrice = parseFloat(price);
+  const parsedAmount = parseInt(amountLeft, 10);
+  
+  if (isNaN(parsedPrice) || parsedPrice < 0) {
+    return res.status(400).json({ error: 'Ungültiger Preis' });
+  }
+  if (isNaN(parsedAmount) || parsedAmount < 0) {
+    return res.status(400).json({ error: 'Ungültige Menge' });
+  }
+  
+  // Bild-URL Validierung (einfach)
+  if (image && !validator.isURL(image, { require_protocol: false }) && !image.match(/^[\w\-\.]+\.(jpg|jpeg|png|gif|webp)$/i)) {
+    return res.status(400).json({ error: 'Ungültige Bild-URL oder Dateiname' });
+  }
+  
+  const connection = await pool.getConnection();
   try {
-    await pool.query(query, [id, title, price, description, category, amountLeft, image]);
-    res.status(201).json({ message: 'Produkt erfolgreich hinzugefügt', id });
+    await connection.beginTransaction();
+    const [result] = await connection.query(`
+      INSERT INTO products (title, price, description, category, amountLeft, image)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `, [safeTitle, parsedPrice, safeDescription, safeCategory, parsedAmount, image]);
+    await connection.commit();
+    await logAudit('CREATE', 'product', result.insertId, req.user.id, { title: safeTitle });
+    res.status(201).json({ message: 'Produkt erfolgreich hinzugefügt', id: result.insertId });
   } catch (err) {
+    await connection.rollback();
     console.error('Fehler beim Hinzufügen des Produkts:', err);
     res.status(500).json({ error: 'Fehler beim Hinzufügen des Produkts' });
+  } finally {
+    connection.release();
   }
 });
 
@@ -885,18 +969,16 @@ app.put('/api/patients/:id', authenticateToken,async (req, res) => {
     res.status(500).json({ error: 'Fehler beim Aktualisieren des Patienten' });
   }
 });
-app.delete('/api/products/:id', authenticateToken, async (req, res) => {
+app.delete('/api/products/:id', authenticateToken, requireAdmin, async (req, res) => {
   const { id } = req.params;
   
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Nur Admins können Produkte löschen' });
-  }
-  
   try {
-    const [result] = await pool.query('DELETE FROM products WHERE idproducts = ?', [id]);
+    // Soft-Delete statt Hard-Delete
+    const [result] = await pool.query('UPDATE products SET deleted_at = NOW() WHERE idproducts = ? AND deleted_at IS NULL', [id]);
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Produkt nicht gefunden' });
     }
+    await logAudit('DELETE', 'product', id, req.user.id);
     res.json({ message: 'Produkt erfolgreich gelöscht' });
   } catch (err) {
     console.error('Fehler beim Löschen des Produkts:', err);
@@ -908,13 +990,13 @@ app.delete('/api/products/:id', authenticateToken, async (req, res) => {
 // TERMINVERWALTUNG API (IHK-Projekt)
 // ============================================
 
-// GET alle Termine (mit Filteroptionen)
-app.get('/api/appointments', authenticateToken, async (req, res) => {
-  if (!['admin', 'staff'].includes(req.user.role)) {
-    return res.status(403).json({ error: 'Keine Berechtigung' });
-  }
-  
+// GET alle Termine (mit Filteroptionen und Pagination)
+app.get('/api/appointments', authenticateToken, requireStaff, async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 100;
+  const offset = (page - 1) * limit;
   const { date, week, month, year, status, category, assigned_to, patient_id } = req.query;
+  
   let query = `
     SELECT a.*, 
            p.name as patient_name, 
@@ -924,7 +1006,7 @@ app.get('/api/appointments', authenticateToken, async (req, res) => {
     FROM appointments a
     LEFT JOIN patients p ON a.patient_id = p.id
     LEFT JOIN users u ON a.assigned_to = u.id
-    WHERE 1=1
+    WHERE a.deleted_at IS NULL
   `;
   const params = [];
 
@@ -957,7 +1039,8 @@ app.get('/api/appointments', authenticateToken, async (req, res) => {
     params.push(patient_id);
   }
 
-  query += ' ORDER BY a.appointment_date ASC, a.appointment_time ASC';
+  query += ' ORDER BY a.appointment_date ASC, a.appointment_time ASC LIMIT ? OFFSET ?';
+  params.push(limit, offset);
 
   try {
     const [results] = await pool.query(query, params);
@@ -969,11 +1052,7 @@ app.get('/api/appointments', authenticateToken, async (req, res) => {
 });
 
 // GET einzelner Termin
-app.get('/api/appointments/:id', authenticateToken, async (req, res) => {
-  if (!['admin', 'staff'].includes(req.user.role)) {
-    return res.status(403).json({ error: 'Keine Berechtigung' });
-  }
-  
+app.get('/api/appointments/:id', authenticateToken, requireStaff, async (req, res) => {
   try {
     const [results] = await pool.query(`
       SELECT a.*, 
@@ -984,7 +1063,7 @@ app.get('/api/appointments/:id', authenticateToken, async (req, res) => {
       FROM appointments a
       LEFT JOIN patients p ON a.patient_id = p.id
       LEFT JOIN users u ON a.assigned_to = u.id
-      WHERE a.id = ?
+      WHERE a.id = ? AND a.deleted_at IS NULL
     `, [req.params.id]);
     
     if (results.length === 0) {
@@ -998,11 +1077,7 @@ app.get('/api/appointments/:id', authenticateToken, async (req, res) => {
 });
 
 // POST neuer Termin
-app.post('/api/appointments', authenticateToken, async (req, res) => {
-  if (!['admin', 'staff'].includes(req.user.role)) {
-    return res.status(403).json({ error: 'Keine Berechtigung' });
-  }
-  
+app.post('/api/appointments', authenticateToken, requireStaff, async (req, res) => {
   const { 
     title, description, appointment_date, appointment_time, end_time,
     category, priority, status, patient_id, assigned_to,
@@ -1013,6 +1088,11 @@ app.post('/api/appointments', authenticateToken, async (req, res) => {
     return res.status(400).json({ error: 'Titel, Datum und Uhrzeit sind erforderlich' });
   }
 
+  // Sanitize
+  const safeTitle = sanitizeInput(title);
+  const safeDescription = description ? sanitizeInput(description) : null;
+  const safeNotes = notes ? sanitizeInput(notes) : null;
+
   try {
     const [result] = await pool.query(`
       INSERT INTO appointments 
@@ -1021,12 +1101,13 @@ app.post('/api/appointments', authenticateToken, async (req, res) => {
        recurring, recurring_interval, notes, created_by)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
-      title, description || null, appointment_date, appointment_time, end_time || null,
+      safeTitle, safeDescription, appointment_date, appointment_time, end_time || null,
       category || 'sonstiges', priority || 'mittel', status || 'geplant',
       patient_id || null, assigned_to || null,
-      recurring || false, recurring_interval || null, notes || null, req.user.id
+      recurring || false, recurring_interval || null, safeNotes, req.user.id
     ]);
     
+    await logAudit('CREATE', 'appointment', result.insertId, req.user.id, { title: safeTitle });
     res.status(201).json({ id: result.insertId, message: 'Termin erstellt' });
   } catch (err) {
     console.error('Fehler beim Erstellen des Termins:', err);
@@ -1035,11 +1116,7 @@ app.post('/api/appointments', authenticateToken, async (req, res) => {
 });
 
 // PUT Termin bearbeiten
-app.put('/api/appointments/:id', authenticateToken, async (req, res) => {
-  if (!['admin', 'staff'].includes(req.user.role)) {
-    return res.status(403).json({ error: 'Keine Berechtigung' });
-  }
-  
+app.put('/api/appointments/:id', authenticateToken, requireStaff, async (req, res) => {
   const { id } = req.params;
   const { 
     title, description, appointment_date, appointment_time, end_time,
@@ -1047,22 +1124,28 @@ app.put('/api/appointments/:id', authenticateToken, async (req, res) => {
     recurring, recurring_interval, notes 
   } = req.body;
 
+  // Sanitize
+  const safeTitle = sanitizeInput(title);
+  const safeDescription = description ? sanitizeInput(description) : null;
+  const safeNotes = notes ? sanitizeInput(notes) : null;
+
   try {
     const [result] = await pool.query(`
       UPDATE appointments SET
         title = ?, description = ?, appointment_date = ?, appointment_time = ?, end_time = ?,
         category = ?, priority = ?, status = ?, patient_id = ?, assigned_to = ?,
         recurring = ?, recurring_interval = ?, notes = ?
-      WHERE id = ?
+      WHERE id = ? AND deleted_at IS NULL
     `, [
-      title, description, appointment_date, appointment_time, end_time,
+      safeTitle, safeDescription, appointment_date, appointment_time, end_time,
       category, priority, status, patient_id || null, assigned_to || null,
-      recurring, recurring_interval, notes, id
+      recurring, recurring_interval, safeNotes, id
     ]);
     
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Termin nicht gefunden' });
     }
+    await logAudit('UPDATE', 'appointment', id, req.user.id, { title: safeTitle });
     res.json({ message: 'Termin aktualisiert' });
   } catch (err) {
     console.error('Fehler beim Aktualisieren des Termins:', err);
@@ -1070,17 +1153,14 @@ app.put('/api/appointments/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// DELETE Termin löschen
-app.delete('/api/appointments/:id', authenticateToken, async (req, res) => {
-  if (!['admin', 'staff'].includes(req.user.role)) {
-    return res.status(403).json({ error: 'Keine Berechtigung' });
-  }
-  
+// DELETE Termin löschen (Soft-Delete)
+app.delete('/api/appointments/:id', authenticateToken, requireStaff, async (req, res) => {
   try {
-    const [result] = await pool.query('DELETE FROM appointments WHERE id = ?', [req.params.id]);
+    const [result] = await pool.query('UPDATE appointments SET deleted_at = NOW() WHERE id = ? AND deleted_at IS NULL', [req.params.id]);
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Termin nicht gefunden' });
     }
+    await logAudit('DELETE', 'appointment', req.params.id, req.user.id);
     res.json({ message: 'Termin gelöscht' });
   } catch (err) {
     console.error('Fehler beim Löschen des Termins:', err);
@@ -1089,21 +1169,17 @@ app.delete('/api/appointments/:id', authenticateToken, async (req, res) => {
 });
 
 // GET Statistiken für Dashboard
-app.get('/api/appointments/stats/overview', authenticateToken, async (req, res) => {
-  if (!['admin', 'staff'].includes(req.user.role)) {
-    return res.status(403).json({ error: 'Keine Berechtigung' });
-  }
-  
+app.get('/api/appointments/stats/overview', authenticateToken, requireStaff, async (req, res) => {
   try {
     const today = new Date().toISOString().split('T')[0];
     const [[todayCount]] = await pool.query(
-      'SELECT COUNT(*) as count FROM appointments WHERE appointment_date = ?', [today]
+      'SELECT COUNT(*) as count FROM appointments WHERE appointment_date = ? AND deleted_at IS NULL', [today]
     );
     const [[pendingCount]] = await pool.query(
-      "SELECT COUNT(*) as count FROM appointments WHERE status = 'geplant'"
+      "SELECT COUNT(*) as count FROM appointments WHERE status = 'geplant' AND deleted_at IS NULL"
     );
     const [[urgentCount]] = await pool.query(
-      "SELECT COUNT(*) as count FROM appointments WHERE priority = 'dringend' AND status = 'geplant'"
+      "SELECT COUNT(*) as count FROM appointments WHERE priority = 'dringend' AND status = 'geplant' AND deleted_at IS NULL"
     );
     
     res.json({
@@ -1118,11 +1194,7 @@ app.get('/api/appointments/stats/overview', authenticateToken, async (req, res) 
 });
 
 // GET Staff-Mitarbeiter für Zuweisung
-app.get('/api/staff-users', authenticateToken, async (req, res) => {
-  if (!['admin', 'staff'].includes(req.user.role)) {
-    return res.status(403).json({ error: 'Keine Berechtigung' });
-  }
-  
+app.get('/api/staff-users', authenticateToken, requireStaff, async (req, res) => {
   try {
     const [results] = await pool.query(
       "SELECT id, username, firstname, lastname FROM users WHERE role IN ('admin', 'staff')"
@@ -1195,5 +1267,84 @@ app.get('/api/appointments/export/csv', authenticateToken, async (req, res) => {
   } catch (err) {
     console.error('Fehler beim CSV-Export:', err);
     res.status(500).json({ error: 'Fehler beim CSV-Export' });
+  }
+});
+
+// ============================================
+// AUDIT-LOG API (nur Admin)
+// ============================================
+
+app.get('/api/audit-logs', authenticateToken, requireAdmin, async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 50;
+  const offset = (page - 1) * limit;
+  const { entity_type, user_id, action, start_date, end_date } = req.query;
+
+  let query = `
+    SELECT al.*, u.username 
+    FROM audit_logs al 
+    LEFT JOIN users u ON al.user_id = u.id
+    WHERE 1=1
+  `;
+  const params = [];
+
+  if (entity_type) {
+    query += ' AND al.entity_type = ?';
+    params.push(entity_type);
+  }
+  if (user_id) {
+    query += ' AND al.user_id = ?';
+    params.push(user_id);
+  }
+  if (action) {
+    query += ' AND al.action = ?';
+    params.push(action);
+  }
+  if (start_date) {
+    query += ' AND al.created_at >= ?';
+    params.push(start_date);
+  }
+  if (end_date) {
+    query += ' AND al.created_at <= ?';
+    params.push(end_date);
+  }
+
+  query += ' ORDER BY al.created_at DESC LIMIT ? OFFSET ?';
+  params.push(limit, offset);
+
+  try {
+    const [results] = await pool.query(query, params);
+    const [[{ count }]] = await pool.query('SELECT COUNT(*) as count FROM audit_logs');
+    res.json({ results, count, page, limit });
+  } catch (err) {
+    console.error('Fehler beim Laden der Audit-Logs:', err);
+    res.status(500).json({ error: 'Fehler beim Laden der Audit-Logs' });
+  }
+});
+
+// Gelöschte Elemente wiederherstellen (Admin only)
+app.post('/api/restore/:entity/:id', authenticateToken, requireAdmin, async (req, res) => {
+  const { entity, id } = req.params;
+  const validEntities = ['products', 'blog_posts', 'appointments', 'patients'];
+  
+  if (!validEntities.includes(entity)) {
+    return res.status(400).json({ error: 'Ungültiger Entity-Typ' });
+  }
+
+  const idColumn = entity === 'products' ? 'idproducts' : 'id';
+  
+  try {
+    const [result] = await pool.query(
+      `UPDATE ${entity} SET deleted_at = NULL WHERE ${idColumn} = ? AND deleted_at IS NOT NULL`,
+      [id]
+    );
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Element nicht gefunden oder nicht gelöscht' });
+    }
+    await logAudit('RESTORE', entity, id, req.user.id);
+    res.json({ message: 'Element wiederhergestellt' });
+  } catch (err) {
+    console.error('Fehler beim Wiederherstellen:', err);
+    res.status(500).json({ error: 'Fehler beim Wiederherstellen' });
   }
 });
