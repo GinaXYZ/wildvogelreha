@@ -282,29 +282,32 @@ const headerStyle = computed(() => ({
 /* ===== HAMBURGER MENU ===== */
 .hamburger {
   display: none;
+  flex-direction: column;    /* stack bars vertically */
   align-items: center;
   justify-content: center;
-  width: 44px;             /* sichtbare Breite */
-  height: 44px;            /* ausreichend Touch-Target */
+  gap: 4px;                  /* spacing between bars */
+  width: 40px;               /* visible container width */
+  height: 40px;              /* touch target area */
   padding: 6px;
   background: transparent;
   border: none;
   cursor: pointer;
-  box-sizing: content-box;
-  z-index: 1100;           /* über dem Overlay */
+  box-sizing: border-box;
+  z-index: 1200;             /* above overlay */
   flex-shrink: 0;
+  overflow: visible;         /* allow transforms to be seen */
 }
 
 /* drei klare, feste Balken */
 .hamburger span {
   display: block;
-  width: 24px;             /* fixe Balkenbreite, nicht 100% */
-  height: 3px;
-  margin: 3px 0;           /* Abstand zwischen den Balken */
-  background-color: #0c4b47 !important; /* zwingt Sichtbarkeit */
+  width: 20px;               /* slightly smaller so not clipped */
+  height: 2px;               /* thin bars */
+  margin: 0;                 /* use gap on container */
+  background-color: #0c4b47 !important;
   border-radius: 2px;
   transform-origin: center;
-  transition: transform 0.25s ease, opacity 0.2s ease;
+  transition: transform 0.22s ease, opacity 0.18s ease;
   will-change: transform, opacity;
 }
 
@@ -318,6 +321,11 @@ const headerStyle = computed(() => ({
 }
 .hamburger.active span:nth-child(3) {
   transform: translateY(-6px) rotate(-45deg);
+}
+
+/* ensure the button does not get clipped by parent */
+.header-inner, .header {
+  overflow: visible;
 }
 
 /* ===== MOBILE OVERLAY ===== */
