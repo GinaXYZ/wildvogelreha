@@ -284,8 +284,8 @@ const headerStyle = computed(() => ({
   display: none;
   flex-direction: column;
   justify-content: space-between;
-  width: 30px;
-  height: 22px;
+  width: 10px;
+  height: 10px;
   background: transparent;
   border: none;
   cursor: pointer;
