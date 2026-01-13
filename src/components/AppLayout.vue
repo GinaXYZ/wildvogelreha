@@ -53,7 +53,7 @@
   .main-content {
     position: relative;
     width: 100%;
-    max-width: 1200;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 1rem;
     box-sizing: border-box;

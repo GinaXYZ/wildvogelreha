@@ -180,7 +180,7 @@ const newBirds = [
 <style scoped>
 .home-main-row {
   display: grid;
-  grid-template-columns: minmax(120px, 180px) 1fr minmax(120px, 180px);
+  grid-template-columns: minmax(220px, 280px) 1fr minmax(220px, 280px);
   align-items: flex-start;
   gap: 1.5rem;
   width: 100%;
@@ -274,6 +274,7 @@ const newBirds = [
   box-shadow: 0 2px 8px rgba(0,0,0,0.07);
   padding: 0.8rem;
   min-width: 0;
+  min-height: 100%;
   max-width: 100%;
   font-size: 0.95rem;
   display: flex;
@@ -434,17 +435,6 @@ const newBirds = [
   line-height: 1.3;
 }
 
-/* Desktop: Show hover effect */
-@media (min-width: 769px) {
-  .news-overlay {
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-  .bird-img-wrapper:hover .news-overlay {
-    opacity: 1;
-  }
-}
-
 /* Mobile: Always show overlay */
 @media (max-width: 768px) {
   .news-overlay {
@@ -554,17 +544,21 @@ const newBirds = [
 @media (max-width: 768px) {
   .donation-list li {
     padding: 0.4rem 0;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
   }
   
   .donor-name {
-    max-width: 70%;
+    max-width: 100%;
+    white-space: normal;
   }
 }
 
 @media (max-width: 480px) {
   .donation-list li {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.2rem;
   }
 }
 .intro-section {
@@ -653,5 +647,4 @@ const newBirds = [
   }
 }
 </style>
-
 
