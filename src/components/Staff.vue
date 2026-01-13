@@ -776,13 +776,22 @@ onMounted(() => {
   table-layout: auto;
 }
 
-/* default cell overflow handling */
-.contacts-table th, .contacts-table td,
-.patients-table th, .patients-table td,
-.donations-table th, .donations-table td {
+/* default cell overflow handling: apply ellipsis only to data cells, not headers */
+.contacts-table td,
+.patients-table td,
+.donations-table td {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* keep headers untruncated and always fully visible */
+.contacts-table th,
+.patients-table th,
+.donations-table th {
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
 }
 
 /* allow message/details column to wrap instead of being cut off */
@@ -798,6 +807,8 @@ onMounted(() => {
   border-radius: 8px;
   width: 100%;          /* responsive input */
   box-sizing: border-box;
+  white-space: normal; /* allow wrapping in details */
+  overflow-wrap: anywhere;
 }
 
 /* ensure actions column stays compact */
@@ -1020,19 +1031,43 @@ onMounted(() => {
   overflow: hidden;
 }
 
-.patients-table {
-  margin: 1.5rem auto; /* center patients table */
-  width: 96%;
-}
-
-/* On very large screens keep tables centered while allowing wide min-width */
+/* Make contacts/patients tables explicitly wider on large screens so headers are not clipped */
 @media (min-width: 1200px) {
+  .staff-content {
+    overflow-x: visible; /* allow tables to extend beyond the gray area */
+  }
   .contacts-table, .patients-table {
-    min-width: 1200px; /* slightly smaller than before to avoid extreme overflow */
+    min-width: 1600px; /* wider so headings fit without wrapping or ellipsis */
     margin-left: auto;
     margin-right: auto;
+    table-layout: auto; /* allow columns to size to content */
+  }
+  .contacts-table th:nth-child(7), .contacts-table td:nth-child(7),
+  .patients-table th:nth-child(6), .patients-table td.actions-column {
+    width: 140px; /* reserve space for actions */
   }
 }
+
+/* On medium screens, still allow larger min-width but less extreme */
+@media (min-width: 900px) and (max-width:1199px) {
+  .contacts-table, .patients-table {
+    min-width: 1200px;
+    table-layout: auto;
+  }
+}
+
+/* ensure message/details columns wrap */
+.message-cell, .patients-table td:nth-child(7), .patients-table td:nth-child(7) textarea {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* center tables on all screen sizes */
+.contacts-table, .patients-table {
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .staff-management {
   background: white;
   padding: 1rem;
@@ -1268,73 +1303,6 @@ onMounted(() => {
   border: 1px solid #ccc;
   padding: 0.2em 0.5em;
   font-size: 1em;
-}
-
-/* Make contacts/patients tables explicitly wider on large screens so columns don't get clipped by the gray wrapper */
-@media (min-width: 1200px) {
-  .staff-content {
-    overflow-x: visible; /* allow tables to extend beyond the gray area */
-  }
-  .contacts-table, .patients-table {
-    min-width: 1400px;
-    table-layout: fixed; /* keep column sizing stable */
-  }
-  .contacts-table th:nth-child(7), .contacts-table td:nth-child(7),
-  .patients-table th:nth-child(6), .patients-table td.actions-column {
-    width: 120px; /* reserve space for actions */
-  }
-}
-
-/* Actions column styling */
-.actions-wrapper {
-  display: flex;
-  gap: 0.4rem;
-  justify-content: center;
-  align-items: center;
-}
-.action-btn {
-  background: #0c4b47;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 0.25rem 0.5rem;
-  cursor: pointer;
-  font-size: 0.95rem;
-}
-.action-btn:hover { transform: scale(1.05); }
-
-/* Patients: allow details to wrap and make columns a bit wider on desktop */
-.patients-table {
-  /* prefer auto table layout so columns can grow as requested */
-  table-layout: auto;
-  min-width: 900px; /* allow wider table on desktop so columns are not cramped */
-}
-
-.details-textarea {
-  width: 100%;
-  min-width: 220px;
-  max-width: 100%;
-  box-sizing: border-box;
-  padding: 0.4rem;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  resize: vertical;
-  white-space: normal;
-  overflow-wrap: anywhere;
-}
-
-/* ensure message/details columns wrap */
-.message-cell, .patients-table td:nth-child(6) {
-  white-space: normal;
-  overflow-wrap: anywhere;
-}
-
-@media (max-width: 1024px) {
-  .patients-table { min-width: 720px; }
-}
-
-@media (max-width: 768px) {
-  .patients-table { min-width: 480px; }
 }
 
 /* Responsive Styles for Staff Component */

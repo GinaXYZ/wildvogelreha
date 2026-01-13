@@ -1018,50 +1018,52 @@ onMounted(() => {
 /* List View */
 .appointments-table {
   width: 100%;
-  max-width: 1400px;
+  max-width: 1800px; /* make list very wide */
+  min-width: 1200px;
   margin: 1rem auto;
   border-collapse: collapse;
   background: white;
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  table-layout: fixed; /* distribute columns and prevent one column from growing too large */
+  table-layout: auto; /* allow columns to size to content */
 }
 
-.appointments-table th,
+/* Headers: never ellipsize - show full header text */
+.appointments-table th {
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+/* Body cells: allow wrapping where sensible (patient, title, category labels) */
 .appointments-table td {
-  padding: 0.75rem 0.5rem;
-  border-bottom: 1px solid #eee;
-  text-align: left;
-  vertical-align: middle;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap; /* keep single-line and ellipsis */
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 /* Reserve space for actions column to avoid content push-out */
 .appointments-table th.actions,
 .appointments-table td.actions {
-  width: 120px;
-  min-width: 100px;
+  width: 160px;
+  min-width: 140px;
   text-align: center;
   white-space: nowrap;
 }
 
-/* Make status select fit into cell nicely */
-.appointments-table td select.status-select {
-  width: 100%;
-  max-width: 140px;
-  box-sizing: border-box;
-}
-
-/* Allow title column to ellipsize but keep priority/labels compact */
+/* ensure apt-title can wrap in body rows */
 .appointments-table td .apt-title {
   display: block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 260px;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  max-width: none;
+}
+
+@media (max-width: 900px) {
+  .appointments-table {
+    min-width: 800px;
+  }
 }
 
 /* Responsive: allow horizontal scroll on small screens */
