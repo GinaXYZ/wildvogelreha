@@ -925,33 +925,69 @@ onBeforeUnmount(() => {
     gap: 1rem;
   }
   .map-container {
-    border-radius: 0; 
-    border-left: none;
-    border-right: none;
-    max-height: 60vh;
+    border-radius: 8px; 
+    max-height: 55vh;
   }
   .map {
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
+    border-radius: 8px;
   }
   .admin-panel {
     max-width: 100%;
     padding: 1rem;
   }
   .add-btn {
-    padding: 0.6rem 1rem;
-    font-size: 0.9rem;
+    padding: 0.7rem 1.2rem;
+    font-size: 1rem;
   }
+  
+  /* Tooltip improvements for mobile */
   .bird-tooltip {
-    max-width: 250px;
-    padding: 0.8rem;
-    font-size: 0.75rem;
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    max-width: 85vw;
+    min-width: 280px;
+    padding: 1rem;
+    font-size: 0.95rem;
+    z-index: 9999;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
   }
+  
+  .bird-tooltip h4 {
+    font-size: 1.1rem;
+    margin-bottom: 0.8rem;
+  }
+  
+  .bird-tooltip p {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 0.5rem;
+  }
+  
   .edit-form {
-    min-width: 220px;
-    max-width: 280px;
-    padding: 0.8rem;
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    min-width: 280px;
+    max-width: 90vw;
+    padding: 1rem;
+    z-index: 9999;
+  }
+  
+  /* Map icons larger for touch */
+  .map-item-wrapper {
+    width: 55px;
+    height: 75px;
+  }
+  .map-item {
+    width: 45px;
+    height: 45px;
+  }
+  .item-label {
+    font-size: 0.75rem;
+    padding: 2px 4px;
   }
 }
 
@@ -960,27 +996,44 @@ onBeforeUnmount(() => {
     margin-top: 4rem;
   }
   .map-item-wrapper {
-    width: 45px;
-    height: 65px;
+    width: 50px;
+    height: 70px;
   }
   .map-item {
-    width: 40px;
-    height: 40px;
+    width: 42px;
+    height: 42px;
   }
   .item-label {
-    font-size: 0.6rem;
-    padding: 1px 3px;
+    font-size: 0.7rem;
+    padding: 2px 4px;
   }
   .bird-tooltip {
-    min-width: 180px;
-    max-width: 220px;
+    min-width: 260px;
+    max-width: 90vw;
+    padding: 1rem;
   }
   .bird-tooltip h4 {
+    font-size: 1rem;
+  }
+  .bird-tooltip p {
     font-size: 0.9rem;
   }
   .btn-edit, .btn-delete {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.65rem;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+  }
+  
+  /* Add form improvements */
+  .add-form {
+    max-width: 100%;
+    padding: 1rem;
+  }
+  
+  .add-form input,
+  .add-form select,
+  .add-form textarea {
+    font-size: 1rem;
+    padding: 0.6rem;
   }
 }
 </style>

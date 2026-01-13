@@ -1284,11 +1284,20 @@ function shortName(name) {
 .remove-assignment-btn:hover {
   transform: scale(1.1);
 }
+
+.subtab-container {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
 .subtab-container button {
-  padding: 0.5rem 1.5rem;
+  padding: 0.6rem 1.5rem;
   border: none;
   border-radius: 8px;
-  color: #444747;
+  color: #0c4b47;
   font-family: 'Helvetica', sans-serif;
   background: #eee;
   cursor: pointer;
@@ -1297,8 +1306,6 @@ function shortName(name) {
   box-sizing: border-box;
   white-space: nowrap;
   transition: background 0.2s, color 0.2s;
-  margin-right: 1rem;
-  color: #0c4b47;
 }
 
 .subtab-container button.active {

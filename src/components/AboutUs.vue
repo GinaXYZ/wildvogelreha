@@ -299,6 +299,7 @@
 @media (max-width: 768px) {
   .about-page {
     margin-top: 4.5rem;
+    overflow-x: hidden;
   }
   
   .hero-section,
@@ -326,6 +327,8 @@
   
   .container {
     padding: 0 1rem;
+    max-width: 100%;
+    box-sizing: border-box;
   }
   
   .mission-section,
@@ -334,19 +337,38 @@
   .team-section,
   .stats-section,
   .cta-section {
-    padding: 3rem 0;
+    padding: 2.5rem 0;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+  }
+  
+  .story-image,
+  .facility-item img {
+    max-width: 100%;
+    height: auto;
   }
   
   h2 {
-    font-size: 1.8rem;
+    font-size: 1.6rem;
   }
   
   .story-text h2 {
-    font-size: 2rem;
+    font-size: 1.8rem;
+  }
+  
+  .story-text p {
+    font-size: 1.05rem;
+    line-height: 1.6;
   }
   
   .stat-number {
-    font-size: 2.2rem;
+    font-size: 2rem;
+  }
+  
+  .mission-card p,
+  .facility-item p,
+  .team-member p {
+    font-size: 1rem;
   }
 }
 

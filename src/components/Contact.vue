@@ -309,11 +309,15 @@ input:disabled {
 @media (max-width: 768px) {
   .contact-page {
     padding: 1rem;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
   }
   
   .contact-container {
     padding: 2rem 1.5rem;
     margin-top: 5rem;
+    margin-left: 0;
+    margin-right: 0;
   }
   
   .form-row {

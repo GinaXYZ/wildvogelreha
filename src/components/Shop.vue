@@ -809,10 +809,32 @@ const handleAddToCart = (product) => {
   
   .admin-section {
     padding: 0 1rem;
+    margin: 2rem auto;
+  }
+  
+  .admin-form {
+    padding: 1.5rem;
+  }
+  
+  .admin-form h3 {
+    font-size: 1.3rem;
   }
   
   .form-row {
     grid-template-columns: 1fr;
+    gap: 0.8rem;
+  }
+  
+  .form-input,
+  .form-select,
+  .form-textarea {
+    font-size: 1rem;
+    padding: 0.8rem;
+  }
+  
+  .submit-btn {
+    width: 100%;
+    padding: 1rem;
   }
 }
 

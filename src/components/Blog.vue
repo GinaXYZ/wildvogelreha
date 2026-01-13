@@ -40,8 +40,14 @@ onMounted(async () => {
 
 const formatDate = (dateString) => {
   if (!dateString) return 'Unbekanntes Datum';
-  const options = { year: 'numeric', month: 'long', day: 'numeric' };
-  return new Date(dateString).toLocaleDateString('de-DE', options);
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Unbekanntes Datum';
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    return date.toLocaleDateString('de-DE', options);
+  } catch (error) {
+    return 'Unbekanntes Datum';
+  }
 };
 
 const createBlogPost = async () => {
@@ -199,7 +205,7 @@ const updatePost = async (postId) => {
         <div v-for="post in posts" :key="post.id" class="blog-post">
           <h3>{{ post.title }}</h3>
           <div class="post-meta">
-            <span class="post-date">{{ formatDate(post.date) }}</span>
+            <span class="post-date">{{ formatDate(post.date || post.created_at) }}</span>
             <span class="post-category">{{ post.category }}</span>
           </div>
           <img v-if="post.imageUrl" :src="post.imageUrl" alt="Beitragsbild" class="post-image" />

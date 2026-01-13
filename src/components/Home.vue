@@ -209,12 +209,34 @@ const newBirds = [
   .home-main-row {
     grid-template-columns: 1fr;
     margin-top: 1.5rem;
-    gap: 1rem;
-    padding: 0 0.8rem;
+    gap: 1.2rem;
+    padding: 0 1rem;
   }
+  
+  .slideshow-center {
+    order: -1;
+    width: 100%;
+    max-width: 100%;
+  }
+  
   .blogposts-container,
   .donation-table-container {
     width: 100%;
+    padding: 1rem;
+  }
+  
+  .blogposts-container h2,
+  .donation-table-container h2 {
+    font-size: 1.1rem;
+  }
+  
+  .blogposts-list li {
+    font-size: 1rem;
+  }
+  
+  .donation-list li {
+    padding: 0.5rem 0;
+    font-size: 1rem;
   }
 }
 
@@ -250,16 +272,24 @@ const newBirds = [
   background: #f9f9f9;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-  padding: 0.5rem;
+  padding: 0.8rem;
   min-width: 0;
   max-width: 100%;
   font-size: 0.95rem;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
   color: #0c4b47;
   font-family: 'Helvetica', sans-serif;
   box-sizing: border-box;
+  overflow: hidden;
+}
+
+.blogposts-container h2,
+.donation-table-container h2 {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  white-space: nowrap;
 }
 .donation-table {
   width: 100%;
@@ -380,20 +410,55 @@ const newBirds = [
   bottom: 0;
   width: 100%; 
   height: 35%; 
-  background: rgba(226, 226, 226, 0.85);
-  border-radius: 0;
+  background: rgba(226, 226, 226, 0.9);
+  border-radius: 0 0 8px 8px;
   box-sizing: border-box;
-  opacity: 0;
-  transition: opacity 0.2s;
-  pointer-events: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0; 
-    color: #0c4b47;
-}
-.bird-img-wrapper:hover .news-overlay {
+  padding: 0.3rem; 
+  color: #0c4b47;
   opacity: 1;
+  transition: background 0.2s;
+}
+
+.news-overlay h3 {
+  font-size: 0.85rem;
+  margin: 0 0 0.2rem 0;
+  line-height: 1.2;
+}
+
+.news-overlay p {
+  font-size: 0.75rem;
+  margin: 0;
+  line-height: 1.3;
+}
+
+/* Desktop: Show hover effect */
+@media (min-width: 769px) {
+  .news-overlay {
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .bird-img-wrapper:hover .news-overlay {
+    opacity: 1;
+  }
+}
+
+/* Mobile: Always show overlay */
+@media (max-width: 768px) {
+  .news-overlay {
+    opacity: 1;
+    height: auto;
+    min-height: 30%;
+    padding: 0.4rem;
+  }
+  .news-overlay h3 {
+    font-size: 0.8rem;
+  }
+  .news-overlay p {
+    font-size: 0.7rem;
+  }
 }
 .news-text {
   font-size: 1rem;
@@ -405,21 +470,26 @@ const newBirds = [
   padding: 0;
   margin: 0 0 1rem 0;
   width: 100%;
-    color: #0c4b47;
+  color: #0c4b47;
   font-family: 'Helvetica', sans-serif;
 }
 .blogposts-list li {
-  margin-bottom: 1em;
-  word-break: break-word;
-    color: #0c4b47;
+  margin-bottom: 0.8em;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  hyphens: auto;
+  color: #0c4b47;
   font-family: 'Helvetica', sans-serif;
+  line-height: 1.4;
 }
 .blog-link {
   color: #0c4b47;
   text-decoration: none;
   transition: color 0.2s;
-    color: #0c4b47;
   font-family: 'Helvetica', sans-serif;
+  display: block;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
 }
 .blog-link:hover {
   color: #2196f3;
