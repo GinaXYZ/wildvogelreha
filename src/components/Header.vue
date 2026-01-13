@@ -284,12 +284,15 @@ const headerStyle = computed(() => ({
   display: none;
   flex-direction: column;
   justify-content: space-between;
-  width: 10px;
-  height: 10px;
+  width: 36px;           /* visible bar width */
+  height: 22px;          /* container height for three bars */
+  min-width: 36px;
+  min-height: 22px;
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 0;
+  padding: 8px;          /* touch target padding */
+  box-sizing: content-box;
   z-index: 1001;
   flex-shrink: 0;
 }
@@ -300,19 +303,20 @@ const headerStyle = computed(() => ({
   height: 3px;
   background-color: #0c4b47;
   border-radius: 2px;
-  transition: all 0.3s ease;
+  transition: transform 0.25s ease, opacity 0.2s ease;
 }
 
 .hamburger.active span:nth-child(1) {
-  transform: rotate(45deg) translate(5px, 5px);
+  transform: translateY(9px) rotate(45deg);
 }
 
 .hamburger.active span:nth-child(2) {
   opacity: 0;
+  transform: scaleX(0);
 }
 
 .hamburger.active span:nth-child(3) {
-  transform: rotate(-45deg) translate(7px, -6px);
+  transform: translateY(-9px) rotate(-45deg);
 }
 
 /* ===== MOBILE OVERLAY ===== */
@@ -353,6 +357,14 @@ const headerStyle = computed(() => ({
   .hamburger {
     display: flex;
     order: 3;
+    /* ensure consistent size / touch target on mobile */
+    width: 40px;
+    height: 24px;
+    padding: 10px;
+    min-width: 44px;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
   }
   
   .mobile-overlay {
@@ -458,8 +470,9 @@ const headerStyle = computed(() => ({
   }
   
   .hamburger {
-    width: 26px;
+    width: 34px;
     height: 20px;
+    padding: 8px;
   }
   
   .nav {
@@ -499,8 +512,9 @@ const headerStyle = computed(() => ({
   }
   
   .hamburger {
-    width: 24px;
+    width: 32px;
     height: 18px;
+    padding: 6px;
   }
   
   .nav {
