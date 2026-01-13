@@ -20,6 +20,7 @@ const routes = [
     component: AppLayout,
     children: [
       { path: '/', name: 'Home', component: Home },
+      { path: '/home', redirect: '/' },
       { path: '/about', name: 'AboutUs', component: AboutUs },
       { path: '/shop', name: 'Shop', component: Shop },
       { path: '/cart', name: 'Cart', component: Cart }, 

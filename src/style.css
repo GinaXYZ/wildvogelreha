@@ -18,11 +18,21 @@ background-color: rgb(186, 250, 255)
 html {
   overflow-y: scroll;
 }
+body {
+  margin: 0;
+  overflow-x: hidden;
+  font-family: 'Helvetica', sans-serif;
+}
 @media (max-width: 600px) {
-  h1 { font-size: 1.5rem; }
-  h2 { font-size: 1.2rem; }
-  h3 { font-size: 1rem; }
-  p, li, label, input, button { font-size: 1rem; }
+  h1 { font-size: 1.7rem; }
+  h2 { font-size: 1.35rem; }
+  h3 { font-size: 1.1rem; }
+  p, li, label, input, button { font-size: 1.05rem; }
 }
 
+@media (max-width: 900px) {
+  p, li, label, input, button {
+    font-size: 1.05rem;
+  }
+}
 

@@ -824,7 +824,7 @@ app.put('/api/blog/:id', authenticateToken, async (req, res) => {
   }
 });
 app.post('/api/contact', async (req, res) => {
-  const { firstname, lastname, email, telefon, msg } = req.body;
+  const { firstname, lastname, email, telefon, msg, status } = req.body;
   if (!firstname || !lastname || !email || !telefon) {
     return res.status(400).json({ error: 'Vorname, Nachname, E-Mail und Telefon sind erforderlich' });
   }
@@ -837,9 +837,10 @@ app.post('/api/contact', async (req, res) => {
     return res.status(400).json({ error: 'Ungültige Telefonnummer' });
   }
   const id = uuidv4();
-  const query = 'INSERT INTO contacts (id, firstname, lastname, email, telefon, msg) VALUES (?, ?, ?, ?, ?, ?)';
+  const contactStatus = status || 'neu';
+  const query = 'INSERT INTO contacts (id, firstname, lastname, email, telefon, msg, status) VALUES (?, ?, ?, ?, ?, ?, ?)';
   try {
-    await pool.query(query, [id, firstname, lastname, email, telefon, msg || null]);
+    await pool.query(query, [id, firstname, lastname, email, telefon, msg || null, contactStatus]);
     res.json({ 
       message: 'Kontaktdaten erfolgreich gespeichert',
       id

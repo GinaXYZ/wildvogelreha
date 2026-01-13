@@ -138,11 +138,15 @@
   font-family: 'Helvetica', sans-serif;
   color: #0c4b47;
   margin-top: 5rem;
+  width: 100%;
+  overflow-x: hidden;
 }
 .container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 2rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 .mission-section {
   padding: 6rem 0;

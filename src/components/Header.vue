@@ -1,40 +1,42 @@
 <template>
   <div :class="['top-section', { compact: isCompact }]">
     <header :class="['header', { compact: isCompact }]" :style="headerStyle">
-      <div class="logo-and-title">
-        <img :src="Logo" alt="Logo" class="logo" />
-        <router-link class="title" to="/">Wildvogel Rehastation Waabs e.V.</router-link>
-      </div>
-      
-      <!-- Hamburger Menu Button (Mobile) -->
-      <button class="hamburger" @click="toggleMobileMenu" :class="{ active: mobileMenuOpen }">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
-      
-      <nav class="nav" :class="{ 'mobile-open': mobileMenuOpen }">
-        <router-link class="nav-link" to="/" @click="closeMobileMenu">Home</router-link>
-        <router-link class="nav-link" to="/about" @click="closeMobileMenu">Über uns</router-link>
-        <router-link class="nav-link" to="/voegel" @click="closeMobileMenu">Karte</router-link>
-        <router-link class="nav-link" to="/shop" @click="closeMobileMenu">Shop</router-link>
-        <router-link class="nav-link" to="/blog" @click="closeMobileMenu">Blog</router-link>
-        <router-link class="nav-link" to="/spenden" @click="closeMobileMenu">Spenden</router-link>
-        <router-link class="nav-link" to="/contact" @click="closeMobileMenu">Kontakt</router-link>
-      </nav>
-      <div class="user-actions">
-        <div class="cart-icon-container">
-          <router-link class="nav-link cart-icon" to="/cart">
-            🛒
-            <span class="cart-count" v-if="cart.length > 0">{{ cart.length }}</span>
-          </router-link>
+      <div class="header-inner">
+        <div class="logo-and-title">
+          <img :src="Logo" alt="Logo" class="logo" />
+          <router-link class="title" to="/">Wildvogel Rehastation Waabs e.V.</router-link>
         </div>
-                <router-link class="nav-link profile-icon" to="/profile">
-          👤
-        </router-link>
-         <button class="login-button" @click="handleAuthClick">
-         {{ authStore.isLoggedIn ? 'Logout' : 'Login' }}
+        
+        <!-- Hamburger Menu Button (Mobile) -->
+        <button class="hamburger" @click="toggleMobileMenu" :class="{ active: mobileMenuOpen }">
+          <span></span>
+          <span></span>
+          <span></span>
         </button>
+        
+        <nav class="nav" :class="{ 'mobile-open': mobileMenuOpen }">
+          <router-link class="nav-link" to="/" @click="closeMobileMenu">Home</router-link>
+          <router-link class="nav-link" to="/about" @click="closeMobileMenu">Über uns</router-link>
+          <router-link class="nav-link" to="/voegel" @click="closeMobileMenu">Karte</router-link>
+          <router-link class="nav-link" to="/shop" @click="closeMobileMenu">Shop</router-link>
+          <router-link class="nav-link" to="/blog" @click="closeMobileMenu">Blog</router-link>
+          <router-link class="nav-link" to="/spenden" @click="closeMobileMenu">Spenden</router-link>
+          <router-link class="nav-link" to="/contact" @click="closeMobileMenu">Kontakt</router-link>
+        </nav>
+        <div class="user-actions">
+          <div class="cart-icon-container">
+            <router-link class="nav-link cart-icon" to="/cart">
+              🛒
+              <span class="cart-count" v-if="cart.length > 0">{{ cart.length }}</span>
+            </router-link>
+          </div>
+          <router-link class="nav-link profile-icon" to="/profile">
+            👤
+          </router-link>
+          <button class="login-button" @click="handleAuthClick">
+            {{ authStore.isLoggedIn ? 'Logout' : 'Login' }}
+          </button>
+        </div>
       </div>
     </header>
     
@@ -130,15 +132,24 @@ const headerStyle = computed(() => ({
   max-width: 100vw;
   z-index: 1000;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  padding: 1.5rem 2rem;
+  padding: clamp(0.8rem, 2vw, 1.5rem) clamp(1rem, 3vw, 2rem);
   background-size: cover;
   background-position: top center;
   background-repeat: no-repeat;
   transition: padding 0.2s ease-in-out;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   box-sizing: border-box;
+  min-height: 70px;
+}
+.header-inner {
+  width: 100%;
+  max-width: 1200px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 1.5rem;
 }
 .main-content, .home-main-row {
   margin-top: 80px; 
@@ -148,13 +159,15 @@ const headerStyle = computed(() => ({
   align-items: center;
   gap: 1rem;
   flex-shrink: 0;
-  margin-right: 1rem;
+  justify-self: end;
+  margin-right: 0.5rem;
 }
 .logo-and-title {
   display: flex;
   align-items: center; 
   gap: 0.5rem;
   flex-shrink: 0;
+  justify-self: start;
 }
 .header.compact .nav-link {
   font-size: 1rem;
@@ -177,9 +190,10 @@ const headerStyle = computed(() => ({
   justify-content: center;
   flex-wrap: nowrap;
   white-space: nowrap;
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   gap: 1.5rem;
-  margin: 0 2rem;
+  margin: 0;
+  justify-self: center;
 }
 .nav-link {
   color: #0c4b47;
@@ -228,10 +242,10 @@ transform: scale(1.1);
   padding: 0.5rem 1rem;
   font-size: 1rem;
   gap: 1rem;
+  min-height: 60px;
 }
 .header .login-button {
   display: inline-block;
-  margin-left: auto;
 }
 .logo.compact {
   height: 25px;
@@ -246,7 +260,7 @@ transform: scale(1.1);
   background-color: #e3e3e3; 
   color: #0c4b47;
   padding: 0.5rem 1rem;
-  margin-right: 3rem;
+  margin-right: 0;
   border: 1px solid #a1a1a1; 
   font-style: bold;
   font-weight: bold;
@@ -268,6 +282,9 @@ transform: scale(1.1);
 
 /* Responsive Styles */
 @media (max-width: 1200px) {
+  .header-inner {
+    max-width: 100%;
+  }
   .title {
     font-size: 1.1rem;
   }
@@ -324,6 +341,9 @@ transform: scale(1.1);
   .header {
     padding: 1rem 1.5rem;
   }
+  .header-inner {
+    gap: 1rem;
+  }
   .nav {
     gap: 0.8rem;
   }
@@ -345,6 +365,13 @@ transform: scale(1.1);
   .header {
     padding: 0.8rem 1rem;
     min-height: 60px;
+  }
+
+  .header-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
   }
   
   .hamburger {

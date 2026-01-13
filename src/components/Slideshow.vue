@@ -53,10 +53,10 @@ const goToSlide = (index) => {
 
   <style>
 .slideshow {
-  margin-top: 10rem;
+  margin-top: 0;
   position: relative;
   width: 100%;
-  max-width: 600px;
+  max-width: 680px;
   height: auto;
   aspect-ratio: 3 / 2;
   overflow: hidden;
@@ -161,7 +161,7 @@ button.next {
 /* ===== Responsive Slideshow ===== */
 @media (max-width: 768px) {
   .slideshow {
-    margin-top: 2rem;
+    margin-top: 1rem;
     max-width: 100%;
   }
   

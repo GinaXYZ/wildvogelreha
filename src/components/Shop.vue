@@ -668,6 +668,8 @@ const handleAddToCart = (product) => {
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   color: #0c4b47;
   font-family: 'Helvetica', sans-serif;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .admin-form h3 {

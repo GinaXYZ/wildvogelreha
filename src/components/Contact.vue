@@ -31,13 +31,14 @@ const submitContact = async () => {
         lastname: lastname.value,
         email: email.value,
         telefon: telefon.value,
-        msg: msg.value
+        msg: msg.value,
+        status: 'neu'
       }),
     });
 
     const data = await response.json();
 
-    if (res.ok) {
+    if (response.ok) {
           message.value = 'Vielen Dank! Ihre Nachricht wurde erfolgreich versendet. Wir melden uns bald bei Ihnen.';
       firstname.value = '';
       lastname.value = '';
