@@ -531,7 +531,7 @@ onBeforeUnmount(() => {
 
 .item-label {
   margin-top: 2px;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   background: rgba(255,255,255,0.8);
   padding: 2px 4px;
   border-radius: 4px;
@@ -551,11 +551,11 @@ onBeforeUnmount(() => {
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   z-index: 999999;
   min-width: 200px;
-  max-width: 90vw;
+  max-width: 250px;
   font-family: 'Helvetica', sans-serif;
   font-weight: bold;
   color: #0c4b47;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   pointer-events: auto;
   transform: translateX(-50%);
 }
@@ -918,17 +918,6 @@ onBeforeUnmount(() => {
   }
 }
 
-@media (max-width: 900px) {
-  .bird-tooltip,
-  .edit-form {
-    position: fixed !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    max-width: 90vw;
-  }
-}
-
 @media (max-width: 640px) {
   .main-layout {
     padding: 0 0.5rem;
@@ -997,7 +986,7 @@ onBeforeUnmount(() => {
     height: 45px;
   }
   .item-label {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     padding: 2px 4px;
   }
 }

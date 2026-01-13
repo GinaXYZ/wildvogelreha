@@ -15,47 +15,45 @@
       <div v-if="donationsLoading">Lade Spenden...</div>
       <div v-else-if="donationsError" class="error">{{ donationsError }}</div>
       <div v-else>
-        <div class="table-scroll">
           <table class="donations-table">
-            <thead>
-              <tr>
-                <th @click="sortBy('created_at')" class="sortable-header">
-                  Datum 
+          <thead>
+            <tr>
+              <th @click="sortBy('created_at')" class="sortable-header">
+                Datum 
+                <span class="sort-arrow">
+                  {{ sortDirection === 'asc' ? '▲' : '▼' }}
+                </span>
+              </th>
+                <th @click="sortBy('donor_name')" class="sortable-header" style="position: relative;">
+                  Name
+                  <span class="sort-arrow">
+                    {{ sortDirection === 'asc' ? '▲' : '▼' }}
+                  </span>
+                  <button
+                    class="search-btn"
+                    @click.stop="showSearchPopup($event)"
+                    style="margin-left: 0.2rem;"
+                    title="Nach Namen suchen"
+                  >
+                    🔍
+                  </button>
+                </th>
+                <th @click="sortBy('amount')" class="sortable-header">
+                  Betrag 
                   <span class="sort-arrow">
                     {{ sortDirection === 'asc' ? '▲' : '▼' }}
                   </span>
                 </th>
-                  <th @click="sortBy('donor_name')" class="sortable-header" style="position: relative;">
-                    Name
-                    <span class="sort-arrow">
-                      {{ sortDirection === 'asc' ? '▲' : '▼' }}
-                    </span>
-                    <button
-                      class="search-btn"
-                      @click.stop="showSearchPopup($event)"
-                      style="margin-left: 0.2rem;"
-                      title="Nach Namen suchen"
-                    >
-                      🔍
-                    </button>
-                  </th>
-                  <th @click="sortBy('amount')" class="sortable-header">
-                    Betrag 
-                    <span class="sort-arrow">
-                      {{ sortDirection === 'asc' ? '▲' : '▼' }}
-                    </span>
-                  </th>
-              </tr>
-            </thead>
-            <tbody>
-                <tr v-for="donation in paginatedDonations" :key="donation.id">
-                <td>{{ formatDate(donation.created_at) }}</td>
-                <td>{{ donation.donor_name || 'Anonym' }}</td>
-                <td>{{ (+donation.amount).toFixed(2) }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+            </tr>
+          </thead>
+          <tbody>
+              <tr v-for="donation in paginatedDonations" :key="donation.id">
+              <td>{{ formatDate(donation.created_at) }}</td>
+              <td>{{ donation.donor_name || 'Anonym' }}</td>
+              <td>{{ (+donation.amount).toFixed(2) }}</td>
+            </tr>
+          </tbody>
+        </table>
         <div 
             v-if="searchPopupVisible"
             class="search-popup"
@@ -86,56 +84,54 @@
       <div v-if="contactsLoading" class="loading">Lade Kontakte...</div>
       <div v-else-if="contactsError" class="error">{{ contactsError }}</div>
       <div v-else>
-        <div class="table-scroll">
-          <table class="contacts-table">
-            <thead>
-              <tr>
-                <th class="priority-column-cell">Priorität</th>
-                <th>Name</th>
-                <th>E-Mail</th>
-                <th>Telefon</th>
-                <th>Datum</th>
-                <th>Aktionen</th>
-                <th>Nachricht</th>
-              </tr>
-            </thead>
-                      <tbody>
-              <tr v-for="contact in contacts" :key="contact.id">
-                <td class="priority-column-cell"> 
-                  <div class="status-content-wrapper"> 
-                    <span :class="getStatusSquareClass(contact.status)" class="status-square"></span>
-                    <select
-                      v-model="contact.status"
-                      @change="updateContactStatus(contact)"
-                      class="status-select"
-                      :class="{ 'notfall-status': contact.status === 'notfall' }"
-                    >
-                      <option value="neu">Neu</option>
-                      <option value="notfall">Notfall</option>
-                      <option value="niedrig">Niedrig</option>
-                      <option value="Wichtig">Wichtig</option>
-                      <option value="Mittel">Mittel</option>
-                      <option value="fertig">Fertig</option>
-                    </select>
-                  </div>
-                </td>
-                <td>{{ contact.firstname }} {{ contact.lastname }}</td>
-                <td>{{ contact.email }}</td>
-                <td>{{ contact.telefon }}</td>
-                <td>{{ formatDate(contact.created_at) }}</td>
-                <td>
-                  <button @click="deleteContact(contact.id)" class="delete-btn" title="Kontakt löschen">
-                    🗑️
-                  </button>
-                </td>
-                <td>{{ contact.msg }}</td>
-              </tr>
-              <tr v-if="contacts.length === 0">
-                <td colspan="7">Keine Kontakte gefunden.</td>
-              </tr>
-            </tbody>
-          </table> 
-        </div>
+        <table class="contacts-table">
+          <thead>
+            <tr>
+              <th>Priorität</th>
+              <th>Name</th>
+              <th>E-Mail</th>
+              <th>Telefon</th>
+              <th>Datum</th>
+              <th>Aktionen</th>
+              <th>Nachricht</th>
+            </tr>
+          </thead>
+                    <tbody>
+            <tr v-for="contact in contacts" :key="contact.id">
+              <td class="priority-column-cell"> 
+                <div class="status-content-wrapper"> 
+                  <span :class="getStatusSquareClass(contact.status)" class="status-square"></span>
+                  <select
+                    v-model="contact.status"
+                    @change="updateContactStatus(contact)"
+                    class="status-select"
+                    :class="{ 'notfall-status': contact.status === 'notfall' }"
+                  >
+                    <option value="neu">Neu</option>
+                    <option value="notfall">Notfall</option>
+                    <option value="niedrig">Niedrig</option>
+                    <option value="Wichtig">Wichtig</option>
+                    <option value="Mittel">Mittel</option>
+                    <option value="fertig">Fertig</option>
+                  </select>
+                </div>
+              </td>
+              <td>{{ contact.firstname }} {{ contact.lastname }}</td>
+              <td>{{ contact.email }}</td>
+              <td>{{ contact.telefon }}</td>
+              <td>{{ formatDate(contact.created_at) }}</td>
+              <td>
+                <button @click="deleteContact(contact.id)" class="delete-btn" title="Kontakt löschen">
+                  🗑️
+                </button>
+              </td>
+              <td>{{ contact.msg }}</td>
+            </tr>
+            <tr v-if="contacts.length === 0">
+              <td colspan="7">Keine Kontakte gefunden.</td>
+            </tr>
+          </tbody>
+        </table> 
         <div class="pagination">
           <button @click="contactsPage--" :disabled="contactsPage === 1">Zurück</button>
           <span>Seite {{ contactsPage }}</span>
@@ -149,52 +145,51 @@
       <div v-if="patientsLoading">Lade Patienten...</div>
       <div v-else-if="patientsError" class="error">{{ patientsError }}</div>
       <div v-else>
-        <div class="table-scroll">
-          <table class="patients-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Tierart</th>
-                <th>Status</th>
-                <th>Aufnahmedatum</th>
-                <th>Details</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="patient in patients" :key="patient.id">
-                <td>{{ patient.id }}</td>
-                <td>{{ patient.name }}</td>
-                <td>{{ patient.species }}</td>
-                <td>
-                  <select
-                    v-model="patient.status"
-                    class="status-select"
-                    @change="updatePatient(patient)"
-                  >
-                    <option value="in Behandlung">In Behandlung</option>
-                    <option value="ausgewildert">Ausgewildert</option>
-                    <option value="kritisch">Kritisch</option>
-                    <option value="gesund">Gesund</option>
-                    <option value="permanent">Permanent</option>
-                    <option value="Adoption">Adoption</option>
-                  </select>
-                </td>
-                <td>{{ formatDate(patient.admission_date) }}</td>
-                <td>
+        <table class="patients-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Tierart</th>
+              <th>Status</th>
+              <th>Aufnahmedatum</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="patient in patients" :key="patient.id">
+              <td>{{ patient.id }}</td>
+              <td>{{ patient.name }}</td>
+              <td>{{ patient.species }}</td>
+              <td>
+                <select
+                  v-model="patient.status"
+                  class="status-select"
+                  @change="updatePatient(patient)"
+                >
+                  <option value="in Behandlung">In Behandlung</option>
+                  <option value="ausgewildert">Ausgewildert</option>
+                  <option value="kritisch">Kritisch</option>
+                  <option value="gesund">Gesund</option>
+                  <option value="permanent">Permanent</option>
+                  <option value="Adoption">Adoption</option>
+                </select>
+              </td>
+              <td>{{ formatDate(patient.admission_date) }}</td>
+              <td>
                 <input
                   v-model="patient.details"
                   class="details-input"
+                  style="width: 180px;"
                   @blur="updatePatient(patient)"
                 />
-                </td>
-              </tr>
-              <tr v-if="patients.length === 0">
-                <td colspan="7">Keine Patienten gefunden.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+              </td>
+            </tr>
+            <tr v-if="patients.length === 0">
+              <td colspan="7">Keine Patienten gefunden.</td>
+            </tr>
+          </tbody>
+        </table>
         <div class="pagination">
           <button @click="patientsPage--" :disabled="patientsPage === 1">Zurück</button>
           <span>Seite {{ patientsPage }}</span>
@@ -225,30 +220,28 @@
             <input v-model="newTask" placeholder="Neue Aufgabe..." />
             <button @click="addTask">Hinzufügen</button>
           </div>
-          <div class="table-scroll">
-            <table class="task-table">
-              <thead>
-                <tr>
-                  <th>Status</th>
-                  <th>Aufgabe</th>
-                  <th>Aktion</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(task, index) in tasks" :key="index">
-                  <td>
-                    <input type="checkbox" v-model="task.done" />
-                  </td>
-                  <td>
-                    <span :class="{ 'task-done': task.done }">{{ task.text }}</span>
-                  </td>
-                  <td>
-                    <button @click="removeTask(index)">❌</button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <table class="task-table">
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Aufgabe</th>
+                <th>Aktion</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(task, index) in tasks" :key="index">
+                <td>
+                  <input type="checkbox" v-model="task.done" />
+                </td>
+                <td>
+                  <span :class="{ 'task-done': task.done }">{{ task.text }}</span>
+                </td>
+                <td>
+                  <button @click="removeTask(index)">❌</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       <div v-else-if="activeTaskTab === 'schicht'" class="schedule-section">
         <h3>Schichtplanung</h3>
@@ -274,41 +267,39 @@
         </div>
         </div>
  <div class="week-calendar">
-  <div class="table-scroll">
-    <table class="schedule-table">
-      <thead>
-        <tr>
-          <th class="time-header">Zeit</th>
-          <th v-for="day in weekDays" :key="day" class="day-header">
-            {{ day }}
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="timeSlot in timeSlots" :key="timeSlot" class="time-row">
-          <td class="time-cell">{{ timeSlot }}</td>
-          <td v-for="day in weekDays" :key="day"
-              class="schedule-cell"
-              :data-day="day"
-              :data-time="timeSlot">
-            <div v-for="assignment in getScheduleForCell(day, timeSlot)"
-                 :key="assignment.id"
-                 class="staff-assignment"
-                 @mousedown="onDragStart($event, assignment.staff)">
-              <span class="staff-name">{{ shortName(assignment.staff.name) }}</span>
-              <button v-if="isAdmin"
-                      @click="removeAssignment(assignment.id)"
-                      @mousedown.stop
-                      class="remove-staff-btn"
-                      title="x">
-                ✕
-              </button>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+  <table class="schedule-table">
+    <thead>
+      <tr>
+        <th class="time-header">Zeit</th>
+        <th v-for="day in weekDays" :key="day" class="day-header">
+          {{ day }}
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="timeSlot in timeSlots" :key="timeSlot" class="time-row">
+        <td class="time-cell">{{ timeSlot }}</td>
+        <td v-for="day in weekDays" :key="day"
+            class="schedule-cell"
+            :data-day="day"
+            :data-time="timeSlot">
+          <div v-for="assignment in getScheduleForCell(day, timeSlot)"
+               :key="assignment.id"
+               class="staff-assignment"
+               @mousedown="onDragStart($event, assignment.staff)">
+            <span class="staff-name">{{ shortName(assignment.staff.name) }}</span>
+            <button v-if="isAdmin"
+                    @click="removeAssignment(assignment.id)"
+                    @mousedown.stop
+                    class="remove-staff-btn"
+                    title="x">
+              ✕
+            </button>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
 </div>
 </div>
 </div>
@@ -784,9 +775,6 @@ function shortName(name) {
   padding: 0.3rem;
   border: 1px solid #ccc;
   border-radius: 8px;
-  width: 100%;
-  max-width: 240px;
-  box-sizing: border-box;
 }
 .patients-table {
   width: 100%; 
@@ -1013,8 +1001,7 @@ function shortName(name) {
   width: 20px;
 }
 .contacts-table {
-  width: 100%;
-  table-layout: fixed;
+  width: 96%;
   border-collapse: separate;
   border-spacing: 0;
   margin: 2rem auto 0 auto;
@@ -1030,7 +1017,6 @@ function shortName(name) {
   text-align: center;
   vertical-align: middle;
   border-bottom: 1px solid #f0f0f0;
-  word-break: break-word;
 }
 .contacts-table td.priority-column-cell,
 .contacts-table th.priority-column-cell { 
@@ -1095,25 +1081,6 @@ function shortName(name) {
   .contacts-table th, .contacts-table td {
     padding: 0.7rem 0.2rem;
   }
-  .contacts-table td.priority-column-cell,
-  .contacts-table th.priority-column-cell,
-  .contacts-table td.status-cell,
-  .contacts-table th.status-cell {
-    min-width: 120px;
-    width: auto;
-  }
-  .details-input {
-    max-width: 100%;
-  }
-}
-.table-scroll {
-  width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.table-scroll table {
-  width: 100%;
 }
 .contacts-table td:nth-child(6) {
   text-align: center;
@@ -1321,7 +1288,7 @@ function shortName(name) {
 .subtab-container {
   display: flex;
   gap: 1rem;
-  margin-top: 2.5rem;
+  margin-top: 1.5rem;
   margin-bottom: 1.5rem;
   flex-wrap: wrap;
 }

@@ -29,8 +29,7 @@ onMounted(async () => {
     });
 
     if (response.ok) {
-      const data = await response.json();
-      posts.value = Array.isArray(data) ? data : data.results || [];
+      posts.value = await response.json();
     } else {
       message.value = `Fehler beim Abrufen der Blog-Beiträge: ${response.status} ${response.statusText}`;
     }
