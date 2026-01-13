@@ -368,6 +368,11 @@ const headerStyle = computed(() => ({
     justify-content: center;
   }
 
+  /* hide the left logo on mobile so the hamburger is clearly visible */
+  .logo {
+    display: none;
+  }
+
   /* ensure compact title stays smaller on mobile when header is compact */
   .header.compact .title {
     font-size: 0.9rem;
@@ -466,6 +471,11 @@ const headerStyle = computed(() => ({
     font-size: 0.85rem;
   }
 
+  /* hide logo on smaller screens as well */
+  .logo {
+    display: none;
+  }
+
   .hamburger {
     width: 34px;
     height: 20px;
@@ -496,6 +506,11 @@ const headerStyle = computed(() => ({
 
   .header.compact .title {
     font-size: 0.75rem;
+  }
+
+  /* hide logo on very small screens too */
+  .logo {
+    display: none;
   }
 
   .hamburger {
