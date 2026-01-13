@@ -338,6 +338,24 @@ const weekSchedule = ref([]);
 const donations = ref([]);
 const donationsLoading = ref(false);
 const donationsError = ref(null);
+
+// move allDonations here so computed properties that use it don't run before declaration
+const allDonations = ref([]);
+const fetchAllDonations = async () => {
+  try {
+    const token = authStore.token || localStorage.getItem('token');
+    const res = await fetch(`${API_BASE}/donations/all`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    if (!res.ok) throw new Error('Fehler beim Laden aller Spenden');
+    const data = await res.json();
+    allDonations.value = data || [];
+  } catch (err) {
+    console.error('fetchAllDonations error', err);
+  }
+};
 const contacts = ref([]);
 const contactsLoading = ref(false);
 const contactsError = ref(null);
@@ -741,6 +759,12 @@ const addNewPatient = () => {
   const newP = { id: Date.now(), name, species: '', status: 'in Behandlung', admission_date: new Date().toISOString(), details: '' };
   patients.value.unshift(newP);
 };
+onMounted(() => {
+  fetchAllDonations();
+  fetchDonations();
+  fetchContacts();
+  fetchPatients();
+});
 </script>
 
 <style scoped>
