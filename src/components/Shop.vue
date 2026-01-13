@@ -808,12 +808,13 @@ const handleAddToCart = (product) => {
   }
   
   .admin-section {
-    padding: 0 1rem;
-    margin: 2rem auto;
+    padding: 0 0.5rem;
+    margin: 1.5rem auto;
   }
   
   .admin-form {
-    padding: 1.5rem;
+    padding: 1rem;
+    margin: 0 0.5rem;
   }
   
   .admin-form h3 {
@@ -830,11 +831,17 @@ const handleAddToCart = (product) => {
   .form-textarea {
     font-size: 1rem;
     padding: 0.8rem;
+    width: 100%;
+    box-sizing: border-box;
   }
   
   .submit-btn {
     width: 100%;
     padding: 1rem;
+  }
+  
+  .product-form {
+    width: 100%;
   }
 }
 

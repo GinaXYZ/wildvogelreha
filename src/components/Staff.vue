@@ -1288,9 +1288,10 @@ function shortName(name) {
 .subtab-container {
   display: flex;
   gap: 1rem;
-  margin-top: 1.5rem;
+  margin-top: 2rem;
   margin-bottom: 1.5rem;
   flex-wrap: wrap;
+  padding-top: 0.5rem;
 }
 
 .subtab-container button {
@@ -1410,16 +1411,20 @@ function shortName(name) {
     width: 100%;
     padding: 0.5rem;
     margin-top: 1rem;
+    overflow-x: auto;
   }
   
-  /* Responsive table container */
+  /* Responsive table wrapper */
   .contacts-table,
-  .patients-table {
+  .patients-table,
+  .donations-table,
+  .task-table {
     display: block;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     white-space: nowrap;
     max-width: 100%;
+    font-size: 0.9rem;
   }
   
   .contacts-table th,
@@ -1428,7 +1433,15 @@ function shortName(name) {
   .patients-table td {
     padding: 0.5rem 0.3rem;
     font-size: 0.85rem;
-    min-width: 80px;
+    min-width: 70px;
+  }
+  
+  /* Hide less important columns on mobile */
+  .contacts-table th:nth-child(3),
+  .contacts-table td:nth-child(3),
+  .contacts-table th:nth-child(4),
+  .contacts-table td:nth-child(4) {
+    display: none;
   }
   
   .donations-table {
@@ -1482,12 +1495,14 @@ function shortName(name) {
     flex-wrap: wrap;
     gap: 0.5rem;
     justify-content: center;
+    margin-top: 1.5rem;
   }
   
   .subtab-container button {
     margin-right: 0;
     flex: 1 1 auto;
-    min-width: 120px;
+    min-width: 100px;
+    font-size: 0.85rem;
   }
   
   /* Staff form responsive */
@@ -1523,6 +1538,13 @@ function shortName(name) {
   .donation-sums {
     text-align: center;
     font-size: 0.95rem;
+  }
+  
+  /* Status select smaller */
+  .status-select {
+    font-size: 0.8rem;
+    padding: 0.3rem;
+    min-width: 80px;
   }
 }
 

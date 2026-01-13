@@ -3,7 +3,7 @@
 }
 
 html {
-  font-size: 16px;
+  font-size: 18px; /* Increased base font size */
   scroll-behavior: smooth;
 }
 
@@ -12,6 +12,7 @@ body {
   padding: 0;
   min-width: 320px;
   overflow-x: hidden;
+  font-family: 'Helvetica', sans-serif;
 }
 
 :root {
@@ -27,24 +28,30 @@ body {
   --header-height-mobile: 60px;
 }
 
-/* ===== Responsive Typography ===== */
+/* ===== Responsive Typography - LARGER for Mobile ===== */
+@media (max-width: 1024px) {
+  html {
+    font-size: 17px;
+  }
+}
+
 @media (max-width: 768px) {
   html {
-    font-size: 15px;
+    font-size: 17px; /* Keep larger on mobile for readability */
   }
 }
 
 @media (max-width: 480px) {
   html {
-    font-size: 14px;
+    font-size: 16px; /* Still larger than before */
   }
 }
 
 @media (max-width: 600px) {
-  h1 { font-size: 1.4rem; }
-  h2 { font-size: 1.2rem; }
-  h3 { font-size: 1rem; }
-  p, li, label, input, button { font-size: 0.95rem; }
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.3rem; }
+  h3 { font-size: 1.1rem; }
+  p, li, label, input, button { font-size: 1rem; }
 }
 
 /* ===== Utility classes ===== */
@@ -89,4 +96,45 @@ html, body {
 img {
   max-width: 100%;
   height: auto;
+}
+
+/* ===== Table responsiveness ===== */
+@media (max-width: 768px) {
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+  
+  /* Better input/form sizing */
+  input, select, textarea {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  
+  /* Form containers should not overflow */
+  form {
+    max-width: 100%;
+    overflow: hidden;
+  }
+}
+
+/* ===== Ensure nothing overflows on mobile ===== */
+@media (max-width: 600px) {
+  .main-content > * {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  
+  /* Tables with scroll hint */
+  table {
+    font-size: 0.9rem;
+  }
+  
+  /* Better button sizes for touch */
+  button {
+    min-height: 44px;
+    padding: 0.5rem 1rem;
+  }
 }

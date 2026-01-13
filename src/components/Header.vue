@@ -1,40 +1,45 @@
 <template>
-  <div :class="['top-section', { compact: isCompact }]">
+  <div class="header-wrapper">
     <header :class="['header', { compact: isCompact }]" :style="headerStyle">
-      <div class="logo-and-title">
-        <img :src="Logo" alt="Logo" class="logo" />
-        <router-link class="title" to="/">Wildvogel Rehastation Waabs e.V.</router-link>
-      </div>
-      
-      <!-- Hamburger Menu Button (Mobile) -->
-      <button class="hamburger" @click="toggleMobileMenu" :class="{ active: mobileMenuOpen }">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
-      
-      <nav class="nav" :class="{ 'mobile-open': mobileMenuOpen }">
-        <router-link class="nav-link" to="/" @click="closeMobileMenu">Home</router-link>
-        <router-link class="nav-link" to="/about" @click="closeMobileMenu">Über uns</router-link>
-        <router-link class="nav-link" to="/voegel" @click="closeMobileMenu">Karte</router-link>
-        <router-link class="nav-link" to="/shop" @click="closeMobileMenu">Shop</router-link>
-        <router-link class="nav-link" to="/blog" @click="closeMobileMenu">Blog</router-link>
-        <router-link class="nav-link" to="/spenden" @click="closeMobileMenu">Spenden</router-link>
-        <router-link class="nav-link" to="/contact" @click="closeMobileMenu">Kontakt</router-link>
-      </nav>
-      <div class="user-actions">
-        <div class="cart-icon-container">
+      <div class="header-inner">
+        <div class="logo-and-title">
+          <img :src="Logo" alt="Logo" class="logo" />
+          <router-link class="title" to="/">Wildvogel Rehastation Waabs e.V.</router-link>
+        </div>
+        
+        <!-- Hamburger Menu Button (Mobile) -->
+        <button class="hamburger" @click="toggleMobileMenu" :class="{ active: mobileMenuOpen }" aria-label="Menü">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        
+        <nav class="nav" :class="{ 'mobile-open': mobileMenuOpen }">
+          <router-link class="nav-link" to="/" @click="closeMobileMenu">Home</router-link>
+          <router-link class="nav-link" to="/about" @click="closeMobileMenu">Über uns</router-link>
+          <router-link class="nav-link" to="/voegel" @click="closeMobileMenu">Karte</router-link>
+          <router-link class="nav-link" to="/shop" @click="closeMobileMenu">Shop</router-link>
+          <router-link class="nav-link" to="/blog" @click="closeMobileMenu">Blog</router-link>
+          <router-link class="nav-link" to="/spenden" @click="closeMobileMenu">Spenden</router-link>
+          <router-link class="nav-link" to="/contact" @click="closeMobileMenu">Kontakt</router-link>
+          <!-- Mobile: Login in Nav -->
+          <button class="login-button mobile-login" @click="handleAuthClick">
+            {{ authStore.isLoggedIn ? 'Logout' : 'Login' }}
+          </button>
+        </nav>
+        
+        <div class="user-actions">
           <router-link class="nav-link cart-icon" to="/cart">
             🛒
             <span class="cart-count" v-if="cart.length > 0">{{ cart.length }}</span>
           </router-link>
+          <router-link class="nav-link profile-icon" to="/profile">
+            👤
+          </router-link>
+          <button class="login-button desktop-login" @click="handleAuthClick">
+            {{ authStore.isLoggedIn ? 'Logout' : 'Login' }}
+          </button>
         </div>
-                <router-link class="nav-link profile-icon" to="/profile">
-          👤
-        </router-link>
-         <button class="login-button" @click="handleAuthClick">
-         {{ authStore.isLoggedIn ? 'Logout' : 'Login' }}
-        </button>
       </div>
     </header>
     
@@ -102,184 +107,179 @@ const headerStyle = computed(() => ({
 </script>
 
 <style scoped>
-.top-section {
-  background-size: contain;
-  background-position: center;
-  background-repeat: no-repeat;
-  transition: all 0.3s ease;
-}
-.login-container {
+/* ===== HEADER WRAPPER - Controls spacing for page content ===== */
+.header-wrapper {
   position: relative;
+  width: 100%;
 }
-.login-button:active {
-  background-color: #bfcfcf;
-  color: #0c4b47;
-  box-shadow: 1px 1px 2px rgba(0,0,0,0.15) inset;
-  transform: translateY(2px) scale(0.98);
-}
-.login-button:hover {
-  background-color: #e0e0e0c6;
-}
+
+/* ===== HEADER - Fixed position, not affected by content ===== */
 .header {
   font-family: 'Helvetica', sans-serif;
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  width: 100%;
-  max-width: 100vw;
+  width: 100vw;
   z-index: 1000;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem 2rem;
   background-size: cover;
   background-position: top center;
   background-repeat: no-repeat;
-  transition: padding 0.2s ease-in-out;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   box-sizing: border-box;
+  transition: all 0.3s ease;
 }
-.main-content, .home-main-row {
-  margin-top: 80px; 
-}
-.user-actions {
+
+.header-inner {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 1rem;
-  flex-shrink: 0;
-  margin-right: 1rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1rem 2rem;
+  box-sizing: border-box;
 }
+
+.header.compact .header-inner {
+  padding: 0.5rem 1.5rem;
+}
+
+/* ===== LOGO AND TITLE ===== */
 .logo-and-title {
   display: flex;
-  align-items: center; 
+  align-items: center;
   gap: 0.5rem;
   flex-shrink: 0;
 }
-.header.compact .nav-link {
-  font-size: 1rem;
-}
+
 .logo {
-  height: 35px;
+  height: 40px;
   width: auto;
   transition: all 0.3s ease;
 }
+
+.header.compact .logo {
+  height: 30px;
+}
+
 .title {
   color: #0c4b47;
   font-size: 1.3rem;
   text-decoration: none;
   transition: all 0.3s ease;
   white-space: nowrap;
+  font-weight: bold;
 }
+
+.header.compact .title {
+  font-size: 1.1rem;
+}
+
+/* ===== NAVIGATION - Centered ===== */
 .nav {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-wrap: nowrap;
-  white-space: nowrap;
-  flex: 1 1 auto;
   gap: 1.5rem;
+  flex: 1;
   margin: 0 2rem;
 }
+
 .nav-link {
   color: #0c4b47;
   text-decoration: none;
   cursor: pointer;
   font-family: 'Helvetica', sans-serif;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
+  font-weight: 500;
   transition: color 0.2s ease;
   white-space: nowrap;
+  padding: 0.3rem 0.5rem;
 }
+
 .nav-link:hover {
   color: #2196f3;
 }
+
+.header.compact .nav-link {
+  font-size: 1rem;
+}
+
+/* ===== USER ACTIONS ===== */
+.user-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.cart-icon,
 .profile-icon {
   font-size: 1.5rem;
   color: #0c4b47;
   cursor: pointer;
-  transition: color 0.2s ease;
+  transition: transform 0.2s ease;
+  text-decoration: none;
+  position: relative;
 }
+
+.cart-icon:hover,
 .profile-icon:hover {
-transform: scale(1.1);
+  transform: scale(1.1);
 }
-.cart-icon-container {
-  position: relative;
-}
-.cart-icon {
-  display: flex;
-  align-items: center;
-  position: relative;
-}
-.cart-icon:hover {
-transform: scale(1.1);
-}
+
 .cart-count {
   position: absolute;
-  top: -5px;
+  top: -8px;
   right: -10px;
   background-color: red;
   color: white;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: bold;
   border-radius: 50%;
-  padding: 0.2rem 0.5rem;
+  padding: 0.15rem 0.4rem;
+  min-width: 18px;
+  text-align: center;
 }
-.header.compact {
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-  gap: 1rem;
-}
-.header .login-button {
-  display: inline-block;
-  margin-left: auto;
-}
-.logo.compact {
-  height: 25px;
-}
-.title.compact {
-  font-size: 1.5rem;
-}
-.nav-link.compact {
-  font-size: 1rem;
-}
+
+/* ===== LOGIN BUTTON ===== */
 .login-button {
-  background-color: #e3e3e3; 
+  background-color: #e3e3e3;
   color: #0c4b47;
   padding: 0.5rem 1rem;
-  margin-right: 3rem;
-  border: 1px solid #a1a1a1; 
-  font-style: bold;
+  border: 1px solid #a1a1a1;
   font-weight: bold;
   border-radius: 4px;
   font-size: 1rem;
   font-family: 'Helvetica', sans-serif;
-  text-decoration: none;
   cursor: pointer;
-  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2), -1px -1px 3px rgba(255, 255, 255, 0.8); 
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2), -1px -1px 3px rgba(255, 255, 255, 0.8);
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
+
+.login-button:hover {
+  background-color: #d0d0d0;
+}
+
+.login-button:active {
+  background-color: #bfcfcf;
+  transform: translateY(1px);
+}
+
 .header.compact .login-button {
-  font-size: 0.9rem;
   padding: 0.4rem 0.8rem;
-}
-.header.compact .logo {
-  height: 25px; 
+  font-size: 0.9rem;
 }
 
-/* Responsive Styles */
-@media (max-width: 1200px) {
-  .title {
-    font-size: 1.1rem;
-  }
-  .nav-link {
-    font-size: 1.1rem;
-  }
-  .nav {
-    gap: 1rem;
-  }
+.mobile-login {
+  display: none;
 }
 
-/* ===== Hamburger Menu Styles ===== */
+.desktop-login {
+  display: inline-block;
+}
+
+/* ===== HAMBURGER MENU ===== */
 .hamburger {
   display: none;
   flex-direction: column;
@@ -315,40 +315,44 @@ transform: scale(1.1);
   transform: rotate(-45deg) translate(7px, -6px);
 }
 
+/* ===== MOBILE OVERLAY ===== */
 .mobile-overlay {
   display: none;
 }
 
-/* ===== Tablet Responsive (1024px) ===== */
+/* ===== TABLET (1024px) ===== */
 @media (max-width: 1024px) {
-  .header {
-    padding: 1rem 1.5rem;
+  .header-inner {
+    padding: 0.8rem 1.5rem;
   }
+  
   .nav {
-    gap: 0.8rem;
+    gap: 1rem;
+    margin: 0 1rem;
   }
+  
   .nav-link {
     font-size: 1rem;
   }
+  
   .title {
-    font-size: 1rem;
+    font-size: 1.1rem;
   }
-  .login-button {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.9rem;
-    margin-right: 0.5rem;
+  
+  .logo {
+    height: 35px;
   }
 }
 
-/* ===== Mobile Responsive (900px) - Show Hamburger Menu ===== */
+/* ===== MOBILE - Hamburger Menu (900px) ===== */
 @media (max-width: 900px) {
-  .header {
+  .header-inner {
     padding: 0.8rem 1rem;
-    min-height: 60px;
   }
   
   .hamburger {
     display: flex;
+    order: 3;
   }
   
   .mobile-overlay {
@@ -386,37 +390,42 @@ transform: scale(1.1);
     right: 0;
   }
   
-  .nav-link {
+  .nav .nav-link {
     width: 100%;
     padding: 1rem 0;
     font-size: 1.2rem;
     border-bottom: 1px solid #eee;
   }
   
-  .nav-link:last-child {
+  .nav .nav-link:last-of-type {
     border-bottom: none;
   }
   
-  .logo-and-title {
-    flex: 0 0 auto;
+  .mobile-login {
+    display: block;
+    width: 100%;
+    margin-top: 1.5rem;
+    padding: 1rem;
+    font-size: 1.1rem;
+    text-align: center;
+  }
+  
+  .desktop-login {
+    display: none;
   }
   
   .user-actions {
     margin-left: auto;
-    margin-right: 0.8rem;
+    margin-right: 1rem;
     gap: 0.8rem;
   }
   
-  .login-button {
-    display: none;
-  }
-  
   .title {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
   }
   
   .logo {
-    height: 28px;
+    height: 32px;
   }
   
   .cart-icon,
@@ -425,11 +434,10 @@ transform: scale(1.1);
   }
 }
 
-/* ===== Small Mobile (600px) ===== */
+/* ===== SMALL MOBILE (600px) ===== */
 @media (max-width: 600px) {
-  .header {
+  .header-inner {
     padding: 0.7rem 0.8rem;
-    min-height: 55px;
   }
   
   .title {
@@ -437,12 +445,11 @@ transform: scale(1.1);
   }
   
   .logo {
-    height: 26px;
+    height: 28px;
   }
   
   .user-actions {
     gap: 0.6rem;
-    margin-right: 0.6rem;
   }
   
   .cart-icon,
@@ -451,7 +458,7 @@ transform: scale(1.1);
   }
   
   .hamburger {
-    width: 28px;
+    width: 26px;
     height: 20px;
   }
   
@@ -461,17 +468,16 @@ transform: scale(1.1);
     padding: 4.5rem 1.2rem 2rem;
   }
   
-  .nav-link {
+  .nav .nav-link {
     font-size: 1.1rem;
     padding: 0.9rem 0;
   }
 }
 
-/* ===== Very Small Mobile (400px) ===== */
+/* ===== VERY SMALL MOBILE (400px) ===== */
 @media (max-width: 400px) {
-  .header {
-    padding: 0.6rem;
-    min-height: 50px;
+  .header-inner {
+    padding: 0.6rem 0.5rem;
   }
   
   .title {
@@ -479,12 +485,12 @@ transform: scale(1.1);
   }
   
   .logo {
-    height: 22px;
+    height: 24px;
   }
   
   .user-actions {
     gap: 0.4rem;
-    margin-right: 0.4rem;
+    margin-right: 0.5rem;
   }
   
   .cart-icon,
@@ -493,16 +499,16 @@ transform: scale(1.1);
   }
   
   .hamburger {
-    width: 26px;
+    width: 24px;
     height: 18px;
   }
   
   .nav {
-    width: 220px;
-    right: -230px;
+    width: 200px;
+    right: -210px;
   }
   
-  .nav-link {
+  .nav .nav-link {
     font-size: 1rem;
   }
 }
