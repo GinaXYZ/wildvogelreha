@@ -212,8 +212,9 @@ const updateOrderStatus = async (order) => {
   position: relative; 
   max-width: 1000px;
   width: 95%;
-  border-radius: 8px;
-  background-color: #f9f9f9;
+  /* remove rounded gray card - make transparent so page stays white */
+  border-radius: 0;
+  background-color: transparent;
   font-family: 'Helvetica', sans-serif;
   color: #0c4b47;
   display: flex;

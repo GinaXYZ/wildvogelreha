@@ -887,18 +887,24 @@ onMounted(() => {
   transform: translateY(-2px);
 }
 .staff-content {
-  background: #f9f9f9;
+  background: transparent; /* removed gray background */
   padding: 2rem;
-  border-radius: 8px;
+  border-radius: 0; /* remove rounded card look */
   overflow-x: auto;
   width: 90%;
   max-width: 1200px;
   margin-left: auto;
   margin-right: auto;
-  display: flex; /* changed: center child tables */
+  display: flex; /* center child tables */
   flex-direction: column;
   align-items: center;
   box-sizing: border-box;
+}
+
+/* make tables retain white background but no outer gray card */
+.contacts-table, .patients-table, .donations-table {
+  background: #fff;
+  border-radius: 8px;
 }
 .donations-table {
   width: 100%;

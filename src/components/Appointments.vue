@@ -817,10 +817,10 @@ onMounted(() => {
 
 /* Week View */
 .week-view {
-  background: white;
-  border-radius: 8px;
+  background: transparent; /* removed gray card */
+  border-radius: 0;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: none;
   width: 100%;
   max-width: 1600px; /* allow wider calendar on desktop */
   margin: 0 auto;
@@ -941,10 +941,10 @@ onMounted(() => {
 
 /* Month View */
 .month-view {
-  background: white;
-  border-radius: 8px;
+  background: transparent;
+  border-radius: 0;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: none;
 }
 
 .month-header {
