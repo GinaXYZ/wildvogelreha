@@ -504,14 +504,26 @@ async function fetchAppointments() {
       url += `?month=${month}&year=${year}`;
     }
     
+    // Debug log the request URL and token presence
+    console.debug('[Appointments] fetching', url, 'token?', !!token);
     const res = await fetch(url, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
+
+    console.debug('[Appointments] response status', res.status);
     if (res.ok) {
-      appointments.value = await res.json();
+      const data = await res.json();
+      console.debug('[Appointments] fetched', data.length || 0, 'appointments');
+      appointments.value = data;
+    } else {
+      const text = await res.text();
+      console.error('[Appointments] fetch failed:', res.status, text);
+      // clear appointments so UI shows empty state explicitly
+      appointments.value = [];
     }
   } catch (err) {
     console.error('Fehler beim Laden der Termine:', err);
+    appointments.value = [];
   } finally {
     loading.value = false;
   }
