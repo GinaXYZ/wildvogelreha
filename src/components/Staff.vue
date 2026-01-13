@@ -699,76 +699,290 @@ const addNewPatient = () => {
   const newP = { id: Date.now(), name, species: '', status: 'in Behandlung', admission_date: new Date().toISOString(), details: '' };
   patients.value.unshift(newP);
 };
+
+// === Schichtplanung Funktionen ===
+const shortName = (name) => {
+  if (!name) return '';
+  const parts = name.trim().split(' ');
+  if (parts.length >= 2) {
+    return `${parts[0]} ${parts[1][0]}.`;
+  }
+  return name;
+};
+
+const addStaffMember = () => {
+  if (!newStaffMember.value.name.trim()) return;
+  const member = {
+    id: Date.now(),
+    name: newStaffMember.value.name,
+    role: newStaffMember.value.role || 'staff'
+  };
+  staffMembers.value.push(member);
+  localStorage.setItem('staffMembers', JSON.stringify(staffMembers.value));
+  newStaffMember.value = { name: '', role: 'staff' };
+  showStaffForm.value = false;
+};
+
+const removeStaffMember = (id) => {
+  if (!confirm('Mitarbeiter wirklich löschen?')) return;
+  staffMembers.value = staffMembers.value.filter(m => m.id !== id);
+  weekSchedule.value = weekSchedule.value.filter(a => a.staff.id !== id);
+  localStorage.setItem('staffMembers', JSON.stringify(staffMembers.value));
+  localStorage.setItem('weekSchedule', JSON.stringify(weekSchedule.value));
+};
+
+const removeAssignment = (assignmentId) => {
+  weekSchedule.value = weekSchedule.value.filter(a => a.id !== assignmentId);
+  localStorage.setItem('weekSchedule', JSON.stringify(weekSchedule.value));
+};
+
+const loadScheduleData = () => {
+  const savedStaff = localStorage.getItem('staffMembers');
+  const savedSchedule = localStorage.getItem('weekSchedule');
+  if (savedStaff) {
+    staffMembers.value = JSON.parse(savedStaff);
+  }
+  if (savedSchedule) {
+    weekSchedule.value = JSON.parse(savedSchedule);
+  }
+};
+
 onMounted(() => {
   fetchAllDonations();
   fetchDonations();
   fetchContacts();
   fetchPatients();
+  loadScheduleData();
+  
+  // Add global event listeners for drag and drop
+  document.addEventListener('mousemove', onDrag);
+  document.addEventListener('mouseup', onDragEnd);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener('mousemove', onDrag);
+  document.removeEventListener('mouseup', onDragEnd);
 });
 </script>
 
 <style scoped>
-.patients-table {
-  width: 100%; 
-  border-collapse: collapse;
-  margin-top: 1rem;
-  word-break: keep-all;
+/* === Modern Table Styles === */
+.patients-table,
+.contacts-table,
+.donations-table {
+  width: 100%;
+  max-width: 1400px;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 1.5rem auto;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
   table-layout: auto;
 }
 
-/* default cell overflow handling: apply ellipsis only to data cells, not headers */
-.contacts-table td,
-.patients-table td,
-.donations-table td {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* keep headers untruncated and always fully visible */
-.contacts-table th,
 .patients-table th,
+.contacts-table th,
 .donations-table th {
+  background: linear-gradient(135deg, #0c4b47 0%, #157a74 100%);
+  color: white;
+  padding: 1rem 0.8rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   white-space: nowrap;
-  overflow: visible;
-  text-overflow: clip;
+  border-bottom: none;
 }
 
-/* allow message/details column to wrap instead of being cut off */
+.patients-table td,
+.contacts-table td,
+.donations-table td {
+  padding: 0.9rem 0.8rem;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.patients-table tbody tr,
+.contacts-table tbody tr,
+.donations-table tbody tr {
+  transition: background 0.2s;
+}
+
+.patients-table tbody tr:hover,
+.contacts-table tbody tr:hover,
+.donations-table tbody tr:hover {
+  background: #f8fffe;
+}
+
+.patients-table tbody tr:last-child td,
+.contacts-table tbody tr:last-child td,
+.donations-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Allow message/details column to wrap */
 .message-cell {
   white-space: normal;
   overflow-wrap: anywhere;
-  text-overflow: unset;
+  max-width: 250px;
 }
 
 .details-input {
-  padding: 0.3rem;
-  border: 1px solid #ccc;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
   border-radius: 8px;
-  width: 100%;          /* responsive input */
-  box-sizing: border-box;
-  white-space: normal; /* allow wrapping in details */
-  overflow-wrap: anywhere;
-}
-
-/* ensure actions column stays compact */
-.contacts-table td:nth-child(6), .contacts-table th:nth-child(6) {
-  white-space: nowrap;
-  width: 80px;
-}
-
-/* smaller font for dense tables on large screens if needed */
-@media (min-width: 1200px) {
-  .contacts-table, .patients-table {
-    font-size: 0.98rem;
-  }
-}
-.contacts-table,
-.patients-table,
-.donations-table {
   width: 100%;
-  max-width: 100%;
-  table-layout: fixed; /* distribute columns and prevent extreme widths */
+  box-sizing: border-box;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font-size: 0.9rem;
+  resize: vertical;
+  min-height: 50px;
+}
+
+.details-input:focus {
+  outline: none;
+  border-color: #0c4b47;
+  box-shadow: 0 0 0 2px rgba(12, 75, 71, 0.1);
+}
+
+/* Actions column */
+.actions-cell,
+.actions-column {
+  white-space: nowrap;
+  width: 100px;
+}
+
+.actions-wrapper {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: center;
+}
+
+.action-btn {
+  background: #e3f2fd;
+  border: none;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.action-btn:hover {
+  background: #bbdefb;
+  transform: scale(1.1);
+}
+
+.delete-btn {
+  background: #ffebee;
+  border: none;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.delete-btn:hover {
+  background: #ffcdd2;
+  transform: scale(1.1);
+}
+
+/* Status select styling */
+.status-select {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  background: white;
+  cursor: pointer;
+  min-width: 100px;
+}
+
+.status-select:focus {
+  outline: none;
+  border-color: #0c4b47;
+}
+
+/* Status square indicator */
+.status-content-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-square {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.status-square.yellow { background: #ffc107; }
+.status-square.red { background: #e53935; }
+.status-square.green { background: #4caf50; }
+.status-square.orange { background: #ff9800; }
+.status-square.black { background: #333; }
+
+/* Priority column cell */
+.priority-column-cell {
+  min-width: 140px;
+}
+
+/* Sortable header styling */
+.sortable-header {
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s;
+}
+
+.sortable-header:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.sort-arrow {
+  margin-left: 0.3rem;
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.search-btn {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.search-btn:hover {
+  background: rgba(255,255,255,0.4);
+}
+
+.search-popup {
+  position: fixed;
+  background: white;
+  padding: 0.8rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  z-index: 1000;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.donation-search-input {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  min-width: 150px;
 }
 .staff-menu button.contacts-tab-btn {
   position: relative; 
@@ -793,20 +1007,21 @@ onMounted(() => {
   z-index: 10;
 }
 .staff-menu {
-  width: 90%;
+  width: 100%;
   max-width: 1200px;
-  margin: 0 auto 1rem auto;
+  margin: 2rem auto 1.5rem auto;
+  padding: 0 1rem;
   display: flex;
-  gap: 1rem;
+  gap: 0.8rem;
   justify-content: center;
-  flex-wrap: nowrap; /* keep buttons in a single row */
-  overflow-x: auto;
+  flex-wrap: wrap;
   color: #0c4b47;
   font-family: 'Helvetica', sans-serif;
   z-index: 1000;
+  box-sizing: border-box;
 }
 .staff-menu button {
-  padding: 0.5rem 1.5rem;
+  padding: 0.6rem 1.2rem;
   border: none;
   border-radius: 8px;
   color: #0c4b47;
@@ -817,7 +1032,8 @@ onMounted(() => {
   text-align: center;
   box-sizing: border-box;
   white-space: nowrap;
-
+  flex-shrink: 0;
+  transition: transform 0.2s, background 0.2s;
 }
 .staff-menu button.active {
   background: #0c4b47;
@@ -993,6 +1209,244 @@ onMounted(() => {
   max-width: none;
   padding: 2rem;
   box-sizing: border-box;
+}
+
+/* === Schichtplanung Styles === */
+.schedule-section {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.schedule-section h3 {
+  color: #0c4b47;
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.staff-management {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.staff-management h4 {
+  color: #0c4b47;
+  margin-bottom: 1rem;
+}
+
+.btn-add-staff {
+  background: #0c4b47;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.btn-add-staff:hover {
+  background: #0a3a36;
+  transform: translateY(-2px);
+}
+
+.staff-form {
+  display: flex;
+  gap: 0.8rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.staff-form input {
+  padding: 0.6rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  min-width: 150px;
+}
+
+.staff-form button {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.staff-form button:first-of-type {
+  background: #0c4b47;
+  color: white;
+}
+
+.staff-form button:last-of-type {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.staff-pool {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f9f9f9;
+  border-radius: 8px;
+  min-height: 60px;
+}
+
+.staff-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #0c4b47 0%, #157a74 100%);
+  color: white;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  box-shadow: 0 2px 6px rgba(12, 75, 71, 0.3);
+  cursor: grab;
+  user-select: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.staff-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(12, 75, 71, 0.4);
+}
+
+.staff-item:active {
+  cursor: grabbing;
+  transform: scale(1.05);
+}
+
+.staff-item .remove-assignment-btn {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: white;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.staff-item .remove-assignment-btn:hover {
+  background: rgba(255,255,255,0.4);
+}
+
+/* Week Calendar / Schedule Grid */
+.week-calendar {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
+.schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.schedule-table .time-header,
+.schedule-table .day-header {
+  background: linear-gradient(135deg, #0c4b47 0%, #157a74 100%);
+  color: white;
+  padding: 1rem 0.5rem;
+  text-align: center;
+  font-weight: bold;
+  font-size: 0.95rem;
+  border-right: 1px solid rgba(255,255,255,0.2);
+}
+
+.schedule-table .time-header {
+  width: 100px;
+}
+
+.schedule-table .time-cell {
+  background: #f9f9f9;
+  padding: 0.8rem 0.5rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #555;
+  font-weight: 500;
+  border-bottom: 1px solid #eee;
+  border-right: 1px solid #eee;
+}
+
+.schedule-table .schedule-cell {
+  padding: 0.5rem;
+  min-height: 80px;
+  vertical-align: top;
+  border-bottom: 1px solid #eee;
+  border-right: 1px solid #eee;
+  background: white;
+  transition: background 0.2s;
+}
+
+.schedule-table .schedule-cell:hover {
+  background: #f0f9f8;
+}
+
+.schedule-table .schedule-cell.drag-hover {
+  background: #e3f2fd;
+  outline: 2px dashed #0c4b47;
+  outline-offset: -2px;
+}
+
+.staff-assignment {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.7rem;
+  margin: 0.2rem;
+  background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+  color: white;
+  border-radius: 16px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: grab;
+  user-select: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.staff-assignment:hover {
+  transform: scale(1.05);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+}
+
+.staff-assignment .staff-name {
+  white-space: nowrap;
+}
+
+.staff-assignment .remove-staff-btn {
+  background: rgba(255,255,255,0.25);
+  border: none;
+  color: white;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 0.65rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.staff-assignment .remove-staff-btn:hover {
+  background: rgba(255,255,255,0.5);
 }
 
 /* Responsive Styles for Staff Component */
