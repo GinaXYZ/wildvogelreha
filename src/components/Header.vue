@@ -289,6 +289,7 @@ const headerStyle = computed(() => ({
   width: 40px;               /* visible container width */
   height: 40px;              /* touch target area */
   padding: 6px;
+  margin-right: 3px;
   background: transparent;
   border: none;
   cursor: pointer;
