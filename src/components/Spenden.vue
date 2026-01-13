@@ -36,7 +36,7 @@
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.07);
   max-width: 800px;
-  margin: 10rem auto 2rem auto;
+  margin: 7rem auto 2rem auto;
   padding: 2rem;
 }
 
@@ -59,6 +59,7 @@
   max-width: 600px;
   margin: 4rem auto;
   text-align: center;
+  padding: 0 1rem;
 }
 
 .spenden-container h1 {
@@ -87,4 +88,51 @@
   background-color: #012169;
 }
 
+/* ===== Responsive Styles ===== */
+@media (max-width: 768px) {
+  .info-section {
+    margin: 5rem 1rem 1.5rem 1rem;
+    padding: 1.5rem;
+  }
+  
+  .info-section h2 {
+    font-size: 1.4rem;
+  }
+  
+  .donation-list li {
+    font-size: 1rem;
+  }
+  
+  .spenden-container {
+    margin: 2rem auto;
+  }
+  
+  .spenden-container h1 {
+    font-size: 1.5rem;
+  }
+  
+  .spenden-container p {
+    font-size: 1rem;
+  }
+  
+  .paypal-button {
+    font-size: 1rem;
+    padding: 0.7rem 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .info-section {
+    margin: 4.5rem 0.5rem 1rem 0.5rem;
+    padding: 1rem;
+  }
+  
+  .info-section h2 {
+    font-size: 1.2rem;
+  }
+  
+  .donation-list li {
+    font-size: 0.95rem;
+  }
+}
 </style>

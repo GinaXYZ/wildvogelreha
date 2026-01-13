@@ -443,7 +443,7 @@ onBeforeUnmount(() => {
   gap: 2rem;
   margin: 2rem auto;
   max-width: 1200px;
-  margin-top: 10rem;
+  margin-top: 6rem;
   padding: 0 1rem;
 }
 
@@ -901,7 +901,7 @@ onBeforeUnmount(() => {
   .main-layout {
     flex-direction: column;
     align-items: center;
-    margin-top: 2rem; 
+    margin-top: 5rem; 
   }
   
   .map-container {
@@ -921,12 +921,14 @@ onBeforeUnmount(() => {
 @media (max-width: 640px) {
   .main-layout {
     padding: 0 0.5rem;
-    margin-top: 14rem;
+    margin-top: 4.5rem;
+    gap: 1rem;
   }
   .map-container {
     border-radius: 0; 
     border-left: none;
     border-right: none;
+    max-height: 60vh;
   }
   .map {
     border-radius: 0;
@@ -942,6 +944,12 @@ onBeforeUnmount(() => {
     font-size: 0.9rem;
   }
   .bird-tooltip {
+    max-width: 250px;
+    padding: 0.8rem;
+    font-size: 0.75rem;
+  }
+  .edit-form {
+    min-width: 220px;
     max-width: 280px;
     padding: 0.8rem;
   }
@@ -949,13 +957,29 @@ onBeforeUnmount(() => {
 
 @media (max-width: 480px) {
   .main-layout {
-    margin-top: 16rem;
+    margin-top: 4rem;
+  }
+  .map-item-wrapper {
+    width: 45px;
+    height: 65px;
   }
   .map-item {
-    width: 35px;
-    height: 35px;
+    width: 40px;
+    height: 40px;
   }
   .item-label {
+    font-size: 0.6rem;
+    padding: 1px 3px;
+  }
+  .bird-tooltip {
+    min-width: 180px;
+    max-width: 220px;
+  }
+  .bird-tooltip h4 {
+    font-size: 0.9rem;
+  }
+  .btn-edit, .btn-delete {
+    padding: 0.25rem 0.5rem;
     font-size: 0.65rem;
   }
 }

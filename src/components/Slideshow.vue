@@ -55,15 +55,16 @@ const goToSlide = (index) => {
 .slideshow {
   margin-top: 10rem;
   position: relative;
-  width: 600px;
-  height: 400px;;
+  width: 100%;
   max-width: 600px;
+  height: auto;
+  aspect-ratio: 3 / 2;
   overflow: hidden;
   margin-bottom: 2rem;
 }
 .slides {
   width: 100%;
-  height: 400px;
+  height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -86,7 +87,7 @@ const goToSlide = (index) => {
   position: relative;
 }
   
-  button.prev,
+button.prev,
 button.next {
   position: absolute;
   top: 50%;
@@ -100,37 +101,37 @@ button.next {
   user-select: none;
   border-radius: 4px;
   z-index: 10;
-  }
-  
-  button.prev {
-    left: 10px;
-  }
-  button.next {
-    right: 10px;
-  }
-  .dots {
-    text-align: center;
-    margin-top: 10px;
-  }
-  
-  .dots span {
-    display: inline-block;
-    height: 10px;
-    width: 10px;
-    margin: 0 5px;
-    background-color: #bbb;
-    border-radius: 50%;
-    cursor: pointer;
-  }
-  
-  .dots .active {
-    background-color: #0c4b47;
-  }
-  .news-overlay {
+}
+
+button.prev {
+  left: 10px;
+}
+button.next {
+  right: 10px;
+}
+.dots {
+  text-align: center;
+  margin-top: 10px;
+}
+
+.dots span {
+  display: inline-block;
+  height: 10px;
+  width: 10px;
+  margin: 0 5px;
+  background-color: #bbb;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.dots .active {
+  background-color: #0c4b47;
+}
+.news-overlay {
   position: absolute;
   bottom: 0;
   width: 100%;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.9);
   padding: 1rem;
   border-radius: 0 0 8px 8px;
   box-sizing: border-box;
@@ -145,20 +146,9 @@ button.next {
   font-size: 1rem;
   color: #0c4b47;
   font-family: 'Helvetica', sans-serif;
+  margin: 0;
 }
-.dots {
-  text-align: center;
-  margin-top: 10px;
-}
-.dots span {
-  display: inline-block;
-  height: 10px;
-  width: 10px;
-  margin: 0 5px;
-  background-color: #bbb;
-  border-radius: 50%;
-  cursor: pointer;
-}
+
 .slideshow-outer {
   position: center;          
   display: flex;
@@ -166,9 +156,56 @@ button.next {
   align-items: center;                    
 }
 
-.dots .active {
-  background-color: #0c4b47;
+/* ===== Responsive Slideshow ===== */
+@media (max-width: 768px) {
+  .slideshow {
+    margin-top: 2rem;
+    max-width: 100%;
+  }
+  
+  button.prev,
+  button.next {
+    font-size: 1.5rem;
+    padding: 0.4rem 0.8rem;
+  }
+  
+  button.prev {
+    left: 5px;
+  }
+  
+  button.next {
+    right: 5px;
+  }
+  
+  .news-text {
+    font-size: 0.9rem;
+  }
+  
+  .news-overlay {
+    padding: 0.8rem;
+  }
 }
 
+@media (max-width: 480px) {
+  .slideshow {
+    margin-top: 1rem;
+  }
+  
+  button.prev,
+  button.next {
+    font-size: 1.2rem;
+    padding: 0.3rem 0.6rem;
+  }
+  
+  .dots span {
+    height: 8px;
+    width: 8px;
+    margin: 0 3px;
+  }
+  
+  .news-text {
+    font-size: 0.85rem;
+  }
+}
 </style>
   

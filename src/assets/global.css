@@ -23,9 +23,11 @@ body {
   --spacing-sm: 0.5rem;
   --spacing-md: 1rem;
   --spacing-lg: 2rem;
+  --header-height-desktop: 80px;
+  --header-height-mobile: 60px;
 }
 
-/* Responsive Typography */
+/* ===== Responsive Typography ===== */
 @media (max-width: 768px) {
   html {
     font-size: 15px;
@@ -39,13 +41,13 @@ body {
 }
 
 @media (max-width: 600px) {
-  h1 { font-size: 1.5rem; }
+  h1 { font-size: 1.4rem; }
   h2 { font-size: 1.2rem; }
   h3 { font-size: 1rem; }
-  p, li, label, input, button { font-size: 1rem; }
+  p, li, label, input, button { font-size: 0.95rem; }
 }
 
-/* Utility classes */
+/* ===== Utility classes ===== */
 .container {
   width: 100%;
   max-width: 1200px;
@@ -61,4 +63,30 @@ body {
 
 .text-center {
   text-align: center;
+}
+
+/* ===== Mobile-First Touch Improvements ===== */
+@media (max-width: 768px) {
+  button, 
+  .nav-link,
+  a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .container {
+    padding: 0 0.8rem;
+  }
+}
+
+/* ===== Prevent horizontal scroll ===== */
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* ===== Image responsiveness ===== */
+img {
+  max-width: 100%;
+  height: auto;
 }

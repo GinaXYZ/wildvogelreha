@@ -57,11 +57,59 @@ const login = async () => {
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  margin-top: 8rem;
+  margin-top: 6rem;
   max-width: 400px;
+  width: 90%;
+  margin-left: auto;
+  margin-right: auto;
   padding: 2rem 1rem;
   text-align: center;
   font-family: 'Helvetica', sans-serif;
   color: #0c4b47;
+}
+
+.login input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.login button {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #0c4b47;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.login button:hover {
+  background-color: #097a6a;
+}
+
+/* ===== Responsive Login ===== */
+@media (max-width: 768px) {
+  .login {
+    margin-top: 5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .login {
+    margin-top: 4.5rem;
+    padding: 1.5rem 0.8rem;
+    width: 95%;
+  }
+  
+  .login h1 {
+    font-size: 1.5rem;
+  }
 }
 </style>

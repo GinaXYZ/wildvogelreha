@@ -234,7 +234,7 @@ const updatePost = async (postId) => {
 <style scoped>
 .blog-page {
   max-width: 1200px;
-  margin: 8rem auto 0;
+  margin: 6rem auto 0;
   padding: 2rem;
   font-family: 'Helvetica', sans-serif;
   color: #0c4b47;
@@ -351,16 +351,54 @@ textarea {
 
 /* Responsive Styles */
 @media (max-width: 768px) {
+  .blog-page {
+    margin-top: 5rem;
+    padding: 1rem;
+    gap: 2rem;
+  }
+  
   .posts-container {
     gap: 1rem;
   }
+  
   .blog-post {
     flex: 1 1 100%;
     max-width: 100%;
   }
-  .create-post-form input,
-  .create-post-form textarea {
+  
+  .blog-editor {
+    padding: 1rem;
+    max-width: 100%;
+  }
+  
+  .post-options {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  input, textarea, select {
+    width: 100%;
     font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .blog-page {
+    margin-top: 4.5rem;
+    padding: 0.8rem;
+  }
+  
+  .blog-posts h2 {
+    font-size: 1.3rem;
+  }
+  
+  .blog-post h3 {
+    font-size: 1.1rem;
+  }
+  
+  .post-meta {
+    flex-direction: column;
+    gap: 0.3rem;
   }
 }
 </style>

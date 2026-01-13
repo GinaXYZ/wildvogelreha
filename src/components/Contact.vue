@@ -158,7 +158,7 @@ const submitContact = async () => {
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.1);
   color: #0c4b47;
-  margin-top: 6rem;
+  margin-top: 5rem;
 }
 
 .contact-container h1 {
@@ -307,9 +307,13 @@ input:disabled {
 
 
 @media (max-width: 768px) {
+  .contact-page {
+    padding: 1rem;
+  }
+  
   .contact-container {
-    padding: 2rem;
-    margin-top: 8rem;
+    padding: 2rem 1.5rem;
+    margin-top: 5rem;
   }
   
   .form-row {
@@ -317,11 +321,45 @@ input:disabled {
   }
   
   .contact-container h1 {
-    font-size: 2rem;
+    font-size: 1.8rem;
   }
   
   .info-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .contact-page {
+    padding: 0.5rem;
+  }
+  
+  .contact-container {
+    padding: 1.5rem 1rem;
+    margin-top: 4.5rem;
+  }
+  
+  .contact-container h1 {
+    font-size: 1.5rem;
+  }
+  
+  .contact-intro {
+    font-size: 1rem;
+  }
+  
+  input,
+  .message-textarea {
+    padding: 0.8rem;
+    font-size: 0.95rem;
+  }
+  
+  .submit-btn {
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+  }
+  
+  .info-item {
+    padding: 1rem;
   }
 }
 .message-textarea {

@@ -221,7 +221,7 @@ h2 {
   font-family: 'Helvetica', sans-serif;
   color: #0c4b47;
   text-align: center;
-  margin-top: 8rem;
+  margin-top: 6rem;
   font-size: 2rem;
 }
 .login-prompt {
@@ -254,5 +254,64 @@ h2 {
 .login-link:active {
   background-color: #0c4b47;
   transform: scale(0.95);
+}
+
+/* ===== Responsive Cart ===== */
+@media (max-width: 768px) {
+  h2 {
+    margin-top: 5rem;
+    font-size: 1.6rem;
+  }
+  
+  .cart-layout {
+    padding: 1.5rem 0.8rem;
+    gap: 1.5rem;
+  }
+  
+  .cart-container {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+  
+  .cart-item {
+    min-height: 300px;
+    padding: 0.8rem;
+  }
+  
+  .cart-image {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .bezahlen-link {
+    font-size: 1.2rem;
+    padding: 0.6rem 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  h2 {
+    margin-top: 4.5rem;
+    font-size: 1.4rem;
+  }
+  
+  .cart-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .cart-image {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .cart-title {
+    font-size: 1rem;
+  }
+  
+  .quantity-button,
+  .remove-button {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+  }
 }
 </style>

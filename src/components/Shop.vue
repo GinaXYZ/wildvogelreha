@@ -379,7 +379,7 @@ const handleAddToCart = (product) => {
 }
 .shop-header {
   text-align: center;
-  padding: 8rem 2rem 2rem 2rem;
+  padding: 6rem 2rem 2rem 2rem;
   margin-bottom: 2rem;
 }
 
@@ -782,21 +782,81 @@ const handleAddToCart = (product) => {
 
 @media (max-width: 768px) {
   .products-grid {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 300px));
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    padding: 0 0.5rem;
+  }
+  
+  .shop-header {
+    padding: 5rem 1rem 1.5rem 1rem;
   }
   
   .shop-header h1 {
-    font-size: 2rem;
+    font-size: 1.6rem;
   }
   
   .shop-header p {
-    font-size: 1.1rem;
+    font-size: 1rem;
+  }
+  
+  .shop-controls {
+    padding: 0 1rem;
+  }
+  
+  .products-section {
+    padding: 0 1rem;
+  }
+  
+  .admin-section {
+    padding: 0 1rem;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 480px) {
   .products-grid {
-    grid-template-columns: 1fr; 
+    grid-template-columns: 1fr;
+  }
+  
+  .shop-header {
+    padding: 4.5rem 0.5rem 1rem 0.5rem;
+  }
+  
+  .shop-header h1 {
+    font-size: 1.4rem;
+  }
+  
+  .category-pills {
+    gap: 0.5rem;
+  }
+  
+  .category-pill {
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+  }
+  
+  .product-image {
+    height: 200px;
+  }
+  
+  .product-footer {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .add-to-cart-btn {
+    width: 100%;
+    min-width: unset;
+  }
+  
+  .toast {
+    bottom: 1rem;
+    right: 1rem;
+    left: 1rem;
+    max-width: unset;
   }
 }
 .pagination {

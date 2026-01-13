@@ -103,30 +103,17 @@ const register = async () => {
 </template>
 
 <style scoped>
-@media (max-width: 600px) {
-  .register,
-  .checkout-page,
-  .contact-page {
-    width: 100% !important;
-    min-width: 0;
-    padding: 1rem !important;
-    margin-top: 2rem !important;
-  }
-  input, select, textarea {
-    font-size: 1rem;
-  }
-}
 .register {
-  max-width: 1200px;
-  width: 50%;
-  margin: auto;
+  max-width: 500px;
+  width: 90%;
+  margin: 0 auto;
   padding: 2rem;
   background-color: #f9f9f9;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   font-family: 'Helvetica', sans-serif;
   color: #0c4b47;
-  margin-top: 10rem;
+  margin-top: 6rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -141,6 +128,7 @@ select {
   border-radius: 4px;
   font-size: 1rem;
   margin-bottom: 1rem;
+  box-sizing: border-box;
 }
 
 .submit {
@@ -150,11 +138,10 @@ select {
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: bold;
   width: 100%;
-  margin-top: 2rem;
-  position: center;
+  margin-top: 1rem;
   transition: background-color 0.3s ease;
 }
 
@@ -201,5 +188,35 @@ select {
 .password-requirements span.valid {
   color: #2e7d32;
   background: #e8f5e9;
+}
+
+/* ===== Responsive Register ===== */
+@media (max-width: 768px) {
+  .register {
+    margin-top: 5rem;
+    width: 95%;
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .register {
+    margin-top: 4.5rem;
+    padding: 1rem;
+    width: 100%;
+    border-radius: 0;
+  }
+  
+  .register h1 {
+    font-size: 1.5rem;
+  }
+  
+  .password-requirements {
+    font-size: 0.75rem;
+  }
+  
+  .password-requirements span {
+    padding: 0.15rem 0.4rem;
+  }
 }
 </style>

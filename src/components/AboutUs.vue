@@ -137,7 +137,7 @@
 .about-page {
   font-family: 'Helvetica', sans-serif;
   color: #0c4b47;
-    margin-top: 6rem;
+  margin-top: 5rem;
 }
 .container {
   max-width: 1200px;
@@ -297,6 +297,10 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); 
 }
 @media (max-width: 768px) {
+  .about-page {
+    margin-top: 4.5rem;
+  }
+  
   .hero-section,
   .story-content {
     grid-template-columns: 1fr;
@@ -307,6 +311,7 @@
   .facilities-grid,
   .team-grid {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
   
   .stats-grid {
@@ -316,6 +321,82 @@
   .cta-buttons {
     flex-direction: column;
     align-items: center;
+    gap: 1rem;
+  }
+  
+  .container {
+    padding: 0 1rem;
+  }
+  
+  .mission-section,
+  .story-section,
+  .facilities-section,
+  .team-section,
+  .stats-section,
+  .cta-section {
+    padding: 3rem 0;
+  }
+  
+  h2 {
+    font-size: 1.8rem;
+  }
+  
+  .story-text h2 {
+    font-size: 2rem;
+  }
+  
+  .stat-number {
+    font-size: 2.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .about-page {
+    margin-top: 4rem;
+  }
+  
+  .mission-section,
+  .story-section,
+  .facilities-section,
+  .team-section,
+  .stats-section,
+  .cta-section {
+    padding: 2rem 0;
+    margin-top: 1.5rem;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+  }
+  
+  .story-text h2 {
+    font-size: 1.6rem;
+  }
+  
+  .story-text p {
+    font-size: 1rem;
+  }
+  
+  .stat-number {
+    font-size: 1.8rem;
+  }
+  
+  .stat-label {
+    font-size: 0.95rem;
+  }
+  
+  .cta-section h2 {
+    font-size: 1.6rem;
+  }
+  
+  .cta-section p {
+    font-size: 1rem;
+  }
+  
+  .cta-button {
+    padding: 0.8rem 1.5rem;
+    width: 100%;
+    text-align: center;
   }
 }
 h2 {

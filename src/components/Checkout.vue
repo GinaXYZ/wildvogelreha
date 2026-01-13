@@ -123,31 +123,18 @@ const submitCheckout = async () => {
 </script>
 
 <style scoped>
-@media (max-width: 600px) {
-  .register,
-  .checkout-page,
-  .contact-page {
-    width: 100% !important;
-    min-width: 0;
-    padding: 1rem !important;
-    margin-top: 2rem !important;
-  }
-  input, select, textarea {
-    font-size: 1rem;
-  }
-}
 .checkout-page {
-  max-width: 1200px;
-  width: 50%;
+  max-width: 600px;
+  width: 90%;
   margin: 0 auto;
   padding: 2rem;
-  padding-bottom: 6rem; 
+  padding-bottom: 4rem; 
   background-color: #f9f9f9;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   font-family: 'Helvetica', sans-serif;
   color: #0c4b47;
-  margin-top: 10rem;
+  margin-top: 6rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -157,11 +144,12 @@ const submitCheckout = async () => {
 h1 {
   text-align: center;
   margin-bottom: 2rem;
-  margin-top: 3rem;
+  margin-top: 1rem;
 }
 
 .form-group {
   margin-bottom: 1.5rem;
+  width: 100%;
 }
 
 label {
@@ -177,6 +165,7 @@ select {
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 1rem;
+  box-sizing: border-box;
 }
 
 .checkout-button {
@@ -186,7 +175,7 @@ select {
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: bold;
   width: 100%;
   transition: background-color 0.3s ease;
@@ -194,5 +183,36 @@ select {
 
 .checkout-button:hover {
   background-color: #097a6a;
+}
+
+/* ===== Responsive Checkout ===== */
+@media (max-width: 768px) {
+  .checkout-page {
+    margin-top: 5rem;
+    padding: 1.5rem;
+    width: 95%;
+  }
+  
+  h1 {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .checkout-page {
+    margin-top: 4.5rem;
+    padding: 1rem;
+    width: 100%;
+    border-radius: 0;
+  }
+  
+  h1 {
+    font-size: 1.3rem;
+  }
+  
+  .checkout-button {
+    font-size: 1rem;
+    padding: 0.7rem 1.2rem;
+  }
 }
 </style>

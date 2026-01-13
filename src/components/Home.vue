@@ -185,7 +185,7 @@ const newBirds = [
   gap: 1.5rem;
   width: 100%;
   max-width: 1200px;
-  margin: 10rem auto 2rem auto;
+  margin: 2rem auto 2rem auto;
   padding: 0 1rem;
   box-sizing: border-box;
 }
@@ -193,7 +193,7 @@ const newBirds = [
 @media (max-width: 1024px) {
   .home-main-row {
     grid-template-columns: 1fr 1fr;
-    margin-top: 12rem;
+    margin-top: 2rem;
   }
   .slideshow-center {
     grid-column: 1 / -1;
@@ -205,8 +205,9 @@ const newBirds = [
 @media (max-width: 768px) {
   .home-main-row {
     grid-template-columns: 1fr;
-    margin-top: 14rem;
+    margin-top: 1.5rem;
     gap: 1rem;
+    padding: 0 0.8rem;
   }
   .blogposts-container,
   .donation-table-container {
@@ -216,8 +217,9 @@ const newBirds = [
 
 @media (max-width: 480px) {
   .home-main-row {
-    margin-top: 16rem;
+    margin-top: 1rem;
     padding: 0 0.5rem;
+    gap: 0.8rem;
   }
 }
 .slideshow-center {
@@ -226,7 +228,7 @@ const newBirds = [
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  margin-top: -10rem;
+  margin-top: 0;
 }
 .donation-table th, .donation-table td {
   padding: 0.4em 0.7em;
@@ -460,11 +462,13 @@ const newBirds = [
   text-align: center;
   margin-bottom: 2rem;
   padding: 2rem;
-  margin-top: 10rem;
+  margin-top: 7rem;
   background: #f8f9fa;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
   max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
   color: #0c4b47;
   font-family: 'Helvetica', sans-serif;
 }
@@ -497,21 +501,46 @@ const newBirds = [
 }
 @media (max-width: 768px) {
   .intro-section {
-    padding: 1.5rem;
+    padding: 1.5rem 1rem;
     margin-bottom: 1.5rem;
+    margin-top: 5rem;
+    margin-left: 1rem;
+    margin-right: 1rem;
   }
   
   .intro-title {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
   }
   
   .intro-text {
-    font-size: 1rem;
+    font-size: 0.95rem;
     text-align: left;
   }
   
   .intro-highlight {
+    font-size: 0.85rem;
+    padding: 0.6rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .intro-section {
+    margin-top: 4.5rem;
+    padding: 1rem;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+  }
+  
+  .intro-title {
+    font-size: 1.3rem;
+  }
+  
+  .intro-text {
     font-size: 0.9rem;
+  }
+  
+  .intro-highlight {
+    font-size: 0.8rem;
   }
 }
 </style>

@@ -5,14 +5,22 @@
         <img :src="Logo" alt="Logo" class="logo" />
         <router-link class="title" to="/">Wildvogel Rehastation Waabs e.V.</router-link>
       </div>
-      <nav class="nav">
-        <router-link class="nav-link" to="/">Home</router-link>
-        <router-link class="nav-link" to="/about">Über uns</router-link>
-        <router-link class="nav-link" to="/voegel">Karte</router-link>
-        <router-link class="nav-link" to="/shop">Shop</router-link>
-        <router-link class="nav-link" to="/blog">Blog</router-link>
-        <router-link class="nav-link" to="/spenden">Spenden</router-link>
-        <router-link class="nav-link" to="/contact">Kontakt</router-link>
+      
+      <!-- Hamburger Menu Button (Mobile) -->
+      <button class="hamburger" @click="toggleMobileMenu" :class="{ active: mobileMenuOpen }">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      
+      <nav class="nav" :class="{ 'mobile-open': mobileMenuOpen }">
+        <router-link class="nav-link" to="/" @click="closeMobileMenu">Home</router-link>
+        <router-link class="nav-link" to="/about" @click="closeMobileMenu">Über uns</router-link>
+        <router-link class="nav-link" to="/voegel" @click="closeMobileMenu">Karte</router-link>
+        <router-link class="nav-link" to="/shop" @click="closeMobileMenu">Shop</router-link>
+        <router-link class="nav-link" to="/blog" @click="closeMobileMenu">Blog</router-link>
+        <router-link class="nav-link" to="/spenden" @click="closeMobileMenu">Spenden</router-link>
+        <router-link class="nav-link" to="/contact" @click="closeMobileMenu">Kontakt</router-link>
       </nav>
       <div class="user-actions">
         <div class="cart-icon-container">
@@ -29,6 +37,9 @@
         </button>
       </div>
     </header>
+    
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-overlay" v-if="mobileMenuOpen" @click="closeMobileMenu"></div>
   </div>
 </template>
 
@@ -44,10 +55,22 @@ const authStore = useAuthStore();
 const router = useRouter();
 const isLoggedIn = computed(() => authStore.isLoggedIn);
 const isCompact = ref(false);
+const mobileMenuOpen = ref(false);
 let scrollTimeout = null;
 
+const toggleMobileMenu = () => {
+  mobileMenuOpen.value = !mobileMenuOpen.value;
+  // Prevent body scroll when menu is open
+  document.body.style.overflow = mobileMenuOpen.value ? 'hidden' : '';
+};
+
+const closeMobileMenu = () => {
+  mobileMenuOpen.value = false;
+  document.body.style.overflow = '';
+};
 
 function handleAuthClick() {
+  closeMobileMenu();
   if (authStore.isLoggedIn) {
     authStore.logout();
     router.push('/login');
@@ -70,6 +93,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll);
+  document.body.style.overflow = '';
 });
 
 const headerStyle = computed(() => ({
@@ -255,23 +279,52 @@ transform: scale(1.1);
   }
 }
 
+/* ===== Hamburger Menu Styles ===== */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 28px;
+  height: 20px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 1001;
+}
+
+.hamburger span {
+  display: block;
+  width: 100%;
+  height: 3px;
+  background-color: #0c4b47;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.hamburger.active span:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+
+.hamburger.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger.active span:nth-child(3) {
+  transform: rotate(-45deg) translate(7px, -6px);
+}
+
+.mobile-overlay {
+  display: none;
+}
+
+/* ===== Tablet Responsive (1024px) ===== */
 @media (max-width: 1024px) {
   .header {
-    padding: 1.5rem 1rem;
-    flex-wrap: wrap;
-  }
-  .logo-and-title {
-    order: 1;
-  }
-  .user-actions {
-    order: 2;
+    padding: 1.2rem 1rem;
   }
   .nav {
-    order: 3;
-    width: 100%;
-    margin: 0.5rem 0 0 0;
     gap: 0.8rem;
-    flex-wrap: wrap;
   }
   .nav-link {
     font-size: 1rem;
@@ -281,56 +334,135 @@ transform: scale(1.1);
   }
 }
 
-@media (max-width: 768px) {
-  .header {
-    padding: 1rem 0.5rem;
-    flex-direction: column;
-    gap: 0.5rem;
+/* ===== Mobile Responsive (900px) - Show Hamburger Menu ===== */
+@media (max-width: 900px) {
+  .hamburger {
+    display: flex;
+    order: 3;
   }
-  .logo-and-title {
+  
+  .mobile-overlay {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
-    justify-content: center;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 998;
+    backdrop-filter: blur(3px);
   }
+  
   .nav {
-    width: 100%;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 0.3rem;
+    position: fixed;
+    top: 0;
+    right: -300px;
+    width: 280px;
+    height: 100vh;
+    background: white;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 5rem 1.5rem 2rem;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+    transition: right 0.3s ease;
+    z-index: 999;
+    gap: 0;
+    margin: 0;
+    overflow-y: auto;
   }
+  
+  .nav.mobile-open {
+    right: 0;
+  }
+  
   .nav-link {
-    font-size: 0.9rem;
-    padding: 0.3rem 0.5rem;
-  }
-  .user-actions {
     width: 100%;
-    justify-content: center;
+    padding: 1rem 0;
+    font-size: 1.1rem;
+    border-bottom: 1px solid #eee;
   }
+  
+  .nav-link:last-child {
+    border-bottom: none;
+  }
+  
+  .header {
+    flex-wrap: nowrap;
+    padding: 0.8rem 1rem;
+  }
+  
+  .logo-and-title {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .user-actions {
+    order: 2;
+    margin-right: 1rem;
+  }
+  
+  .login-button {
+    display: none;
+  }
+  
   .title {
-    font-size: 1rem;
+    font-size: 0.95rem;
   }
+  
   .logo {
     height: 28px;
   }
-  .login-button {
-    margin-right: 0;
-    padding: 0.4rem 0.8rem;
-    font-size: 0.9rem;
+}
+
+/* ===== Small Mobile (600px) ===== */
+@media (max-width: 600px) {
+  .header {
+    padding: 0.6rem 0.8rem;
+  }
+  
+  .title {
+    font-size: 0.8rem;
+  }
+  
+  .logo {
+    height: 24px;
+  }
+  
+  .user-actions {
+    gap: 0.5rem;
+    margin-right: 0.8rem;
+  }
+  
+  .cart-icon,
+  .profile-icon {
+    font-size: 1.2rem;
+  }
+  
+  .nav {
+    width: 260px;
+    right: -260px;
+    padding-top: 4rem;
   }
 }
 
-@media (max-width: 480px) {
-  .header {
-    padding: 0.5rem;
-  }
-  .nav-link {
-    font-size: 0.8rem;
-    padding: 0.2rem 0.4rem;
-  }
+/* ===== Very Small Mobile (400px) ===== */
+@media (max-width: 400px) {
   .title {
-    font-size: 0.85rem;
+    font-size: 0.7rem;
+    max-width: 140px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
+  
   .logo {
-    height: 22px;
+    height: 20px;
+  }
+  
+  .hamburger {
+    width: 24px;
+    height: 18px;
   }
 }
-</style>;
+</style>

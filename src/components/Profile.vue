@@ -208,10 +208,10 @@ const updateOrderStatus = async (order) => {
 }
 .profile {
   padding: 2rem; 
-  margin: 12rem auto;
+  margin: 6rem auto 2rem auto;
   position: relative; 
-  max-width: 1200px;
-  width: 100%;
+  max-width: 1000px;
+  width: 95%;
   border-radius: 8px;
   background-color: #f9f9f9;
   font-family: 'Helvetica', sans-serif;
@@ -271,7 +271,7 @@ const updateOrderStatus = async (order) => {
 @media (max-width: 768px) {
   .profile {
     padding: 1rem;
-    margin: 14rem auto 2rem auto;
+    margin: 5rem auto 2rem auto;
     width: 95%;
   }
   .tabs {
@@ -285,16 +285,40 @@ const updateOrderStatus = async (order) => {
   .order-box {
     padding: 0.8rem;
   }
+  
+  .order-box ul {
+    padding-left: 0.5rem;
+  }
+  
+  .order-box li {
+    font-size: 0.9rem;
+  }
 }
 
 @media (max-width: 480px) {
   .profile {
-    margin-top: 16rem;
-    padding: 0.5rem;
+    margin-top: 4.5rem;
+    padding: 0.8rem;
+    width: 100%;
+    border-radius: 0;
   }
+  
+  .profile h1 {
+    font-size: 1.4rem;
+  }
+  
   .tabs button {
     padding: 0.3rem 0.7rem;
     font-size: 0.8rem;
+  }
+  
+  .order-box select {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+  
+  .order-box li img {
+    height: 1.5em !important;
   }
 }
 </style>
