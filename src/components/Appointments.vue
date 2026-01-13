@@ -1018,68 +1018,73 @@ onMounted(() => {
 /* List View */
 .appointments-table {
   width: 100%;
-  max-width: 1800px; /* make list very wide */
-  min-width: 1200px;
+  max-width: 1400px;
+  min-width: 1100px;
   margin: 1rem auto;
-  border-collapse: collapse;
-  background: white;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  table-layout: auto; /* allow columns to size to content */
+  border-collapse: separate;
+  border-spacing: 0;
+  background: transparent; /* table container transparent, rows are cards */
 }
 
-/* Headers: never ellipsize - show full header text */
-.appointments-table th {
-  white-space: nowrap;
-  overflow: visible;
-  text-overflow: clip;
-}
-
-/* Body cells: allow wrapping where sensible (patient, title, category labels) */
-.appointments-table td {
-  white-space: normal;
-  overflow-wrap: anywhere;
-}
-
-/* Reserve space for actions column to avoid content push-out */
-.appointments-table th.actions,
-.appointments-table td.actions {
-  width: 160px;
-  min-width: 140px;
-  text-align: center;
-  white-space: nowrap;
-}
-
-/* ensure apt-title can wrap in body rows */
-.appointments-table td .apt-title {
+/* card-style rows */
+.appointments-table tbody tr {
   display: block;
-  white-space: normal;
-  overflow: visible;
-  text-overflow: clip;
-  max-width: none;
+  background: #fff;
+  margin: 0.6rem 0;
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
 
+.appointments-table thead { display: none; }
+
+.appointment-row-grid {
+  display: grid;
+  grid-template-columns: 140px 120px 1fr 150px 120px 160px 180px 140px 120px;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.appointment-cell {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  font-size: 0.95rem;
+}
+
+.appointment-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.btn-edit, .btn-delete {
+  border: none;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.btn-edit { background: #2196f3; color: white; }
+.btn-delete { background: #e53935; color: white; }
+
+/* show header above list for context */
+.appointments-header-row {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0.4rem auto 0.8rem auto;
+  display: grid;
+  grid-template-columns: 140px 120px 1fr 150px 120px 160px 180px 140px 120px;
+  gap: 0.6rem;
+  font-weight: 700;
+  color: #444;
+}
+
+/* responsive tweaks */
 @media (max-width: 900px) {
+  .appointment-row-grid {
+    grid-template-columns: 120px 100px 1fr 120px 100px 120px 140px 100px 80px;
+  }
   .appointments-table {
     min-width: 800px;
-  }
-}
-
-/* Responsive: allow horizontal scroll on small screens */
-@media (max-width: 900px) {
-  .week-header, .time-row {
-    grid-template-columns: 40px repeat(7, 1fr);
-  }
-  .week-view {
-    max-width: 100%;
-  }
-  .appointments-table {
-    display: block;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    white-space: nowrap;
-    max-width: 100%;
   }
 }
 

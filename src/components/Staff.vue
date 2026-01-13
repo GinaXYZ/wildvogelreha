@@ -1,4 +1,5 @@
 <template>
+  <div class="staff-root">
   <div class="staff-menu">
     <button :class="{active: activeStaffTab === 'donations'}" @click="activeStaffTab = 'donations'">Spendenverwaltung</button>
     <button :class="{active: activeStaffTab === 'contacts'}" @click="activeStaffTab = 'contacts'" class="contacts-tab-btn">
@@ -7,7 +8,7 @@
     </button>
     <button :class="{active: activeStaffTab === 'patients'}" @click="activeStaffTab = 'patients'">Tier-/Patientenverwaltung</button>
     <button :class="{active: activeStaffTab === 'appointments'}" @click="activeStaffTab = 'appointments'">Terminverwaltung</button>
-    <button :class="{active: activeStaffTab === 'tasks'}" @click="activeStaffTab = 'tasks'">Aufgaben & Schichtplanung</button>
+    <button :class="{active: activeStaffTab === 'schicht'}" @click="activeStaffTab = 'schicht'">Schichtplanung</button>
   </div>
   <div class="staff-content">
     <div v-if="activeStaffTab === 'donations'">
@@ -210,47 +211,7 @@
       <h2>Terminverwaltung (IHK-Projekt)</h2>
       <Appointments />
     </div>
-        <div v-else-if="activeStaffTab === 'tasks'">
-          <div class="subtab-container">
-            <button
-              :class="{ active: activeTaskTab === 'aufgaben' }"
-              @click="activeTaskTab = 'aufgaben'"
-            >Aufgaben</button>
-            <button
-              :class="{ active: activeTaskTab === 'schicht' }"
-              @click="activeTaskTab = 'schicht'"
-            >Schichtplanung</button>
-          </div>
-          <div v-if="activeTaskTab === 'aufgaben'">
-            <h3>Aufgaben</h3>
-          <div class="task-form">
-            <input v-model="newTask" placeholder="Neue Aufgabe..." />
-            <button @click="addTask">Hinzufügen</button>
-          </div>
-          <table class="task-table">
-            <thead>
-              <tr>
-                <th>Status</th>
-                <th>Aufgabe</th>
-                <th>Aktion</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(task, index) in tasks" :key="index">
-                <td>
-                  <input type="checkbox" v-model="task.done" />
-                </td>
-                <td>
-                  <span :class="{ 'task-done': task.done }">{{ task.text }}</span>
-                </td>
-                <td>
-                  <button @click="removeTask(index)">❌</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      <div v-else-if="activeTaskTab === 'schicht'" class="schedule-section">
+        <div v-else-if="activeStaffTab === 'schicht'" class="schedule-section">
         <h3>Schichtplanung</h3>
         <div class="staff-management">
           <h4>Mitarbeiter verwalten</h4>
@@ -310,7 +271,7 @@
 </div>
 </div>
 </div>
-</div>
+  </div>
 </template>
 
 <script setup>
@@ -331,7 +292,6 @@ const isAdmin = computed(() => {
   return authStore.user?.role === 'admin';
 });
 const activeStaffTab = ref('donations');
-const activeTaskTab = ref('aufgaben');
 const weekDays = ref(['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']);
 const timeSlots = ref(['06:00 - 12:00', '12:00 - 18:00', '18:00 - 00:00', '00:00 - 06:00']);
 const weekSchedule = ref([]);
@@ -359,23 +319,6 @@ const fetchAllDonations = async () => {
 const contacts = ref([]);
 const contactsLoading = ref(false);
 const contactsError = ref(null);
-const tasks = ref([]);
-const newTask = ref('');
-function addTask() {
-  if (newTask.value.trim() === '') return;
-  tasks.value.push({ text: newTask.value, done: false });
-  newTask.value = '';
-}
-const shifts = ref([]);
-const newShift = ref({ date: '', time: '', staff: '' });
-function addShift() {
-  if (!newShift.value.date || !newShift.value.time || !newShift.value.staff) return;
-  shifts.value.push({ ...newShift.value });
-  newShift.value = { date: '', time: '', staff: '' };
-}
-function removeShift(index) {
-  shifts.value.splice(index, 1);
-}
 const patients = ref([]);
 const patientsLoading = ref(false);
 const patientsError = ref(null);
@@ -387,9 +330,6 @@ const newContactsCount = computed(() => {
   }
   return 0;
 });
-function removeTask(index) {
-  tasks.value.splice(index, 1);
-}
 const patientsPage = ref(1);
 const patientsLimit = 20;
 const totalPatients = ref(0);
@@ -853,15 +793,16 @@ onMounted(() => {
   z-index: 10;
 }
 .staff-menu {
+  width: 90%;
+  max-width: 1200px;
+  margin: 0 auto 1rem auto;
   display: flex;
   gap: 1rem;
-  margin-bottom: -1rem;
+  justify-content: center;
+  flex-wrap: nowrap; /* keep buttons in a single row */
+  overflow-x: auto;
   color: #0c4b47;
   font-family: 'Helvetica', sans-serif;
-  max-width: 100%;
-  box-sizing: border-box;
-  flex-wrap: wrap;
-  justify-content: center;
   z-index: 1000;
 }
 .staff-menu button {
@@ -887,18 +828,15 @@ onMounted(() => {
   transform: translateY(-2px);
 }
 .staff-content {
-  background: transparent; /* removed gray background */
+  width: 100%;
+  max-width: none;
   padding: 2rem;
   border-radius: 0; /* remove rounded card look */
   overflow-x: auto;
-  width: 90%;
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
+  box-sizing: border-box;
   display: flex; /* center child tables */
   flex-direction: column;
   align-items: center;
-  box-sizing: border-box;
 }
 
 /* make tables retain white background but no outer gray card */
@@ -1031,284 +969,30 @@ onMounted(() => {
   margin: 2rem auto 0 auto; /* keep centered */
   background: #fff;
   border-radius: 8px;
-  box-shadow: 0 2px 12px #0001;
+  box-shadow: none; /* removed shadow to blend */
   font-family: 'Helvetica', sans-serif;
   font-size: 1.08rem;
   overflow: hidden;
 }
 
-/* Make contacts/patients tables explicitly wider on large screens so headers are not clipped */
-@media (min-width: 1200px) {
-  .staff-content {
-    overflow-x: visible; /* allow tables to extend beyond the gray area */
-  }
-  .contacts-table, .patients-table {
-    min-width: 1600px; /* wider so headings fit without wrapping or ellipsis */
-    margin-left: auto;
-    margin-right: auto;
-    table-layout: auto; /* allow columns to size to content */
-  }
-  .contacts-table th:nth-child(7), .contacts-table td:nth-child(7),
-  .patients-table th:nth-child(6), .patients-table td.actions-column {
-    width: 140px; /* reserve space for actions */
-  }
-}
-
-/* On medium screens, still allow larger min-width but less extreme */
-@media (min-width: 900px) and (max-width:1199px) {
-  .contacts-table, .patients-table {
-    min-width: 1200px;
-    table-layout: auto;
-  }
-}
-
-/* ensure message/details columns wrap */
-.message-cell, .patients-table td:nth-child(7), .patients-table td:nth-child(7) textarea {
-  white-space: normal;
-  overflow-wrap: anywhere;
-}
-
-/* center tables on all screen sizes */
-.contacts-table, .patients-table {
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.staff-management {
-  background: white;
-  padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 2rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.staff-pool {
+/* Fix menu width so buttons don't shift when table grows */
+.staff-menu {
+  width: 90%;
+  max-width: 1200px;
+  margin: 0 auto 1rem auto;
   display: flex;
-  flex-wrap: wrap;
   gap: 1rem;
-  margin-top: 1rem;
-  padding: 1rem;
-  background: #f9f9f9;
-  border-radius: 8px;
-  border: 2px dashed #ccc;
-}
-
-.staff-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem;
-  background: white;
-  border-radius: 8px;
-  border: 2px solid #0c4b47;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.staff-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-}
-
-.btn-add-staff {
-  background: #0c4b47;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.week-calendar {
-  background: white;
-  border-radius: 8px;
+  justify-content: center;
+  flex-wrap: nowrap; /* keep buttons in a single row */
   overflow-x: auto;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  max-width: 1000px;
-  margin: 0 auto;
 }
 
-.schedule-table {
+/* Ensure staff-content doesn't force header/menu to resize when tables overflow */
+.staff-content {
   width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-}
-
-.time-header {
-  background: #0c4b47;
-  color: white;
-  padding: 0.5rem;
-  text-align: center;
-  font-weight: bold;
-  width: 70px;
-  font-size: 0.9rem;
-}
-
-.day-header {
-  background: #0c4b47;
-  color: white;
-  padding: 0.5rem;
-  text-align: center;
-  font-weight: bold;
-  font-size: 0.95rem;
-}
-
-.time-cell {
-  background: #f5f5f5;
-  padding: 0.5rem;
-  text-align: center;
-  font-weight: bold;
-  border: 1px solid #ddd;
-  width: 70px;
-  font-size: 0.85rem;
-  vertical-align: middle;
-}
-
-.schedule-cell {
-  height: 70px;
-  border: 1px solid #ddd;
-  background: #fafafa;
-  vertical-align: middle;
-  text-align: center;
-  position: relative;
-  padding: 0;
-}
-
-.schedule-cell.drag-hover {
-  background: #e8f5e8 !important;
-  border-color: #0c4b47 !important;
-  border-width: 2px !important;
-}
-
-.staff-assignment {
-  display: flex;
-  align-items: center;
-  text-align:center;
-  justify-content: center;
-  color: #0c4b47;
-  background: transparent;
-  padding: 0.2rem;
-  font-size: 0.7rem;
-  word-break: keep-all;
-  cursor: grab;
-  user-select: none;
-  min-width: 100%;
-  max-width: 100%;
-  z-index: 10;
-}
-
-.staff-name {
-  font-size: 0.7rem;
-  font-weight: bold;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.remove-assignment-btn {
-  border: 1px solid #0c4b47;
-  color: #0c4b47;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 0.8rem;
-  font-weight: bold;
-  flex-shrink: 0;
-  margin-left: 0.2rem;
-}
-
-.remove-assignment-btn:hover {
-  transform: scale(1.1);
-}
-
-.subtab-container {
-  display: flex;
-  gap: 1rem;
-  margin-top: 2rem;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-  padding-top: 0.5rem;
-}
-
-.subtab-container button {
-  padding: 0.6rem 1.5rem;
-  border: none;
-  border-radius: 8px;
-  color: #0c4b47;
-  font-family: 'Helvetica', sans-serif;
-  background: #eee;
-  cursor: pointer;
-  font-weight: bold;
-  text-align: center;
+  max-width: none;
+  padding: 2rem;
   box-sizing: border-box;
-  white-space: nowrap;
-  transition: background 0.2s, color 0.2s;
-}
-
-.subtab-container button.active {
-  background: #0c4b47;
-  color: #fff;
-}
-
-.subtab-container button:hover {
-  transform: translateY(-2px);
-  font-weight: bold;
-}
-.remove-staff-btn {
-  border: 1px solid #0c4b47;
-  color: #0c4b47;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 0.8rem;
-  font-weight: bold;
-  flex-shrink: 0;
-  margin-left: 0.2rem;
-}
-.task-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1rem;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px #0001;
-}
-.task-table th, .task-table td {
-  border: 1px solid #eee;
-  padding: 0.7rem 0.5rem;
-  text-align: left;
-}
-.task-table th {
-  background: #f7fafb;
-  color: #0c4b47;
-  font-weight: 600;
-}
-.task-done {
-  text-decoration: line-through;
-  color: #888;
-}
-.sort-arrow:hover {
-  cursor: pointer;
-}
-.search-popup {
-  position: fixed;
-  background: #fff;
-  border-radius: 8px;
-  padding: 0.7em 1em;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  z-index: 99999;
-  font-size: 1em;
-  color: #0c4b47;
-  display: flex;
-  align-items: center;
-  gap: 0.5em;
-}
-.donation-search-input {
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  padding: 0.2em 0.5em;
-  font-size: 1em;
 }
 
 /* Responsive Styles for Staff Component */
