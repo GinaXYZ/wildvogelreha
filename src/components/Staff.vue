@@ -120,10 +120,10 @@
               <td>{{ contact.email }}</td>
               <td>{{ contact.telefon }}</td>
               <td>{{ formatDate(contact.created_at) }}</td>
-              <td>
-                <button @click="deleteContact(contact.id)" class="delete-btn" title="Kontakt löschen">
-                  🗑️
-                </button>
+              <td class="actions-cell">
+                <button @click="editContact(contact)" class="action-btn" title="Kontakt bearbeiten">✏️</button>
+                <button @click="convertToPatient(contact)" class="action-btn" title="Als Patient anlegen">➕</button>
+                <button @click="deleteContact(contact.id)" class="delete-btn" title="Kontakt löschen">🗑️</button>
               </td>
               <td class="message-cell">{{ contact.msg }}</td>
             </tr>
@@ -153,6 +153,7 @@
               <th>Tierart</th>
               <th>Status</th>
               <th>Aufnahmedatum</th>
+              <th>Aktionen</th>
               <th>Details</th>
             </tr>
           </thead>
@@ -176,12 +177,19 @@
                 </select>
               </td>
               <td>{{ formatDate(patient.admission_date) }}</td>
+              <td class="actions-column">
+                <div class="actions-wrapper">
+                  <button @click="editPatient(patient)" class="action-btn" title="Bearbeiten">✏️</button>
+                  <button @click="addNewPatient()" class="action-btn" title="Neu">➕</button>
+                </div>
+              </td>
               <td>
-                <input
+                <textarea
                   v-model="patient.details"
                   class="details-input"
                   @blur="updatePatient(patient)"
-                />
+                  rows="2"
+                ></textarea>
               </td>
             </tr>
             <tr v-if="patients.length === 0">
@@ -648,6 +656,60 @@ const updateContactStatus = async (contact) => {
   }
 };
 
+// Edit contact (quick inline prompt) and persist full contact
+const updateContact = async (contact) => {
+  try {
+    const token = authStore.token || localStorage.getItem('token');
+    await fetch(`/api/contacts/${contact.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(contact)
+    });
+  } catch (err) {
+    alert('Fehler beim Speichern des Kontakts');
+  }
+};
+
+const editContact = async (contact) => {
+  // minimal quick editor: edit Nachricht; can be replaced by modal later
+  const newMsg = prompt('Nachricht bearbeiten:', contact.msg || '');
+  if (newMsg === null) return; // cancelled
+  contact.msg = newMsg;
+  await updateContact(contact);
+};
+
+const convertToPatient = async (contact) => {
+  if (!confirm('Kontakt als neuen Patienten anlegen?')) return;
+  try {
+    const token = authStore.token || localStorage.getItem('token');
+    const name = `${contact.firstname || ''} ${contact.lastname || ''}`.trim() || 'unbekannt';
+    const body = {
+      name: name,
+      species: 'unbekannt',
+      status: 'in Behandlung',
+      admission_date: new Date().toISOString(),
+      details: contact.msg || ''
+    };
+    const res = await fetch(`/api/patients`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error('Fehler beim Anlegen des Patienten');
+    // optionally refresh patients list and remove contact locally
+    contacts.value = contacts.value.filter(c => c.id !== contact.id);
+    fetchPatients();
+  } catch (err) {
+    alert(err.message || 'Fehler beim Anlegen des Patienten');
+  }
+};
+
 const deleteContact = async (id) => {
   if (!confirm('Kontakt wirklich löschen?')) return;
   try {
@@ -663,110 +725,22 @@ const deleteContact = async (id) => {
     alert('Fehler beim Löschen')
   }
 };
-function removeAssignment(assignmentId) {
-  const index = weekSchedule.value.findIndex(a => a.id === assignmentId);
-  if (index >= 0) {
-    weekSchedule.value.splice(index, 1);
-    localStorage.setItem('weekSchedule', JSON.stringify(weekSchedule.value));
-    }
-}
-const allDonations = ref([]);
-const fetchAllDonations = async () => {
-  try {
-    const token = authStore.token || localStorage.getItem('token'); 
-    const res = await fetch(`${API_BASE}/donations/all`, {
-      headers: {
-        'Authorization': `Bearer ${token}` 
-            }});
-                if (!res.ok) throw new Error('Fehler beim Laden aller Spenden');
-    const data = await res.json();
-    allDonations.value = data || [];
-  } catch (err) {
+
+// New helper action handlers (UI only / simple placeholders)
+const editPatient = (patient) => {
+  // simple inline edit prompt for name as placeholder
+  const newName = prompt('Name bearbeiten:', patient.name || '');
+  if (newName !== null) {
+    patient.name = newName;
+    updatePatient(patient);
   }
 };
-onMounted(() => {
-  fetchAllDonations();
-  fetchDonations();
-  fetchContacts();
-  fetchPatients();
-
-const totalSum = computed(() => {
-  return allDonations.value.reduce((sum, d) => sum + Number(d.amount), 0);
-});
-  const monthSum = computed(() => {
-    const now = new Date();
-    return allDonations.value
-      .filter(d => {
-        const date = new Date(d.created_at);
-        return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
-      })
-      .reduce((sum, d) => sum + Number(d.amount), 0);
-  });
-document.addEventListener('mousemove', onDrag);
-document.addEventListener('mouseup', onDragEnd);
-
-const storedSchedule = localStorage.getItem('weekSchedule');
-  if (storedSchedule) {
-    weekSchedule.value = JSON.parse(storedSchedule);
-  }
-
-  const storedShifts = localStorage.getItem('shifts');
-  if (storedShifts) {
-    shifts.value = JSON.parse(storedShifts);
-  } else {
-    shifts.value = [];
-  }
-const stored = localStorage.getItem('staffMembers');
-  if (stored) {
-    staffMembers.value = JSON.parse(stored);
-  } else {
-    staffMembers.value = [
-      { id: 1, name: 'Max Mustermann', role: 'Tierarzt' },
-      { id: 2, name: 'Erika Musterfrau', role: 'Pflegekraft'},
-      { id: 3, name: 'Hans Müller', role: 'Verwaltung'}
-    ];
-  }
-
-if (staffMembers.value.length === 0) {
-  staffMembers.value = [
-    { id: 1, name: 'Max Mustermann', role: 'Tierarzt' },
-    { id: 2, name: 'Erika Musterfrau', role: 'Pflegekraft'},
-    { id: 3, name: 'Hans Müller', role: 'Verwaltung'}
-  ];
-}
-  tasks.value = [
-    { text: 'Tierarzttermin planen', done: false },
-    { text: 'Medikamente bestellen', done: false },
-    { text: 'Rechnungen prüfen', done: true }
-  ];
-});
-  onBeforeUnmount(() => {
-    document.removeEventListener('mousemove', onDrag);
-    document.removeEventListener('mouseup', onDragEnd);
-  });
-  const addStaffMember = () => {
-  if (!newStaffMember.value.name.trim()) return;
-  staffMembers.value.push({
-    id: Date.now(),
-    name: newStaffMember.value.name,
-    role: newStaffMember.value.role,
-  });
-  localStorage.setItem('staffMembers', JSON.stringify(staffMembers.value));
-  showStaffForm.value = false;
-  newStaffMember.value = { name: '', role: 'staff'};
+const addNewPatient = () => {
+  const name = prompt('Neuen Patienten anlegen - Name:');
+  if (!name) return;
+  const newP = { id: Date.now(), name, species: '', status: 'in Behandlung', admission_date: new Date().toISOString(), details: '' };
+  patients.value.unshift(newP);
 };
-function removeStaffMember(id) {
-  staffMembers.value = staffMembers.value.filter(s => s.id !== id);
-  weekSchedule.value = weekSchedule.value.filter(a => a.staff.id !== id);
-  localStorage.setItem('staffMembers', JSON.stringify(staffMembers.value));
-  localStorage.setItem('weekSchedule', JSON.stringify(weekSchedule.value));
-}
-function shortName(name) {
-  if (!name) return '';
-  const parts = name.trim().split(' ');
-  if (parts.length === 1) return parts [0];
-  return `${parts[0]} ${parts[1][0]}.`;
-}
 </script>
 
 <style scoped>
@@ -1381,10 +1355,72 @@ function shortName(name) {
   padding: 0.2em 0.5em;
   font-size: 1em;
 }
-.search-btn {
+
+/* Make contacts/patients tables explicitly wider on large screens so columns don't get clipped by the gray wrapper */
+@media (min-width: 1200px) {
+  .staff-content {
+    overflow-x: visible; /* allow tables to extend beyond the gray area */
+  }
+  .contacts-table, .patients-table {
+    min-width: 1400px;
+    table-layout: fixed; /* keep column sizing stable */
+  }
+  .contacts-table th:nth-child(7), .contacts-table td:nth-child(7),
+  .patients-table th:nth-child(6), .patients-table td.actions-column {
+    width: 120px; /* reserve space for actions */
+  }
+}
+
+/* Actions column styling */
+.actions-wrapper {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: center;
+  align-items: center;
+}
+.action-btn {
+  background: #0c4b47;
+  color: #fff;
   border: none;
+  border-radius: 6px;
+  padding: 0.25rem 0.5rem;
   cursor: pointer;
-  font-weight: bold;
+  font-size: 0.95rem;
+}
+.action-btn:hover { transform: scale(1.05); }
+
+/* Patients: allow details to wrap and make columns a bit wider on desktop */
+.patients-table {
+  /* prefer auto table layout so columns can grow as requested */
+  table-layout: auto;
+  min-width: 900px; /* allow wider table on desktop so columns are not cramped */
+}
+
+.details-textarea {
+  width: 100%;
+  min-width: 220px;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 0.4rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  resize: vertical;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* ensure message/details columns wrap */
+.message-cell, .patients-table td:nth-child(6) {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1024px) {
+  .patients-table { min-width: 720px; }
+}
+
+@media (max-width: 768px) {
+  .patients-table { min-width: 480px; }
 }
 
 /* Responsive Styles for Staff Component */
