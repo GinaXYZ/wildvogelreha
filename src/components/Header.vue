@@ -163,7 +163,7 @@ const headerStyle = computed(() => ({
 
 .title {
   color: #0c4b47;
-  font-size: 1.3rem;
+  font-size: 1.25rem; /* slightly smaller default for better mobile fit */
   text-decoration: none;
   transition: all 0.3s ease;
   white-space: nowrap;
@@ -171,7 +171,7 @@ const headerStyle = computed(() => ({
 }
 
 .header.compact .title {
-  font-size: 1.1rem;
+  font-size: 1.0rem; /* compact header -> smaller title */
 }
 
 /* ===== NAVIGATION - Centered ===== */
@@ -283,18 +283,20 @@ const headerStyle = computed(() => ({
 .hamburger {
   display: none;
   flex-direction: column;
-  justify-content: space-between;
-  width: 36px;           /* visible bar width */
-  height: 22px;          /* container height for three bars */
+  justify-content: center;
+  gap: 6px;               /* ensure three distinct bars */
+  width: 36px;            /* visible bar width */
+  height: 22px;           /* container height for three bars */
   min-width: 36px;
   min-height: 22px;
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 8px;          /* touch target padding */
+  padding: 6px;           /* touch target padding */
   box-sizing: content-box;
   z-index: 1001;
   flex-shrink: 0;
+  align-items: center;
 }
 
 .hamburger span {
@@ -307,7 +309,7 @@ const headerStyle = computed(() => ({
 }
 
 .hamburger.active span:nth-child(1) {
-  transform: translateY(9px) rotate(45deg);
+  transform: translateY(6px) rotate(45deg); /* form an X */
 }
 
 .hamburger.active span:nth-child(2) {
@@ -316,7 +318,7 @@ const headerStyle = computed(() => ({
 }
 
 .hamburger.active span:nth-child(3) {
-  transform: translateY(-9px) rotate(-45deg);
+  transform: translateY(-6px) rotate(-45deg); /* form an X */
 }
 
 /* ===== MOBILE OVERLAY ===== */
@@ -357,16 +359,21 @@ const headerStyle = computed(() => ({
   .hamburger {
     display: flex;
     order: 3;
-    /* ensure consistent size / touch target on mobile */
-    width: 40px;
-    height: 24px;
-    padding: 10px;
-    min-width: 44px;
-    min-height: 44px;
+    /* keep compact visual size but good touch target */
+    width: 36px;
+    height: 22px;
+    padding: 6px;
+    min-width: 36px;
+    min-height: 22px;
     align-items: center;
     justify-content: center;
   }
-  
+
+  /* ensure compact title stays smaller on mobile when header is compact */
+  .header.compact .title {
+    font-size: 0.9rem;
+  }
+
   .mobile-overlay {
     display: block;
     position: fixed;
@@ -453,28 +460,19 @@ const headerStyle = computed(() => ({
   }
   
   .title {
+    font-size: 0.95rem;
+  }
+
+  .header.compact .title {
     font-size: 0.85rem;
   }
-  
-  .logo {
-    height: 28px;
-  }
-  
-  .user-actions {
-    gap: 0.6rem;
-  }
-  
-  .cart-icon,
-  .profile-icon {
-    font-size: 1.3rem;
-  }
-  
+
   .hamburger {
     width: 34px;
     height: 20px;
-    padding: 8px;
+    padding: 6px;
   }
-  
+
   .nav {
     width: 240px;
     right: -250px;
@@ -494,29 +492,19 @@ const headerStyle = computed(() => ({
   }
   
   .title {
+    font-size: 0.85rem;
+  }
+
+  .header.compact .title {
     font-size: 0.75rem;
   }
-  
-  .logo {
-    height: 24px;
-  }
-  
-  .user-actions {
-    gap: 0.4rem;
-    margin-right: 0.5rem;
-  }
-  
-  .cart-icon,
-  .profile-icon {
-    font-size: 1.2rem;
-  }
-  
+
   .hamburger {
     width: 32px;
     height: 18px;
     padding: 6px;
   }
-  
+
   .nav {
     width: 200px;
     right: -210px;
