@@ -884,7 +884,9 @@ onMounted(() => {
   max-width: 1200px;
   margin-left: auto;
   margin-right: auto;
-  display: block;
+  display: flex; /* changed: center child tables */
+  flex-direction: column;
+  align-items: center;
   box-sizing: border-box;
 }
 .donations-table {
@@ -1009,7 +1011,7 @@ onMounted(() => {
   width: 96%;
   border-collapse: separate;
   border-spacing: 0;
-  margin: 2rem auto 0 auto;
+  margin: 2rem auto 0 auto; /* keep centered */
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 12px #0001;
@@ -1017,132 +1019,20 @@ onMounted(() => {
   font-size: 1.08rem;
   overflow: hidden;
 }
-.contacts-table th, .contacts-table td {
-  padding: 1rem 0.5rem;
-  text-align: center;
-  vertical-align: middle;
-  border-bottom: 1px solid #f0f0f0;
-}
-.contacts-table td.priority-column-cell,
-.contacts-table th.priority-column-cell { 
-  min-width: 160px;
-  width: 170px;
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
-}
-.contacts-table th {
-  background: #f7fafb;
-  color: #0c4b47;
-  font-weight: 600;
-  font-size: 1.08rem;
-  border-bottom: 1px solid #e0e0e0;
-  letter-spacing: 0.02em;
-}
-.contacts-stats {
-  margin-bottom: 1rem;
-  padding: 1rem;
-  background: white;
-  border-radius: 8px;
-}
-.status-select {
-  width: 100%;
-  padding: 0.25rem 0.7rem;
-  border: none;
-  border-radius: 8px;
-  background: #f3f3f3;
-  font-size: 1rem;
-  margin-left: 0.2em;
-  flex-grow: 1; 
-  color: #0c4b47;
-  word-break: keep-all;
-  font-family: 'Helvetica', sans-serif;
-}
-.status-select.option {
-  color: #0c4b47;
-  background-color: #ffffff;
-  word-break: keep-all;
-  text-align: center;
-}
-.status-select:focus {
-  outline: 2px solid #0c4b47;
-}
-.delete-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1.5rem;
-  margin: 0 auto;
-  transition: transform 0.15s, color 0.2s;
-  color: #0c4b47;
-}
-@media (max-width: 900px) {
-  .contacts-table {
-    font-size: 0.97rem;
-    width: 100%;
-  }
-  .contacts-table th, .contacts-table td {
-    padding: 0.7rem 0.2rem;
-  }
-}
-.contacts-table td:nth-child(6) {
-  text-align: center;
-  vertical-align: middle;
-}
-.contacts-table tr:last-child td {
-  border-bottom: none;
-}
-.contacts-table td.status-cell, .contacts-table th.status-cell {
-  min-width: 160px;
-  width: 170px;
-  padding-left: 1rem;
-  padding-right: 1rem;
-}
-.delete-btn:hover {
-  transform: scale(1.18);
-  color: #e53935;
-  background: #f9f9f9;
-}
-.cart-icon-container {
-  position: relative;
-}
-.cart-icon {
-  display: flex;
-  align-items: center;
-  position: relative;
-}
-.cart-count {
-  position: absolute;
-  top: -5px;
-  right: -10px;
-  background-color: red;
-  color: white;
-  font-size: 0.8rem;
-  font-weight: bold;
-  border-radius: 50%;
-  padding: 0.2rem 0.5rem;
-}
-.status-square.green {
-  background: #4caf50;
-}
-.status-square.red {
-  background: #e53935;
-}
-.status-square.orange {
-  background: #66b5ff;
-}
-.status-square.yellow {
-  background: #afff02;
-}
-.status-square.black {
-  background: #000000;
-}
-.schedule-section {
-  margin-top: 1rem;
+
+.patients-table {
+  margin: 1.5rem auto; /* center patients table */
+  width: 96%;
 }
 
+/* On very large screens keep tables centered while allowing wide min-width */
+@media (min-width: 1200px) {
+  .contacts-table, .patients-table {
+    min-width: 1200px; /* slightly smaller than before to avoid extreme overflow */
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
 .staff-management {
   background: white;
   padding: 1rem;

@@ -671,6 +671,9 @@ onMounted(() => {
 .appointments-container {
   font-family: 'Helvetica', sans-serif;
   color: #0c4b47;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* center content */
 }
 
 /* Header & Stats */
@@ -818,11 +821,14 @@ onMounted(() => {
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 1600px; /* allow wider calendar on desktop */
+  margin: 0 auto;
 }
 
 .week-header {
   display: grid;
-  grid-template-columns: 60px repeat(7, 1fr);
+  grid-template-columns: 80px repeat(7, 1fr); /* slightly wider time column */
   background: #0c4b47;
   color: white;
 }
@@ -851,13 +857,13 @@ onMounted(() => {
 }
 
 .week-body {
-  max-height: 600px;
+  max-height: 700px; /* taller so content doesn't look cut */
   overflow-y: auto;
 }
 
 .time-row {
   display: grid;
-  grid-template-columns: 60px repeat(7, 1fr);
+  grid-template-columns: 80px repeat(7, 1fr);
   min-height: 60px;
   border-bottom: 1px solid #eee;
 }
@@ -1012,6 +1018,8 @@ onMounted(() => {
 /* List View */
 .appointments-table {
   width: 100%;
+  max-width: 1400px;
+  margin: 1rem auto;
   border-collapse: collapse;
   background: white;
   border-radius: 8px;
@@ -1058,16 +1066,18 @@ onMounted(() => {
 
 /* Responsive: allow horizontal scroll on small screens */
 @media (max-width: 900px) {
+  .week-header, .time-row {
+    grid-template-columns: 40px repeat(7, 1fr);
+  }
+  .week-view {
+    max-width: 100%;
+  }
   .appointments-table {
     display: block;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     white-space: nowrap;
-  }
-  .appointments-table th, .appointments-table td {
-    display: inline-block;
-    vertical-align: top;
-    white-space: normal;
+    max-width: 100%;
   }
 }
 
@@ -1305,7 +1315,7 @@ onMounted(() => {
   }
   
   .cell-date {
-    font-size: 0.85rem;
+    font-size: 0.75rem;
   }
 }
 
