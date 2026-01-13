@@ -198,7 +198,10 @@ const newBirds = [
   .slideshow-center {
     grid-column: 1 / -1;
     order: -1;
-    margin-top: 0;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    max-width: 600px;
   }
 }
 
@@ -227,8 +230,9 @@ const newBirds = [
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   margin-top: 0;
+  width: 100%;
 }
 .donation-table th, .donation-table td {
   padding: 0.4em 0.7em;
@@ -449,6 +453,22 @@ const newBirds = [
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.donation-list li:last-child {
+  border-bottom: none;
+}
+
+.donor-name {
+  flex: 1;
+  text-align: left;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-right: 0.5rem;
 }
 
 .donation-amount {
@@ -456,8 +476,27 @@ const newBirds = [
   margin-left: 0.5rem;
   color: #2196f3;
   font-family: 'Helvetica', sans-serif;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
+/* Responsive Donation List */
+@media (max-width: 768px) {
+  .donation-list li {
+    padding: 0.4rem 0;
+    font-size: 0.9rem;
+  }
+  
+  .donor-name {
+    max-width: 70%;
+  }
+}
+
+@media (max-width: 480px) {
+  .donation-list li {
+    font-size: 0.85rem;
+  }
+}
 .intro-section {
   text-align: center;
   margin-bottom: 2rem;

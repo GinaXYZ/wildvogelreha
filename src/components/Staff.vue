@@ -876,17 +876,19 @@ function shortName(name) {
   border-radius: 8px;
   overflow-x: auto;
   width: 90%;
+  max-width: 1200px;
   margin-left: auto;
   margin-right: auto;
   display: block;
+  box-sizing: border-box;
 }
 .donations-table {
-  width: 50%;
+  width: 100%;
+  max-width: 600px;
   border-collapse: collapse;
-  align-items: center;
   text-align: center;
-  display: block;
   margin: 0 auto;
+  display: table;
 }
 @media (max-width: 800px) {
   .donations-table {
@@ -1389,28 +1391,50 @@ function shortName(name) {
 @media (max-width: 768px) {
   .staff-menu {
     gap: 0.5rem;
+    padding: 0 0.5rem;
   }
   .staff-menu button {
     padding: 0.4rem 0.8rem;
     font-size: 0.85rem;
+    flex: 1 1 auto;
+    min-width: 0;
   }
   .staff-content {
     width: 100%;
     padding: 0.5rem;
+    margin-top: 1rem;
   }
+  
+  /* Responsive table container */
   .contacts-table,
   .patients-table {
     display: block;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     white-space: nowrap;
+    max-width: 100%;
   }
+  
   .contacts-table th,
   .contacts-table td,
   .patients-table th,
   .patients-table td {
     padding: 0.5rem 0.3rem;
     font-size: 0.85rem;
+    min-width: 80px;
   }
+  
+  .donations-table {
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .donations-table th,
+  .donations-table td {
+    padding: 0.4rem;
+    font-size: 0.9rem;
+  }
+  
   .week-calendar {
     max-width: 100%;
   }
@@ -1428,6 +1452,71 @@ function shortName(name) {
   .staff-assignment {
     font-size: 0.6rem;
   }
+  
+  /* Task form responsive */
+  .task-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .task-form input {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .task-form button {
+    width: 100%;
+  }
+  
+  /* Subtab responsive */
+  .subtab-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+  }
+  
+  .subtab-container button {
+    margin-right: 0;
+    flex: 1 1 auto;
+    min-width: 120px;
+  }
+  
+  /* Staff form responsive */
+  .staff-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+  
+  .staff-form input {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .staff-form button {
+    width: 100%;
+    padding: 0.5rem;
+  }
+  
+  /* Staff pool responsive */
+  .staff-pool {
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+  
+  .staff-item {
+    padding: 0.4rem;
+    font-size: 0.85rem;
+  }
+  
+  /* Donation sums */
+  .donation-sums {
+    text-align: center;
+    font-size: 0.95rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1438,6 +1527,7 @@ function shortName(name) {
   .staff-menu button {
     width: 100%;
     text-align: center;
+    padding: 0.6rem;
   }
   .pagination {
     flex-wrap: wrap;
@@ -1445,6 +1535,51 @@ function shortName(name) {
   }
   .donations-table {
     width: 100%;
+  }
+  
+  /* Very small screen table handling */
+  .contacts-table th,
+  .contacts-table td,
+  .patients-table th,
+  .patients-table td {
+    font-size: 0.8rem;
+    padding: 0.3rem 0.2rem;
+  }
+  
+  .status-select {
+    font-size: 0.85rem;
+    padding: 0.2rem 0.4rem;
+  }
+  
+  /* Schedule table very small */
+  .schedule-table {
+    font-size: 0.65rem;
+  }
+  
+  .time-header,
+  .day-header,
+  .time-cell {
+    padding: 0.2rem;
+    font-size: 0.65rem;
+  }
+  
+  .schedule-cell {
+    height: 40px;
+  }
+  
+  .staff-assignment {
+    font-size: 0.55rem;
+    padding: 0.1rem;
+  }
+  
+  .staff-name {
+    font-size: 0.55rem;
+  }
+  
+  .remove-assignment-btn,
+  .remove-staff-btn {
+    font-size: 0.6rem;
+    padding: 0.1rem;
   }
 }
 </style>

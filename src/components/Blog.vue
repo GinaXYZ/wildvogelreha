@@ -364,6 +364,21 @@ textarea {
   .blog-post {
     flex: 1 1 100%;
     max-width: 100%;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+  
+  .blog-post p {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+    hyphens: auto;
+  }
+  
+  .blog-post h3 {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
   
   .blog-editor {
@@ -379,6 +394,7 @@ textarea {
   input, textarea, select {
     width: 100%;
     font-size: 1rem;
+    box-sizing: border-box;
   }
 }
 
@@ -392,13 +408,27 @@ textarea {
     font-size: 1.3rem;
   }
   
+  .blog-post {
+    padding: 0.8rem;
+  }
+  
   .blog-post h3 {
     font-size: 1.1rem;
+    line-height: 1.3;
+  }
+  
+  .blog-post p {
+    font-size: 0.95rem;
+    line-height: 1.5;
   }
   
   .post-meta {
     flex-direction: column;
     gap: 0.3rem;
+  }
+  
+  .post-actions {
+    flex-wrap: wrap;
   }
 }
 </style>

@@ -61,6 +61,8 @@ const goToSlide = (index) => {
   aspect-ratio: 3 / 2;
   overflow: hidden;
   margin-bottom: 2rem;
+  margin-left: auto;
+  margin-right: auto;
 }
 .slides {
   width: 100%;
@@ -150,7 +152,7 @@ button.next {
 }
 
 .slideshow-outer {
-  position: center;          
+  width: 100%;
   display: flex;
   justify-content: center;   
   align-items: center;                    

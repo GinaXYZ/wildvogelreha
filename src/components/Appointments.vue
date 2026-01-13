@@ -1192,14 +1192,67 @@ onMounted(() => {
 }
 
 /* Responsive */
+@media (max-width: 1024px) {
+  .header-actions {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .btn-add, .btn-export {
+    flex: 1 1 auto;
+  }
+}
+
 @media (max-width: 768px) {
+  .appointments-container {
+    padding: 0.5rem;
+  }
+  
+  .appointments-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .header-actions {
+    width: 100%;
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  .header-actions button {
+    flex: 1;
+  }
+  
   .filter-bar {
     flex-direction: column;
     align-items: stretch;
+    gap: 0.8rem;
+  }
+  
+  .view-toggle {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .view-toggle button {
+    flex: 1;
+    padding: 0.5rem;
   }
   
   .filters {
     flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .filters select {
+    flex: 1 1 45%;
+    min-width: 120px;
+  }
+  
+  .date-nav {
+    justify-content: center;
+    gap: 0.5rem;
   }
   
   .week-header, .time-row {
@@ -1209,11 +1262,125 @@ onMounted(() => {
   .appointments-table {
     display: block;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    font-size: 0.85rem;
+  }
+  
+  .appointments-table th,
+  .appointments-table td {
+    padding: 0.5rem 0.3rem;
+    white-space: nowrap;
   }
   
   .stats-cards {
     width: 100%;
     justify-content: space-around;
+  }
+  
+  .stat-card {
+    padding: 0.8rem;
+    min-width: 80px;
+  }
+  
+  /* Modal responsive */
+  .modal {
+    width: 95%;
+    max-width: 95%;
+    padding: 1rem;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  .form-row-group {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .form-row-group .form-row {
+    width: 100%;
+  }
+  
+  /* Month view responsive */
+  .month-cell {
+    min-height: 60px;
+    padding: 0.3rem;
+  }
+  
+  .mini-appointment {
+    font-size: 0.6rem;
+    padding: 0.1rem 0.2rem;
+  }
+  
+  .cell-date {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .stat-card {
+    padding: 0.5rem;
+    min-width: 60px;
+  }
+  
+  .stat-number {
+    font-size: 1.2rem;
+  }
+  
+  .stat-label {
+    font-size: 0.7rem;
+  }
+  
+  .view-toggle button {
+    font-size: 0.8rem;
+    padding: 0.4rem;
+  }
+  
+  .filters select {
+    flex: 1 1 100%;
+    font-size: 0.9rem;
+  }
+  
+  .week-view {
+    font-size: 0.75rem;
+  }
+  
+  .time-col {
+    font-size: 0.65rem;
+    width: 35px !important;
+  }
+  
+  .day-col, .day-cell {
+    font-size: 0.7rem;
+  }
+  
+  .appointment-block {
+    font-size: 0.6rem;
+    padding: 0.2rem;
+  }
+  
+  .month-day-name {
+    padding: 0.4rem;
+    font-size: 0.75rem;
+  }
+  
+  .month-cell {
+    min-height: 50px;
+    padding: 0.2rem;
+  }
+  
+  .cell-date {
+    font-size: 0.75rem;
+  }
+  
+  .appointments-table th,
+  .appointments-table td {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.2rem;
+  }
+  
+  .btn-edit, .btn-delete {
+    padding: 0.2rem;
+    font-size: 0.8rem;
   }
 }
 </style>
