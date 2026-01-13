@@ -125,7 +125,7 @@
                   🗑️
                 </button>
               </td>
-              <td>{{ contact.msg }}</td>
+              <td class="message-cell">{{ contact.msg }}</td>
             </tr>
             <tr v-if="contacts.length === 0">
               <td colspan="7">Keine Kontakte gefunden.</td>
@@ -180,7 +180,6 @@
                 <input
                   v-model="patient.details"
                   class="details-input"
-                  style="width: 180px;"
                   @blur="updatePatient(patient)"
                 />
               </td>
@@ -771,11 +770,6 @@ function shortName(name) {
 </script>
 
 <style scoped>
-.details-input {
-  padding: 0.3rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-}
 .patients-table {
   width: 100%; 
   border-collapse: collapse;
@@ -783,36 +777,49 @@ function shortName(name) {
   word-break: keep-all;
   table-layout: auto;
 }
-.patients-table th:nth-child(4), 
-.patients-table td:nth-child(4) {
-  min-width: 160px;
+
+/* default cell overflow handling */
+.contacts-table th, .contacts-table td,
+.patients-table th, .patients-table td,
+.donations-table th, .donations-table td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.patients-table th, .patients-table td {
+
+/* allow message/details column to wrap instead of being cut off */
+.message-cell {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-overflow: unset;
+}
+
+.details-input {
+  padding: 0.3rem;
   border: 1px solid #ccc;
-  padding: 0.75rem; 
-  text-align: center;
-  vertical-align: center; 
-  word-break: keep-all;
+  border-radius: 8px;
+  width: 100%;          /* responsive input */
+  box-sizing: border-box;
 }
 
-.patients-table th {
-  background: #eee;
-  font-weight: bold;
+/* ensure actions column stays compact */
+.contacts-table td:nth-child(6), .contacts-table th:nth-child(6) {
+  white-space: nowrap;
+  width: 80px;
 }
 
-.contacts-table tr:nth-child(even) {
-  background: #fafcfd;
+/* smaller font for dense tables on large screens if needed */
+@media (min-width: 1200px) {
+  .contacts-table, .patients-table {
+    font-size: 0.98rem;
+  }
 }
-
-.contacts-table tr:hover {
-  background: #f1f7f6;
-}
-.status-square {
-  width: 16px;
-  height: 16px;
-  border: 1px solid #000000;
-  margin-right: 0.2em;
-  flex-shrink: 0;
+.contacts-table,
+.patients-table,
+.donations-table {
+  width: 100%;
+  max-width: 100%;
+  table-layout: fixed; /* distribute columns and prevent extreme widths */
 }
 .staff-menu button.contacts-tab-btn {
   position: relative; 

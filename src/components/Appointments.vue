@@ -1017,77 +1017,58 @@ onMounted(() => {
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  table-layout: fixed; /* distribute columns and prevent one column from growing too large */
 }
 
-.appointments-table th {
-  background: #0c4b47;
-  color: white;
-  padding: 1rem 0.5rem;
-  text-align: left;
-}
-
+.appointments-table th,
 .appointments-table td {
-  padding: 0.8rem 0.5rem;
+  padding: 0.75rem 0.5rem;
   border-bottom: 1px solid #eee;
+  text-align: left;
+  vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap; /* keep single-line and ellipsis */
 }
 
-.appointments-table tr:hover {
-  background: #f5f5f5;
-}
-
-.priority-row-dringend {
-  background: #ffebee !important;
-}
-
-.priority-row-hoch {
-  background: #fff8e1 !important;
-}
-
-.category-badge, .priority-badge {
-  padding: 0.3rem 0.6rem;
-  border-radius: 12px;
-  font-size: 0.8rem;
-  font-weight: bold;
-}
-
-.cat-behandlung { background: #e3f2fd; color: #1976d2; }
-.cat-fuetterung { background: #e8f5e9; color: #388e3c; }
-.cat-medikation { background: #fce4ec; color: #c2185b; }
-.cat-reinigung { background: #f3e5f5; color: #7b1fa2; }
-.cat-auswilderung { background: #e0f7fa; color: #00838f; }
-.cat-kontrolle { background: #fff3e0; color: #e65100; }
-.cat-sonstiges { background: #eceff1; color: #546e7a; }
-
-.prio-niedrig { background: #e8f5e9; color: #2e7d32; }
-.prio-mittel { background: #e3f2fd; color: #1976d2; }
-.prio-hoch { background: #fff3e0; color: #e65100; }
-.prio-dringend { background: #ffebee; color: #c62828; }
-
-.status-select {
-  padding: 0.3rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 0.85rem;
-}
-
-.recurring-badge {
-  margin-left: 0.3rem;
-}
-
-.actions {
+/* Reserve space for actions column to avoid content push-out */
+.appointments-table th.actions,
+.appointments-table td.actions {
+  width: 120px;
+  min-width: 100px;
+  text-align: center;
   white-space: nowrap;
 }
 
-.btn-edit, .btn-delete {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1.1rem;
-  padding: 0.3rem;
+/* Make status select fit into cell nicely */
+.appointments-table td select.status-select {
+  width: 100%;
+  max-width: 140px;
+  box-sizing: border-box;
 }
 
-.btn-delete:hover {
-  color: #e53935;
+/* Allow title column to ellipsize but keep priority/labels compact */
+.appointments-table td .apt-title {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 260px;
+}
+
+/* Responsive: allow horizontal scroll on small screens */
+@media (max-width: 900px) {
+  .appointments-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+  .appointments-table th, .appointments-table td {
+    display: inline-block;
+    vertical-align: top;
+    white-space: normal;
+  }
 }
 
 /* Modal */
