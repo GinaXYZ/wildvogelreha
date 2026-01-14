@@ -69,6 +69,7 @@
             />
             <button @click="closeSearchPopup" style="margin-left:0.5em;">✖</button>
           </div>
+
           <div class="pagination">
             <button @click="page--" :disabled="page === 1">Zurück</button>
             <span>Seite {{ page }}</span>
@@ -89,7 +90,10 @@
           <thead>
             <tr>
               <th>Priorität</th>
-              <th>Name</th>
+                  <th>
+                    Name
+                    <button class="search-btn" @click.stop="showContactsSearchPopup($event)" title="Nach Kontakten suchen" style="margin-left:0.4rem;">🔍</button>
+                  </th>
               <th>E-Mail</th>
               <th>Telefon</th>
               <th>Datum</th>
@@ -98,7 +102,7 @@
             </tr>
           </thead>
                     <tbody>
-            <tr v-for="contact in contacts" :key="contact.id">
+                <tr v-for="contact in contactsDisplayed" :key="contact.id">
               <td class="priority-column-cell"> 
                 <div class="status-content-wrapper"> 
                   <span :class="getStatusSquareClass(contact.status)" class="status-square"></span>
@@ -141,6 +145,14 @@
         <p><em>Seite {{ contactsPage }} von {{ Math.ceil(totalContacts / contactsLimit) }}</em></p>
       </div>
       </div>
+      <div 
+        v-if="contactsSearchPopupVisible"
+        class="search-popup"
+        :style="{ top: contactsPopupY + 'px', left: contactsPopupX + 'px' }"
+      >
+        <input v-model="contactsSearch" type="text" placeholder="Kontakte suchen" class="donation-search-input" autofocus />
+        <button @click="closeContactsSearchPopup" style="margin-left:0.5em;">✖</button>
+      </div>
     <div v-else-if="activeStaffTab === 'patients'">
       <h2>Tier-/Patientenverwaltung</h2>
       <div v-if="patientsLoading">Lade Patienten...</div>
@@ -150,7 +162,10 @@
           <thead>
             <tr>
               <th>ID</th>
-              <th>Name</th>
+              <th>
+                Name
+                <button class="search-btn" @click.stop="showPatientsSearchPopup($event)" title="Nach Patienten suchen" style="margin-left:0.4rem;">🔍</button>
+              </th>
               <th>Tierart</th>
               <th>Status</th>
               <th>Aufnahmedatum</th>
@@ -159,7 +174,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="patient in patients" :key="patient.id">
+            <tr v-for="patient in patientsDisplayed" :key="patient.id">
               <td>{{ patient.id }}</td>
               <td>{{ patient.name }}</td>
               <td>{{ patient.species }}</td>
@@ -420,6 +435,18 @@ const searchPopupVisible = ref(false);
 const popupX = ref(0);
 const popupY = ref(0);
 
+// Contacts search state
+const contactsSearch = ref('');
+const contactsSearchPopupVisible = ref(false);
+const contactsPopupX = ref(0);
+const contactsPopupY = ref(0);
+
+// Patients search state
+const patientsSearch = ref('');
+const patientsSearchPopupVisible = ref(false);
+const patientsPopupX = ref(0);
+const patientsPopupY = ref(0);
+
 function showSearchPopup(event) {
   searchPopupVisible.value = true;
   popupX.value = event.clientX;
@@ -429,9 +456,56 @@ function closeSearchPopup() {
   searchPopupVisible.value = false;
   donationSearch.value = '';
 }
+
+function showContactsSearchPopup(event) {
+  contactsSearchPopupVisible.value = true;
+  contactsPopupX.value = event.clientX;
+  contactsPopupY.value = event.clientY;
+}
+function closeContactsSearchPopup() {
+  contactsSearchPopupVisible.value = false;
+  contactsSearch.value = '';
+}
+
+function showPatientsSearchPopup(event) {
+  patientsSearchPopupVisible.value = true;
+  patientsPopupX.value = event.clientX;
+  patientsPopupY.value = event.clientY;
+}
+function closePatientsSearchPopup() {
+  patientsSearchPopupVisible.value = false;
+  patientsSearch.value = '';
+}
 const paginatedDonations = computed(() => {
   const start = (page.value - 1) * limit;
   return sortedDonations.value.slice(start, start + limit);
+});
+
+// Filtered views for contacts and patients (searchable)
+const contactsDisplayed = computed(() => {
+  if (!contactsSearch.value || !contacts.value) return contacts.value || [];
+  const q = contactsSearch.value.trim().toLowerCase();
+  return (contacts.value || []).filter(c => {
+    return (
+      (c.firstname || '').toLowerCase().includes(q) ||
+      (c.lastname || '').toLowerCase().includes(q) ||
+      (c.email || '').toLowerCase().includes(q) ||
+      (c.telefon || '').toLowerCase().includes(q) ||
+      (c.msg || '').toLowerCase().includes(q)
+    );
+  });
+});
+
+const patientsDisplayed = computed(() => {
+  if (!patientsSearch.value || !patients.value) return patients.value || [];
+  const q = patientsSearch.value.trim().toLowerCase();
+  return (patients.value || []).filter(p => {
+    return (
+      (p.name || '').toLowerCase().includes(q) ||
+      (p.species || '').toLowerCase().includes(q) ||
+      (p.details || '').toLowerCase().includes(q)
+    );
+  });
 });
 const sortedDonations = computed(() => {
   let filtered = [...allDonations.value];
@@ -1053,6 +1127,9 @@ onBeforeUnmount(() => {
 .contacts-table, .patients-table, .donations-table {
   background: #fff;
   border-radius: 8px;
+}
+.contacts-table, .patients-table, .donations-table, .task-table {
+  font-size: 0.95rem; /* match donations table sizing */
 }
 .donations-table {
   width: 100%;
