@@ -90,7 +90,7 @@
           <thead>
             <tr>
               <th>Priorität</th>
-                  <th>
+                  <th class="name-col">
                     Name
                     <button class="search-btn" @click.stop="showContactsSearchPopup($event)" title="Nach Kontakten suchen" style="margin-left:0.4rem;">🔍</button>
                   </th>
@@ -162,7 +162,7 @@
           <thead>
             <tr>
               <th>ID</th>
-              <th>
+              <th class="name-col">
                 Name
                 <button class="search-btn" @click.stop="showPatientsSearchPopup($event)" title="Nach Patienten suchen" style="margin-left:0.4rem;">🔍</button>
               </th>
@@ -1131,6 +1131,11 @@ onBeforeUnmount(() => {
 .contacts-table, .patients-table, .donations-table, .task-table {
   font-size: 0.95rem; /* match donations table sizing */
 }
+
+/* Ensure name column keeps generous width like donations table */
+.name-col {
+  min-width: 220px;
+}
 .donations-table {
   width: 100%;
   max-width: 600px;
@@ -1269,10 +1274,11 @@ onBeforeUnmount(() => {
   overflow: hidden;
 }
 .contacts-table th, .contacts-table td {
-  padding: 1rem 0.5rem;
-  text-align: center;
+  padding: 0.9rem 0.8rem;
+  text-align: left;
   vertical-align: middle;
   border-bottom: 1px solid #f0f0f0;
+  font-size: 0.95rem;
 }
 .contacts-table td.priority-column-cell,
 .contacts-table th.priority-column-cell { 
@@ -1282,12 +1288,16 @@ onBeforeUnmount(() => {
   padding-right: 0.5rem;
 }
 .contacts-table th {
-  background: #f7fafb;
-  color: #0c4b47;
+  background: #0c4b47;
+  color: #fff;
+  padding: 1rem 0.8rem;
+  text-align: left;
   font-weight: 600;
-  font-size: 1.08rem;
-  border-bottom: 1px solid #e0e0e0;
-  letter-spacing: 0.02em;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: normal;
+  border-bottom: none;
 }
 .contacts-stats {
   margin-bottom: 1rem;
