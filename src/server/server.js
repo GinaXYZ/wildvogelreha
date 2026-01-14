@@ -10,6 +10,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const validator = require('validator');
 const nodemailer = require('nodemailer');
+const https = require('https');
 
 const saltRounds = 10;
 
@@ -98,35 +99,14 @@ async function logAudit(action, entityType, entityId, userId, details = null) {
   }
 }
 
-// Email helper: uses SMTP config if provided, otherwise falls back to Ethereal test account
+// Email helper: uses Brevo HTTP API (no SMTP ports needed)
 async function sendAppointmentEmail(appointment, recipients = []) {
   try {
-    console.log('sendAppointmentEmail: SMTP_HOST present?', !!process.env.SMTP_HOST, 'SMTP_USER present?', !!process.env.SMTP_USER);
-    let transporter;
-    if (process.env.SMTP_HOST && process.env.SMTP_USER) {
-      transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 587,
-        secure: process.env.SMTP_SECURE === 'true',
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS
-        }
-      });
-      console.log('sendAppointmentEmail: created SMTP transporter with host', process.env.SMTP_HOST);
-    } else {
-      // create test account
-      const testAccount = await nodemailer.createTestAccount();
-      transporter = nodemailer.createTransport({
-        host: testAccount.smtp.host,
-        port: testAccount.smtp.port,
-        secure: testAccount.smtp.secure,
-        auth: {
-          user: testAccount.user,
-          pass: testAccount.pass
-        }
-      });
-      console.log('sendAppointmentEmail: using Ethereal test account, host', testAccount.smtp.host);
+    console.log('sendAppointmentEmail: Brevo API key present?', !!process.env.BREVO_API_KEY);
+    
+    if (!process.env.BREVO_API_KEY) {
+      console.warn('sendAppointmentEmail: BREVO_API_KEY not set, skipping email');
+      return;
     }
 
     // Format date nicely (German locale)
@@ -252,19 +232,52 @@ Wildvogel Rehastation Waabs
 </html>
 `;
 
-    const info = await transporter.sendMail({
-      from: process.env.EMAIL_FROM || '"Wildvogel Rehastation" <no-reply@wildvogelreha.de>',
-      to: recipients.join(','),
+    // Prepare email data for Brevo API
+    const emailData = JSON.stringify({
+      sender: { email: process.env.EMAIL_FROM || 'no-reply@wildvogelreha.de', name: 'Wildvogel Rehastation' },
+      to: recipients.map(email => ({ email })),
       subject,
-      text: textBody,
-      html: htmlBody
+      textContent: textBody,
+      htmlContent: htmlBody
     });
 
-    if (nodemailer.getTestMessageUrl) {
-      const preview = nodemailer.getTestMessageUrl(info);
-      if (preview) console.log('Email preview URL:', preview);
-    }
-    return info;
+    // Send via Brevo HTTP API (port 443, never blocked)
+    return new Promise((resolve, reject) => {
+      const options = {
+        hostname: 'api.brevo.com',
+        port: 443,
+        path: '/v3/smtp/email',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'api-key': process.env.BREVO_API_KEY,
+          'Content-Length': Buffer.byteLength(emailData)
+        }
+      };
+
+      const req = https.request(options, (res) => {
+        let data = '';
+        res.on('data', chunk => data += chunk);
+        res.on('end', () => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            console.log('✅ Email sent successfully via Brevo API:', data);
+            resolve(JSON.parse(data));
+          } else {
+            console.error('❌ Brevo API error:', res.statusCode, data);
+            reject(new Error(`Brevo API error: ${res.statusCode} ${data}`));
+          }
+        });
+      });
+
+      req.on('error', (err) => {
+        console.error('❌ HTTPS request error:', err);
+        reject(err);
+      });
+
+      req.write(emailData);
+      req.end();
+    });
+
   } catch (err) {
     console.error('Fehler beim Senden der Termin-Email:', err && err.stack ? err.stack : err);
     // rethrow so callers can handle, but keep the stack logged
