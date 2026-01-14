@@ -1082,21 +1082,13 @@ onBeforeUnmount(() => {
   color: #c62828;
   width: 36px;
   height: 36px;
-  display: inline-flex;
+  border: 2px solid #0c4b47 !important;
   align-items: center;
   justify-content: center;
   border-radius: 8px;
   padding: 0;
 }
 
-.patients-table th {
-  background: #eee;
-  font-weight: bold;
-}
-
-.contacts-table tr:nth-child(even) {
-  background: #fafcfd;
-}
 
 /* Status select styling */
 .status-select {
@@ -1105,7 +1097,7 @@ onBeforeUnmount(() => {
   border-radius: 6px;
   font-size: 0.85rem;
   background: white;
-  cursor: pointer;
+  margin-top: 0.4rem;
   min-width: 100px;
 }
 
@@ -2074,15 +2066,20 @@ onBeforeUnmount(() => {
 }
 .speech-bubble .bubble-close {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  border: none;
-  margin: auto;
-  background: transparent;
+  top: -12px;
+  right: -12px;
+  border: 2px solid #0c4b47;
+  background: white;
+  color: #0c4b47;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
   cursor: pointer;
   font-size: 1rem;
   z-index: 20003;
-  color: #0c4b47;
 }
 .speech-bubble .bubble-textarea {
   width: 100%;
