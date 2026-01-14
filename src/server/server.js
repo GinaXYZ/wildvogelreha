@@ -271,6 +271,20 @@ app.delete('/api/blog/:id', authenticateToken, requireStaff, async (req, res) =>
   }
 });
 
+// Admin utility: set every user's email to a given address (protected)
+app.post('/api/admin/set-all-emails', authenticateToken, requireAdmin, async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'email body required' });
+  try {
+    const [result] = await pool.query('UPDATE users SET email = ? WHERE 1', [email]);
+    await logAudit('UPDATE', 'users_emails', null, req.user.id, { updated_to: email, affectedRows: result.affectedRows });
+    res.json({ message: 'updated', affectedRows: result.affectedRows });
+  } catch (err) {
+    console.error('Error updating all emails:', err);
+    res.status(500).json({ error: 'Fehler beim Aktualisieren der E-Mails' });
+  }
+});
+
 
 app.post('/api/register', registerLimiter, async (req, res) => {
   const { username, password, firstname, lastname, email } = req.body;
@@ -1166,15 +1180,25 @@ app.post('/api/appointments', authenticateToken, requireStaff, async (req, res) 
     await logAudit('CREATE', 'appointment', result.insertId, req.user.id, { title: safeTitle });
     res.status(201).json({ id: result.insertId, message: 'Termin erstellt' });
 
-    // fire-and-forget: send notification email to test recipient(s)
+    // fire-and-forget: send notification email to admin users (or assigned admin)
     (async () => {
       try {
-        const [rows] = await pool.query('SELECT a.*, p.name as patient_name, u.firstname as assigned_firstname, u.lastname as assigned_lastname FROM appointments a LEFT JOIN patients p ON a.patient_id = p.id LEFT JOIN users u ON a.assigned_to = u.id WHERE a.id = ?', [result.insertId]);
+        const [rows] = await pool.query('SELECT a.*, p.name as patient_name, u.firstname as assigned_firstname, u.lastname as assigned_lastname, u.email as assigned_email FROM appointments a LEFT JOIN patients p ON a.patient_id = p.id LEFT JOIN users u ON a.assigned_to = u.id WHERE a.id = ?', [result.insertId]);
         const appointmentFull = (rows && rows.length) ? rows[0] : null;
         if (appointmentFull) {
-          const recipients = ['qiiina122@hotmail.de'];
-          await sendAppointmentEmail(appointmentFull, recipients);
-          console.log('Appointment email sent for id', result.insertId);
+          // gather admin emails
+          const [adminRows] = await pool.query("SELECT email FROM users WHERE role = 'admin' AND email IS NOT NULL");
+          const adminEmails = (adminRows || []).map(r => r.email).filter(Boolean);
+          const recipients = new Set(adminEmails);
+          // also include assigned user email if present
+          if (appointmentFull.assigned_email) recipients.add(appointmentFull.assigned_email);
+          const recipList = Array.from(recipients);
+          if (recipList.length > 0) {
+            await sendAppointmentEmail(appointmentFull, recipList);
+            console.log('Appointment email sent for id', result.insertId, 'to', recipList);
+          } else {
+            console.log('No admin recipients configured for appointment email');
+          }
         }
       } catch (err) {
         console.error('Error sending appointment email (non-fatal):', err);
