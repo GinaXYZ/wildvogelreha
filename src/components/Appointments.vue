@@ -77,10 +77,10 @@
           <div v-for="day in weekDays" :key="day.date" class="day-cell" 
                :class="{ today: isToday(day.date) }"
                @click="openAddModalForSlot(day.date, hour)">
-            <div v-for="apt in getAppointmentsForSlot(day.date, hour)" :key="apt.id"
+               <div v-for="apt in getAppointmentsForSlot(day.date, hour)" :key="apt.id"
                  class="appointment-block"
                  :class="[`priority-${apt.priority}`, `status-${apt.status}`]"
-                 @click.stop="openEditModal(apt)">
+                 @click.stop="showAppointmentBubble($event, apt)">
               <span class="apt-time">{{ formatTime(apt.appointment_time) }}</span>
               <span class="apt-title">{{ apt.title }}</span>
               <span v-if="apt.patient_name" class="apt-patient">🐦 {{ apt.patient_name }}</span>
@@ -263,11 +263,25 @@
         </form>
       </div>
     </div>
+
+    <!-- Appointment speech-bubble (week view) -->
+    <div v-if="appointmentBubble.visible" class="speech-bubble-overlay" @click.self="closeAppointmentBubble">
+      <div class="speech-bubble" ref="bubbleRef" :class="{ 'arrow-bottom': appointmentBubble.placement === 'above', 'arrow-top': appointmentBubble.placement === 'below' }" :style="{ top: appointmentBubble.y + 'px', left: appointmentBubble.x + 'px' }">
+        <button class="bubble-close" @click="closeAppointmentBubble">✖</button>
+        <div class="bubble-content">
+          <textarea ref="bubbleTextarea" v-model="appointmentBubble.content" class="bubble-textarea" @input="scheduleSaveAppointmentBubble"></textarea>
+          <div class="bubble-actions">
+            <button @click="() => { openEditModal(appointments.value.find(a => a.id === appointmentBubble.value.id)); appointmentBubble.value.visible = false; }">Bearbeiten</button>
+            <button @click="() => deleteAppointmentFromBubble(appointmentBubble.value.id)">Löschen</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, nextTick, onBeforeUnmount } from 'vue';
 import { useAuthStore } from './auth.js';
 
 const authStore = useAuthStore();
@@ -279,6 +293,12 @@ const patients = ref([]);
 const staffUsers = ref([]);
 const loading = ref(false);
 const stats = ref({ today: 0, pending: 0, urgent: 0 });
+
+// Speech-bubble for appointment details in week view
+const appointmentBubble = ref({ visible: false, x: 0, y: 0, content: '', id: null });
+const bubbleRef = ref(null);
+const bubbleTextarea = ref(null);
+let bubbleSaveTimer = null;
 
 // View & Filter
 const viewMode = ref('week');
@@ -499,6 +519,77 @@ function closeModals() {
   formData.value = getEmptyFormData();
 }
 
+async function showAppointmentBubble(event, apt) {
+  event.stopPropagation();
+  const rect = event.currentTarget.getBoundingClientRect();
+  appointmentBubble.value = { visible: true, x: rect.left + rect.width / 2, y: rect.bottom + 8, content: apt.description || apt.notes || '', id: apt.id };
+  await nextTick();
+  const b = bubbleRef.value;
+  if (b && b.getBoundingClientRect) {
+    const br = b.getBoundingClientRect();
+    let left = rect.left + rect.width / 2 - br.width / 2;
+    let top = rect.bottom + 8;
+    let placement = 'below';
+    if (top + br.height + 8 > window.innerHeight) {
+      top = rect.top - br.height - 8;
+      placement = 'above';
+    }
+    left = Math.max(8, Math.min(left, window.innerWidth - br.width - 8));
+    appointmentBubble.value.x = left;
+    appointmentBubble.value.y = Math.max(8, top);
+    appointmentBubble.value.placement = placement;
+  }
+  await nextTick();
+  if (bubbleTextarea.value && bubbleTextarea.value.focus) {
+    bubbleTextarea.value.focus();
+    try { const len = bubbleTextarea.value.value.length; bubbleTextarea.value.setSelectionRange(len, len); } catch(e) {}
+  }
+}
+
+function closeAppointmentBubble() {
+  // save pending edits
+  if (bubbleSaveTimer) { clearTimeout(bubbleSaveTimer); bubbleSaveTimer = null; }
+  saveAppointmentBubbleContent().catch(err => console.error(err));
+  appointmentBubble.value.visible = false;
+}
+
+async function saveAppointmentBubbleContent() {
+  if (!appointmentBubble.value.id) return;
+  try {
+    const apt = appointments.value.find(a => a.id === appointmentBubble.value.id);
+    if (apt) {
+      apt.description = appointmentBubble.value.content;
+      // send update to server
+      const token = authStore.token || localStorage.getItem('token');
+      await fetch(`${API_BASE}/appointments/${apt.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(apt)
+      });
+    }
+  } catch (err) {
+    console.error('Fehler beim Speichern der Termin-Details:', err);
+  }
+}
+
+function scheduleSaveAppointmentBubble() {
+  if (bubbleSaveTimer) clearTimeout(bubbleSaveTimer);
+  bubbleSaveTimer = setTimeout(() => { saveAppointmentBubbleContent().catch(e => console.error(e)); }, 700);
+}
+
+async function deleteAppointmentFromBubble(id) {
+  if (!confirm('Termin wirklich löschen?')) return;
+  try {
+    const token = authStore.token || localStorage.getItem('token');
+    const res = await fetch(`${API_BASE}/appointments/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+    if (res.ok) {
+      appointmentBubble.value.visible = false;
+      await fetchAppointments();
+      await fetchStats();
+    }
+  } catch (err) { console.error(err); }
+}
+
 // API Calls
 async function fetchAppointments() {
   loading.value = true;
@@ -675,6 +766,10 @@ onMounted(() => {
   fetchPatients();
   fetchStaffUsers();
 });
+
+onBeforeUnmount(() => {
+  if (bubbleSaveTimer) clearTimeout(bubbleSaveTimer);
+});
 </script>
 
 <style scoped>
@@ -832,6 +927,11 @@ onMounted(() => {
   overflow: hidden;
   box-shadow: none;
   width: 100%;
+.time-row {
+  display: flex;
+  min-height: 56px; /* consistent row height */
+  height: 56px;
+}
   max-width: 1600px; /* allow wider calendar on desktop */
   margin: 0 auto;
 }
@@ -901,6 +1001,14 @@ onMounted(() => {
   background: #e3f2fd;
 }
 
+.day-cell {
+    flex: 1 1 0;
+    min-height: 56px;
+    padding: 0.25rem 0.4rem;
+    border-right: 1px solid #f0f0f0;
+    position: relative;
+    overflow: hidden; /* prevent shifting by long entries */
+}
 .appointment-block {
   background: #e8f5e9;
   border-left: 3px solid #4caf50;
@@ -911,6 +1019,24 @@ onMounted(() => {
   cursor: pointer;
   overflow: hidden;
 }
+.appointment-block {
+    background: #e3f2fd;
+    border-radius: 6px;
+    padding: 0.22rem 0.45rem;
+    margin-bottom: 0.18rem;
+    font-size: 0.9rem;
+    display: inline-flex;
+    gap: 0.4rem;
+    align-items: center;
+    max-width: 100%;
+    box-sizing: border-box;
+    height: 36px; /* fixed block height */
+    line-height: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+  .appointment-block .apt-title { overflow: hidden; text-overflow: ellipsis; }
 
 .appointment-block:hover {
   transform: scale(1.02);
