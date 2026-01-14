@@ -797,6 +797,7 @@ onBeforeUnmount(() => {
   border-bottom: none;
 }
 
+<<<<<<< HEAD
 .patients-table td,
 .contacts-table td,
 .donations-table td {
@@ -805,6 +806,12 @@ onBeforeUnmount(() => {
   vertical-align: middle;
   color: #333;
   font-size: 0.95rem;
+=======
+.patients-table th {
+  background: #0c4b47;
+  color: #fff;
+  font-weight: 600;
+>>>>>>> e064979 (edit style)
 }
 
 .patients-table tbody tr,
@@ -1065,8 +1072,17 @@ onBeforeUnmount(() => {
   max-width: 600px;
   border-collapse: collapse;
   text-align: center;
+<<<<<<< HEAD
   margin: 0 auto;
   display: table;
+=======
+  display: table;
+  margin: 0 auto;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+>>>>>>> e064979 (edit style)
 }
 @media (max-width: 800px) {
   .donations-table {
@@ -1078,12 +1094,17 @@ onBeforeUnmount(() => {
     padding: 0.5rem;
   }
 }
-.donations-table th, .donations-table td {
+.on-board-table th, .on-board-table td,
+.donations-table th, .donations-table td,
+.contacts-table th, .contacts-table td,
+.patients-table th, .patients-table td,
+.task-table th, .task-table td {
   border: 1px solid #ccc;
   padding: 0.5rem;
   text-align: left;
-  word-break: none;
-  
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
 }
 .status-content-wrapper {
   display: inline-flex;  
@@ -1093,7 +1114,9 @@ onBeforeUnmount(() => {
   width: 100%;            
 }
 .donations-table th {
-  background: #eee;
+  background: #0c4b47;
+  color: #fff;
+  font-weight: 600;
 }
 .error {
   color: red;
@@ -1190,12 +1213,65 @@ onBeforeUnmount(() => {
   font-size: 1.08rem;
   overflow: hidden;
 }
+<<<<<<< HEAD
 
 /* Fix menu width so buttons don't shift when table grows */
 .staff-menu {
   width: 90%;
   max-width: 1200px;
   margin: 0 auto 1rem auto;
+=======
+.contacts-table th, .contacts-table td {
+  padding: 1rem 0.5rem;
+  text-align: center;
+  vertical-align: middle;
+  border-bottom: 1px solid #f0f0f0;
+}
+.contacts-table td.priority-column-cell,
+.contacts-table th.priority-column-cell { 
+  min-width: 160px;
+  width: 170px;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+.contacts-table th {
+  background: #0c4b47;
+  color: #fff;
+  font-weight: 600;
+  font-size: 1.08rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  letter-spacing: 0.02em;
+}
+.contacts-stats {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+}
+.status-select {
+  width: 100%;
+  padding: 0.25rem 0.7rem;
+  border: none;
+  border-radius: 8px;
+  background: #f3f3f3;
+  font-size: 1rem;
+  margin-left: 0.2em;
+  flex-grow: 1; 
+  color: #0c4b47;
+  word-break: keep-all;
+  font-family: 'Helvetica', sans-serif;
+}
+.status-select.option {
+  color: #0c4b47;
+  background-color: #ffffff;
+  word-break: keep-all;
+  text-align: center;
+}
+.status-select:focus {
+  outline: 2px solid #0c4b47;
+}
+.delete-btn {
+>>>>>>> e064979 (edit style)
   display: flex;
   gap: 1rem;
   justify-content: center;
@@ -1444,9 +1520,60 @@ onBeforeUnmount(() => {
   justify-content: center;
   line-height: 1;
 }
+<<<<<<< HEAD
 
 .staff-assignment .remove-staff-btn:hover {
   background: rgba(255,255,255,0.5);
+=======
+.task-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px #0001;
+}
+.task-table th, .task-table td {
+  border: 1px solid #eee;
+  padding: 0.7rem 0.5rem;
+  text-align: left;
+}
+.task-table th {
+  background: #0c4b47;
+  color: #fff;
+  font-weight: 600;
+}
+.task-done {
+  text-decoration: line-through;
+  color: #888;
+}
+.sort-arrow:hover {
+  cursor: pointer;
+}
+.search-popup {
+  position: fixed;
+  background: #fff;
+  border-radius: 8px;
+  padding: 0.7em 1em;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  z-index: 99999;
+  font-size: 1em;
+  color: #0c4b47;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+.donation-search-input {
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  padding: 0.2em 0.5em;
+  font-size: 1em;
+}
+.search-btn {
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+>>>>>>> e064979 (edit style)
 }
 
 /* Responsive Styles for Staff Component */
