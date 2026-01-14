@@ -9,6 +9,7 @@ const jwt = require('jsonwebtoken');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const validator = require('validator');
+const nodemailer = require('nodemailer');
 
 const saltRounds = 10;
 
@@ -94,6 +95,55 @@ async function logAudit(action, entityType, entityId, userId, details = null) {
     );
   } catch (err) {
     console.error('Audit-Log Fehler:', err.message);
+  }
+}
+
+// Email helper: uses SMTP config if provided, otherwise falls back to Ethereal test account
+async function sendAppointmentEmail(appointment, recipients = []) {
+  try {
+    let transporter;
+    if (process.env.SMTP_HOST && process.env.SMTP_USER) {
+      transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 587,
+        secure: process.env.SMTP_SECURE === 'true',
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS
+        }
+      });
+    } else {
+      // create test account
+      const testAccount = await nodemailer.createTestAccount();
+      transporter = nodemailer.createTransport({
+        host: testAccount.smtp.host,
+        port: testAccount.smtp.port,
+        secure: testAccount.smtp.secure,
+        auth: {
+          user: testAccount.user,
+          pass: testAccount.pass
+        }
+      });
+    }
+
+    const subject = `Neuer Termin: ${appointment.title} (${appointment.appointment_date} ${appointment.appointment_time})`;
+    const body = `Titel: ${appointment.title}\nDatum: ${appointment.appointment_date}\nZeit: ${appointment.appointment_time}${appointment.end_time ? ' - ' + appointment.end_time : ''}\nKategorie: ${appointment.category}\nPriorität: ${appointment.priority}\nPatient: ${appointment.patient_name || appointment.patient_id || '-'}\nZugewiesen: ${appointment.assigned_firstname ? appointment.assigned_firstname + ' ' + (appointment.assigned_lastname||'') : '-'}\nStatus: ${appointment.status}\n\nBeschreibung:\n${appointment.description || appointment.notes || '-'}\n`;
+
+    const info = await transporter.sendMail({
+      from: process.env.EMAIL_FROM || 'no-reply@wildvogelreha.local',
+      to: recipients.join(','),
+      subject,
+      text: body
+    });
+
+    if (nodemailer.getTestMessageUrl) {
+      const preview = nodemailer.getTestMessageUrl(info);
+      if (preview) console.log('Email preview URL:', preview);
+    }
+    return info;
+  } catch (err) {
+    console.error('Fehler beim Senden der Termin-Email:', err);
+    throw err;
   }
 }
 
@@ -1115,6 +1165,20 @@ app.post('/api/appointments', authenticateToken, requireStaff, async (req, res) 
     
     await logAudit('CREATE', 'appointment', result.insertId, req.user.id, { title: safeTitle });
     res.status(201).json({ id: result.insertId, message: 'Termin erstellt' });
+
+    // fire-and-forget: send notification email to test recipient(s)
+    (async () => {
+      try {
+        const [[aptRows]] = await pool.query('SELECT a.*, p.name as patient_name, u.firstname as assigned_firstname, u.lastname as assigned_lastname FROM appointments a LEFT JOIN patients p ON a.patient_id = p.id LEFT JOIN users u ON a.assigned_to = u.id WHERE a.id = ?', [result.insertId]);
+        const appointmentFull = Array.isArray(aptRows) ? aptRows[0] : aptRows;
+        // placeholder recipient for testing
+        const recipients = ['qiiina122@hotmail.de'];
+        await sendAppointmentEmail(appointmentFull, recipients);
+        console.log('Appointment email sent for id', result.insertId);
+      } catch (err) {
+        console.error('Error sending appointment email (non-fatal):', err);
+      }
+    })();
   } catch (err) {
     console.error('Fehler beim Erstellen des Termins:', err);
     res.status(500).json({ error: 'Fehler beim Erstellen des Termins' });
