@@ -282,13 +282,11 @@
   </table>
 </div>
 </div>
-</div>
   </div>
-</template>
+  </div>
 
-<!-- Speech bubble overlay for messages/details -->
-<template v-if="messageBubble.visible">
-  <div class="speech-bubble-overlay" @click.self="closeBubble">
+  <!-- Speech bubble overlay for messages/details -->
+  <div v-if="messageBubble.visible" class="speech-bubble-overlay" @click.self="closeBubble">
     <div class="speech-bubble" :style="{ top: messageBubble.y + 'px', left: messageBubble.x + 'px' }">
       <button class="bubble-close" @click="closeBubble">✖</button>
       <div v-if="!messageBubble.editing">
