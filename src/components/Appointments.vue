@@ -1589,3 +1589,108 @@ onBeforeUnmount(() => {
     font-size: 0.8rem;
   }
 </style>
+<style scoped>
+/* Appointment speech-bubble styles (overlay + bubble) */
+.speech-bubble-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20000;
+}
+.speech-bubble {
+  position: absolute;
+  width: 360px;
+  max-width: calc(100vw - 24px);
+  background: white;
+  border: 2px solid #0c4b47;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  z-index: 20001;
+}
+.speech-bubble.arrow-top::before,
+.speech-bubble.arrow-top::after {
+  left: 50%;
+  transform: translateX(-50%);
+}
+.speech-bubble.arrow-top::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 10px solid #0c4b47;
+}
+.speech-bubble.arrow-top::after {
+  content: '';
+  position: absolute;
+  top: -8px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid white;
+}
+.speech-bubble.arrow-bottom::before {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid #0c4b47;
+}
+.speech-bubble.arrow-bottom::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid white;
+}
+.speech-bubble .bubble-close {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  border: 2px solid #0c4b47;
+  background: white;
+  color: #0c4b47;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1rem;
+  z-index: 20003;
+}
+.speech-bubble .bubble-textarea {
+  width: 100%;
+  min-height: 120px;
+  box-sizing: border-box;
+  padding: 0.6rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-top: 0.4rem;
+  resize: vertical;
+  font-size: 0.98rem;
+}
+.speech-bubble .bubble-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 0.8rem;
+}
+</style>
