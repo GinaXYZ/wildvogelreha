@@ -2077,6 +2077,7 @@ onBeforeUnmount(() => {
   top: 8px;
   right: 8px;
   border: none;
+  margin: auto;
   background: transparent;
   cursor: pointer;
   font-size: 1rem;
