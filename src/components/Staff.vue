@@ -2082,13 +2082,14 @@ onBeforeUnmount(() => {
   cursor: pointer;
   font-size: 1rem;
   z-index: 20003;
+  color: #0c4b47;
 }
 .speech-bubble .bubble-textarea {
   width: 100%;
   min-height: 120px;
   box-sizing: border-box;
   padding: 0.6rem;
-  border: 1px solid #ddd;
+  border: 1px solid #0c4b47;
   border-radius: 8px;
   margin-top: 0.2rem;
   resize: vertical;
