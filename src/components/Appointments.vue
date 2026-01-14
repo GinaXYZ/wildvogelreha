@@ -1036,11 +1036,17 @@ onMounted(() => {
   max-width: 1400px;
   margin: 1rem auto;
   border-collapse: separate;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
   border-spacing: 0;
   background: white;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
 }
 
 .appointments-table thead {
@@ -1048,7 +1054,7 @@ onMounted(() => {
 }
 
 .appointments-table th {
-  background: linear-gradient(135deg, #0c4b47 0%, #157a74 100%);
+  background: #0c4b47;
   color: white;
   padding: 1rem 0.8rem;
   text-align: left;
@@ -1056,7 +1062,7 @@ onMounted(() => {
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .appointments-table tbody {

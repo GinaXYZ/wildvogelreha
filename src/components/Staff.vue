@@ -1733,4 +1733,26 @@ onBeforeUnmount(() => {
     padding: 0.1rem;
   }
 }
+
+/* Unified plain header + no truncation for staff tables */
+.contacts-table th,
+.patients-table th,
+.donations-table th,
+.task-table th,
+.schedule-table .time-header,
+.schedule-table .day-header {
+  background: #0c4b47 !important;
+  color: #fff !important;
+  white-space: normal !important;
+  text-transform: none;
+}
+
+.contacts-table th, .contacts-table td,
+.patients-table th, .patients-table td,
+.donations-table th, .donations-table td,
+.task-table th, .task-table td {
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
 </style>
