@@ -287,23 +287,22 @@
   </div>
   </div>
 
-  <!-- Speech bubble overlay for messages/details -->
+  <!-- Speech bubble overlay for messages/details (always-editable textarea + autosave) -->
   <div v-if="messageBubble.visible" class="speech-bubble-overlay" @click.self="closeBubble">
-      <div class="speech-bubble" ref="bubbleRef" :class="{ 'arrow-bottom': messageBubble.placement === 'above', 'arrow-top': messageBubble.placement === 'below' }" :style="{ top: messageBubble.y + 'px', left: messageBubble.x + 'px' }">
+    <div
+      class="speech-bubble"
+      ref="bubbleRef"
+      :class="{ 'arrow-bottom': messageBubble.placement === 'above', 'arrow-top': messageBubble.placement === 'below' }"
+      :style="{ top: messageBubble.y + 'px', left: messageBubble.x + 'px' }"
+    >
       <button class="bubble-close" @click="closeBubble">✖</button>
-      <div v-if="!messageBubble.editing">
-        <div class="bubble-text">{{ messageBubble.content || '(keine Nachricht)' }}</div>
-        <div class="bubble-actions">
-          <button @click="messageBubble.editing = true">Bearbeiten</button>
-        </div>
-      </div>
-      <div v-else>
-        <textarea v-model="messageBubble.content" rows="6" class="bubble-textarea"></textarea>
-        <div class="bubble-actions">
-          <button @click="saveBubbleContent">Speichern</button>
-          <button @click="messageBubble.editing = false">Abbrechen</button>
-        </div>
-      </div>
+      <textarea
+        ref="bubbleTextarea"
+        v-model="messageBubble.content"
+        rows="6"
+        class="bubble-textarea"
+        @input="scheduleSaveBubbleContent"
+      ></textarea>
     </div>
   </div>
 </template>
@@ -495,15 +494,17 @@ function closePatientsSearchPopup() {
   patientsSearchPopupVisible.value = false;
   patientsSearch.value = '';
 }
-// Message/Details speech-bubble state
-const messageBubble = ref({ visible: false, x: 0, y: 0, content: '', editing: false, id: null, type: null });
+// Message/Details speech-bubble state (always editable textarea)
+const messageBubble = ref({ visible: false, x: 0, y: 0, content: '', id: null, type: null });
 const bubbleRef = ref(null);
+const bubbleTextarea = ref(null);
+let saveTimer = null;
 
 async function showContactBubble(event, contact) {
   event.stopPropagation();
   const rect = event.currentTarget.getBoundingClientRect();
   // temporarily place in middle of button
-  messageBubble.value = { visible: true, x: rect.left + rect.width / 2, y: rect.bottom + 8, content: contact.msg || '', editing: false, id: contact.id, type: 'contact' };
+  messageBubble.value = { visible: true, x: rect.left + rect.width / 2, y: rect.bottom + 8, content: contact.msg || '', id: contact.id, type: 'contact' };
   await nextTick();
   const b = bubbleRef.value;
   if (b && b.getBoundingClientRect) {
@@ -521,12 +522,17 @@ async function showContactBubble(event, contact) {
     messageBubble.value.y = Math.max(8, top);
     messageBubble.value.placement = placement;
   }
+  await nextTick();
+  if (bubbleTextarea.value && bubbleTextarea.value.focus) {
+    bubbleTextarea.value.focus();
+    try { const len = bubbleTextarea.value.value.length; bubbleTextarea.value.setSelectionRange(len, len); } catch (e) {}
+  }
 }
 
 async function showPatientBubble(event, patient) {
   event.stopPropagation();
   const rect = event.currentTarget.getBoundingClientRect();
-  messageBubble.value = { visible: true, x: rect.left + rect.width / 2, y: rect.bottom + 8, content: patient.details || '', editing: false, id: patient.id, type: 'patient' };
+  messageBubble.value = { visible: true, x: rect.left + rect.width / 2, y: rect.bottom + 8, content: patient.details || '', id: patient.id, type: 'patient' };
   await nextTick();
   const b = bubbleRef.value;
   if (b && b.getBoundingClientRect) {
@@ -543,15 +549,25 @@ async function showPatientBubble(event, patient) {
     messageBubble.value.y = Math.max(8, top);
     messageBubble.value.placement = placement;
   }
+  await nextTick();
+  if (bubbleTextarea.value && bubbleTextarea.value.focus) {
+    bubbleTextarea.value.focus();
+    try { const len = bubbleTextarea.value.value.length; bubbleTextarea.value.setSelectionRange(len, len); } catch (e) {}
+  }
 }
 
-function closeBubble() {
+async function closeBubble() {
+  // ensure any pending changes are saved before closing
+  try {
+    await saveBubbleContent();
+  } catch (e) {
+    console.error('Fehler beim Speichern vor Schließen:', e);
+  }
   messageBubble.value.visible = false;
-  messageBubble.value.editing = false;
 }
 
 async function saveBubbleContent() {
-  if (!messageBubble.value.id) return closeBubble();
+  if (!messageBubble.value.id) return;
   try {
     if (messageBubble.value.type === 'contact') {
       const c = contacts.value.find(c => c.id === messageBubble.value.id);
@@ -568,9 +584,14 @@ async function saveBubbleContent() {
     }
   } catch (err) {
     console.error('Fehler beim Speichern der Nachricht/Details:', err);
-  } finally {
-    closeBubble();
   }
+  }
+
+function scheduleSaveBubbleContent() {
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    saveBubbleContent().catch(err => console.error(err));
+  }, 800);
 }
 const paginatedDonations = computed(() => {
   const start = (page.value - 1) * limit;
@@ -932,6 +953,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   document.removeEventListener('mousemove', onDrag);
   document.removeEventListener('mouseup', onDragEnd);
+  if (saveTimer) clearTimeout(saveTimer);
 });
 </script>
 
@@ -2046,9 +2068,30 @@ onBeforeUnmount(() => {
   background: white;
   border: 2px solid #0c4b47;
   border-radius: 8px;
-  padding: 0.8rem;
+  padding: 1rem;
   box-shadow: 0 10px 30px rgba(0,0,0,0.25);
   z-index: 20001;
+}
+.speech-bubble .bubble-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1rem;
+  z-index: 20003;
+}
+.speech-bubble .bubble-textarea {
+  width: 100%;
+  min-height: 120px;
+  box-sizing: border-box;
+  padding: 0.6rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-top: 0.2rem;
+  resize: vertical;
+  font-size: 0.98rem;
 }
 .speech-bubble.arrow-top::before,
 .speech-bubble.arrow-top::after {
