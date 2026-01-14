@@ -130,7 +130,9 @@
                 <button @click="convertToPatient(contact)" class="action-btn" title="Als Patient anlegen">➕</button>
                 <button @click="deleteContact(contact.id)" class="delete-btn" title="Kontakt löschen">🗑️</button>
               </td>
-              <td class="message-cell">{{ contact.msg }}</td>
+              <td class="message-cell">
+                <button class="btn-show" @click.stop="showContactBubble($event, contact)">Anzeigen</button>
+              </td>
             </tr>
             <tr v-if="contacts.length === 0">
               <td colspan="7">Keine Kontakte gefunden.</td>
@@ -200,12 +202,7 @@
                 </div>
               </td>
               <td>
-                <textarea
-                  v-model="patient.details"
-                  class="details-input"
-                  @blur="updatePatient(patient)"
-                  rows="2"
-                ></textarea>
+                <button class="btn-show" @click.stop="showPatientBubble($event, patient)">Anzeigen</button>
               </td>
             </tr>
             <tr v-if="patients.length === 0">
@@ -286,6 +283,28 @@
 </div>
 </div>
 </div>
+  </div>
+</template>
+
+<!-- Speech bubble overlay for messages/details -->
+<template v-if="messageBubble.visible">
+  <div class="speech-bubble-overlay" @click.self="closeBubble">
+    <div class="speech-bubble" :style="{ top: messageBubble.y + 'px', left: messageBubble.x + 'px' }">
+      <button class="bubble-close" @click="closeBubble">✖</button>
+      <div v-if="!messageBubble.editing">
+        <div class="bubble-text">{{ messageBubble.content || '(keine Nachricht)' }}</div>
+        <div class="bubble-actions">
+          <button @click="messageBubble.editing = true">Bearbeiten</button>
+        </div>
+      </div>
+      <div v-else>
+        <textarea v-model="messageBubble.content" rows="6" class="bubble-textarea"></textarea>
+        <div class="bubble-actions">
+          <button @click="saveBubbleContent">Speichern</button>
+          <button @click="messageBubble.editing = false">Abbrechen</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -475,6 +494,50 @@ function showPatientsSearchPopup(event) {
 function closePatientsSearchPopup() {
   patientsSearchPopupVisible.value = false;
   patientsSearch.value = '';
+}
+// Message/Details speech-bubble state
+const messageBubble = ref({ visible: false, x: 0, y: 0, content: '', editing: false, id: null, type: null });
+
+function showContactBubble(event, contact) {
+  event.stopPropagation();
+  const x = Math.min(window.innerWidth - 340, event.clientX + 8);
+  const y = Math.max(8, event.clientY - 16);
+  messageBubble.value = { visible: true, x, y, content: contact.msg || '', editing: false, id: contact.id, type: 'contact' };
+}
+
+function showPatientBubble(event, patient) {
+  event.stopPropagation();
+  const x = Math.min(window.innerWidth - 340, event.clientX + 8);
+  const y = Math.max(8, event.clientY - 16);
+  messageBubble.value = { visible: true, x, y, content: patient.details || '', editing: false, id: patient.id, type: 'patient' };
+}
+
+function closeBubble() {
+  messageBubble.value.visible = false;
+  messageBubble.value.editing = false;
+}
+
+async function saveBubbleContent() {
+  if (!messageBubble.value.id) return closeBubble();
+  try {
+    if (messageBubble.value.type === 'contact') {
+      const c = contacts.value.find(c => c.id === messageBubble.value.id);
+      if (c) {
+        c.msg = messageBubble.value.content;
+        await updateContact(c);
+      }
+    } else if (messageBubble.value.type === 'patient') {
+      const p = patients.value.find(p => p.id === messageBubble.value.id);
+      if (p) {
+        p.details = messageBubble.value.content;
+        await updatePatient(p);
+      }
+    }
+  } catch (err) {
+    console.error('Fehler beim Speichern der Nachricht/Details:', err);
+  } finally {
+    closeBubble();
+  }
 }
 const paginatedDonations = computed(() => {
   const start = (page.value - 1) * limit;
@@ -1792,6 +1855,73 @@ onBeforeUnmount(() => {
   /* Schedule table very small */
   .schedule-table {
     font-size: 0.65rem;
+  }
+  /* Speech bubble styles */
+  .speech-bubble-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 20000;
+  }
+  .speech-bubble {
+    position: absolute;
+    width: 340px;
+    max-width: calc(100vw - 24px);
+    background: white;
+    border-radius: 12px;
+    padding: 0.8rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    transform: translate(-8px, 8px);
+  }
+  .speech-bubble::after {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 20px;
+    border-width: 0 10px 10px 10px;
+    border-style: solid;
+    border-color: transparent transparent white transparent;
+  }
+  .bubble-close {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 0.95rem;
+  }
+  .bubble-text {
+    white-space: pre-wrap;
+    max-height: 50vh;
+    overflow: auto;
+    color: #222;
+  }
+  .bubble-textarea {
+    width: 100%;
+    min-height: 120px;
+    box-sizing: border-box;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+  }
+  .bubble-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    margin-top: 0.6rem;
+  }
+  .btn-show {
+    background: #e3f2fd;
+    border: none;
+    padding: 0.4rem 0.6rem;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .btn-show:hover {
+    background: #bbdefb;
   }
   
   .time-header,
