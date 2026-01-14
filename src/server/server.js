@@ -101,6 +101,7 @@ async function logAudit(action, entityType, entityId, userId, details = null) {
 // Email helper: uses SMTP config if provided, otherwise falls back to Ethereal test account
 async function sendAppointmentEmail(appointment, recipients = []) {
   try {
+    console.log('sendAppointmentEmail: SMTP_HOST present?', !!process.env.SMTP_HOST, 'SMTP_USER present?', !!process.env.SMTP_USER);
     let transporter;
     if (process.env.SMTP_HOST && process.env.SMTP_USER) {
       transporter = nodemailer.createTransport({
@@ -112,6 +113,7 @@ async function sendAppointmentEmail(appointment, recipients = []) {
           pass: process.env.SMTP_PASS
         }
       });
+      console.log('sendAppointmentEmail: created SMTP transporter with host', process.env.SMTP_HOST);
     } else {
       // create test account
       const testAccount = await nodemailer.createTestAccount();
@@ -124,16 +126,138 @@ async function sendAppointmentEmail(appointment, recipients = []) {
           pass: testAccount.pass
         }
       });
+      console.log('sendAppointmentEmail: using Ethereal test account, host', testAccount.smtp.host);
     }
 
-    const subject = `Neuer Termin: ${appointment.title} (${appointment.appointment_date} ${appointment.appointment_time})`;
-    const body = `Titel: ${appointment.title}\nDatum: ${appointment.appointment_date}\nZeit: ${appointment.appointment_time}${appointment.end_time ? ' - ' + appointment.end_time : ''}\nKategorie: ${appointment.category}\nPriorität: ${appointment.priority}\nPatient: ${appointment.patient_name || appointment.patient_id || '-'}\nZugewiesen: ${appointment.assigned_firstname ? appointment.assigned_firstname + ' ' + (appointment.assigned_lastname||'') : '-'}\nStatus: ${appointment.status}\n\nBeschreibung:\n${appointment.description || appointment.notes || '-'}\n`;
+    // Format date nicely (German locale)
+    const dateFormatted = new Date(appointment.appointment_date).toLocaleDateString('de-DE', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+    const timeRange = appointment.end_time 
+      ? `${appointment.appointment_time} – ${appointment.end_time} Uhr`
+      : `${appointment.appointment_time} Uhr`;
+    
+    // Priority colors/labels
+    const priorityLabels = { niedrig: '🟢 Niedrig', mittel: '🟡 Mittel', hoch: '🟠 Hoch', dringend: '🔴 Dringend' };
+    const priorityLabel = priorityLabels[appointment.priority] || appointment.priority;
+    
+    // Category labels
+    const categoryLabels = {
+      behandlung: '💊 Behandlung', fuetterung: '🍽️ Fütterung', medikation: '💉 Medikation',
+      reinigung: '🧹 Reinigung', auswilderung: '🦅 Auswilderung', kontrolle: '🔍 Kontrolle', sonstiges: '📋 Sonstiges'
+    };
+    const categoryLabel = categoryLabels[appointment.category] || appointment.category;
+
+    const subject = `🗓️ Neuer Termin: ${appointment.title} – ${dateFormatted}`;
+    
+    // Plain text version
+    const textBody = `
+═══════════════════════════════════════════════════════
+   NEUER TERMIN - Wildvogel Rehastation Waabs
+═══════════════════════════════════════════════════════
+
+📌 ${appointment.title}
+
+📅 Datum:      ${dateFormatted}
+🕐 Zeit:       ${timeRange}
+📂 Kategorie:  ${categoryLabel}
+⚡ Priorität:  ${priorityLabel}
+
+🐦 Patient:    ${appointment.patient_name || '–'}
+👤 Zugewiesen: ${appointment.assigned_firstname ? appointment.assigned_firstname + ' ' + (appointment.assigned_lastname || '') : '–'}
+📊 Status:     ${appointment.status || 'geplant'}
+
+───────────────────────────────────────────────────────
+📝 Beschreibung / Notizen:
+───────────────────────────────────────────────────────
+${appointment.description || appointment.notes || 'Keine Beschreibung vorhanden.'}
+
+═══════════════════════════════════════════════════════
+Diese E-Mail wurde automatisch generiert.
+Wildvogel Rehastation Waabs
+═══════════════════════════════════════════════════════
+`;
+
+    // HTML version (looks great in email clients)
+    const htmlBody = `
+<!DOCTYPE html>
+<html lang="de">
+<head><meta charset="UTF-8"></head>
+<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px;">
+  <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+    
+    <!-- Header -->
+    <div style="background: linear-gradient(135deg, #0c4b47 0%, #1a6b65 100%); color: white; padding: 24px; text-align: center;">
+      <h1 style="margin: 0; font-size: 22px;">🗓️ Neuer Termin erstellt</h1>
+      <p style="margin: 8px 0 0; opacity: 0.9; font-size: 14px;">Wildvogel Rehastation Waabs</p>
+    </div>
+    
+    <!-- Title -->
+    <div style="padding: 24px 24px 16px; border-bottom: 1px solid #eee;">
+      <h2 style="margin: 0; color: #0c4b47; font-size: 20px;">${appointment.title}</h2>
+    </div>
+    
+    <!-- Details Grid -->
+    <div style="padding: 20px 24px;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+        <tr>
+          <td style="padding: 12px 0; border-bottom: 1px solid #f0f0f0; width: 40%; color: #666;">📅 <strong>Datum</strong></td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #f0f0f0; color: #333;">${dateFormatted}</td>
+        </tr>
+        <tr>
+          <td style="padding: 12px 0; border-bottom: 1px solid #f0f0f0; color: #666;">🕐 <strong>Uhrzeit</strong></td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #f0f0f0; color: #333;">${timeRange}</td>
+        </tr>
+        <tr>
+          <td style="padding: 12px 0; border-bottom: 1px solid #f0f0f0; color: #666;">📂 <strong>Kategorie</strong></td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #f0f0f0; color: #333;">${categoryLabel}</td>
+        </tr>
+        <tr>
+          <td style="padding: 12px 0; border-bottom: 1px solid #f0f0f0; color: #666;">⚡ <strong>Priorität</strong></td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #f0f0f0; color: #333;">${priorityLabel}</td>
+        </tr>
+        <tr>
+          <td style="padding: 12px 0; border-bottom: 1px solid #f0f0f0; color: #666;">🐦 <strong>Patient</strong></td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #f0f0f0; color: #333;">${appointment.patient_name || '–'}</td>
+        </tr>
+        <tr>
+          <td style="padding: 12px 0; border-bottom: 1px solid #f0f0f0; color: #666;">👤 <strong>Zugewiesen an</strong></td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #f0f0f0; color: #333;">${appointment.assigned_firstname ? appointment.assigned_firstname + ' ' + (appointment.assigned_lastname || '') : '–'}</td>
+        </tr>
+        <tr>
+          <td style="padding: 12px 0; color: #666;">📊 <strong>Status</strong></td>
+          <td style="padding: 12px 0; color: #333;"><span style="background: #e8f5e9; color: #2e7d32; padding: 4px 12px; border-radius: 20px; font-size: 12px;">${appointment.status || 'geplant'}</span></td>
+        </tr>
+      </table>
+    </div>
+    
+    <!-- Description -->
+    ${(appointment.description || appointment.notes) ? `
+    <div style="padding: 0 24px 24px;">
+      <div style="background: #f9f9f9; border-radius: 8px; padding: 16px; border-left: 4px solid #0c4b47;">
+        <strong style="color: #666; font-size: 12px; text-transform: uppercase;">📝 Beschreibung / Notizen</strong>
+        <p style="margin: 8px 0 0; color: #333; line-height: 1.6;">${(appointment.description || appointment.notes).replace(/\n/g, '<br>')}</p>
+      </div>
+    </div>
+    ` : ''}
+    
+    <!-- Footer -->
+    <div style="background: #f9f9f9; padding: 16px 24px; text-align: center; font-size: 12px; color: #999;">
+      Diese E-Mail wurde automatisch generiert.<br>
+      <strong>Wildvogel Rehastation Waabs</strong>
+    </div>
+    
+  </div>
+</body>
+</html>
+`;
 
     const info = await transporter.sendMail({
-      from: process.env.EMAIL_FROM || 'no-reply@wildvogelreha.local',
+      from: process.env.EMAIL_FROM || '"Wildvogel Rehastation" <no-reply@wildvogelreha.de>',
       to: recipients.join(','),
       subject,
-      text: body
+      text: textBody,
+      html: htmlBody
     });
 
     if (nodemailer.getTestMessageUrl) {
@@ -142,7 +266,8 @@ async function sendAppointmentEmail(appointment, recipients = []) {
     }
     return info;
   } catch (err) {
-    console.error('Fehler beim Senden der Termin-Email:', err);
+    console.error('Fehler beim Senden der Termin-Email:', err && err.stack ? err.stack : err);
+    // rethrow so callers can handle, but keep the stack logged
     throw err;
   }
 }
@@ -1190,6 +1315,7 @@ app.post('/api/appointments', authenticateToken, requireStaff, async (req, res) 
     return res.status(400).json({ error: 'Titel, Datum und Uhrzeit sind erforderlich' });
   }
 
+  console.log('POST /api/appointments body:', req.body);
   // Sanitize
   const safeTitle = sanitizeInput(title);
   const safeDescription = description ? sanitizeInput(description) : null;
@@ -1237,7 +1363,7 @@ app.post('/api/appointments', authenticateToken, requireStaff, async (req, res) 
       }
     })();
   } catch (err) {
-    console.error('Fehler beim Erstellen des Termins:', err);
+    console.error('Fehler beim Erstellen des Termins:', err && err.stack ? err.stack : err);
     res.status(500).json({ error: 'Fehler beim Erstellen des Termins' });
   }
 });
