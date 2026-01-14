@@ -269,10 +269,21 @@
       <div class="speech-bubble" ref="bubbleRef" :class="{ 'arrow-bottom': appointmentBubble.placement === 'above', 'arrow-top': appointmentBubble.placement === 'below' }" :style="{ top: appointmentBubble.y + 'px', left: appointmentBubble.x + 'px' }">
         <button class="bubble-close" @click="closeAppointmentBubble">✖</button>
         <div class="bubble-content">
+          <div class="bubble-fields">
+            <div><strong>Datum:</strong> {{ bubbleApt ? formatDate(bubbleApt.appointment_date) : '-' }}</div>
+            <div><strong>Zeit:</strong> {{ bubbleApt ? (formatTime(bubbleApt.appointment_time) + (bubbleApt.end_time ? ' - ' + formatTime(bubbleApt.end_time) : '')) : '-' }}</div>
+            <div><strong>Titel:</strong> {{ bubbleApt ? bubbleApt.title : '-' }}</div>
+            <div><strong>Kategorie:</strong> {{ bubbleApt ? getCategoryLabel(bubbleApt.category) : '-' }}</div>
+            <div><strong>Priorität:</strong> {{ bubbleApt ? getPriorityLabel(bubbleApt.priority) : '-' }}</div>
+            <div><strong>Patient:</strong> {{ bubbleApt ? (bubbleApt.patient_name || '-') : '-' }}</div>
+            <div><strong>Zugewiesen:</strong> {{ bubbleApt ? (bubbleApt.assigned_firstname ? bubbleApt.assigned_firstname + ' ' + (bubbleApt.assigned_lastname||'') : '-') : '-' }}</div>
+            <div><strong>Status:</strong> {{ bubbleApt ? bubbleApt.status : '-' }}</div>
+          </div>
+          <label style="margin-top:0.6rem"><strong>Beschreibung / Notizen</strong></label>
           <textarea ref="bubbleTextarea" v-model="appointmentBubble.content" class="bubble-textarea" @input="scheduleSaveAppointmentBubble"></textarea>
           <div class="bubble-actions">
-            <button @click="() => { openEditModal(appointments.value.find(a => a.id === appointmentBubble.value.id)); appointmentBubble.value.visible = false; }">Bearbeiten</button>
-            <button @click="() => deleteAppointmentFromBubble(appointmentBubble.value.id)">Löschen</button>
+            <button @click="openEditFromBubble">Bearbeiten</button>
+            <button @click="() => deleteAppointmentFromBubble(appointmentBubble.id)">Löschen</button>
           </div>
         </div>
       </div>
@@ -299,6 +310,10 @@ const appointmentBubble = ref({ visible: false, x: 0, y: 0, content: '', id: nul
 const bubbleRef = ref(null);
 const bubbleTextarea = ref(null);
 let bubbleSaveTimer = null;
+const bubbleApt = computed(() => {
+  if (!appointmentBubble.value || !appointmentBubble.value.id) return null;
+  return appointments.value.find(a => String(a.id) === String(appointmentBubble.value.id)) || null;
+});
 
 // View & Filter
 const viewMode = ref('week');
@@ -588,6 +603,15 @@ async function deleteAppointmentFromBubble(id) {
       await fetchStats();
     }
   } catch (err) { console.error(err); }
+}
+
+function openEditFromBubble() {
+  const id = appointmentBubble.value && appointmentBubble.value.id;
+  if (!id) return;
+  const apt = appointments.value.find(a => String(a.id) === String(id));
+  if (!apt) return;
+  openEditModal(apt);
+  appointmentBubble.value.visible = false;
 }
 
 // API Calls
