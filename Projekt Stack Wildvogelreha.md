@@ -80,3 +80,7 @@ Entwicklung eines webbasierten Terminverwaltungssystems für die fiktive Wildvog
 - Vermeidung von Terminüberschneidungen
 - Verbesserte Kommunikation zwischen Mitarbeitern
 - Zeitersparnis ca. 3-5h pro Woche
+
+
+--muss echt sein, mit firma usw
+

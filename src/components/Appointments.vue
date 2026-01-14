@@ -1396,22 +1396,16 @@ onMounted(() => {
   }
 }
 
-@media (max-width: 480px) {
-  .stat-card {
-    padding: 0.5rem;
-    min-width: 60px;
-  }
-  
-  .stat-number {
-    font-size: 1.2rem;
-  }
-  
-  .stat-label {
-    font-size: 0.7rem;
-  }
-  
-  .view-toggle button {
-    font-size: 0.8rem;
+.stat-number {
+  font-size: 1.2rem;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+}
+
+.view-toggle button {
+  font-size: 0.8rem;
     padding: 0.4rem;
   }
   
@@ -1462,5 +1456,4 @@ onMounted(() => {
     padding: 0.2rem;
     font-size: 0.8rem;
   }
-}
 </style>
