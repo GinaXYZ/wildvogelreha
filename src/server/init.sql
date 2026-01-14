@@ -114,11 +114,11 @@ CREATE TABLE IF NOT EXISTS map_items (
 
 -- Users (password = 'test123' für alle)
 INSERT IGNORE INTO users (id, username, password, firstname, lastname, email, role) VALUES
-('admin-1', 'admin', '$2b$10$fKe3o.ieH5jBcmdQrcto6uV.GAzVrmtRfznE7CVATuKpTDbtd14Py', 'Admin', 'User', 'admin@wildvogelreha.de', 'admin'),
-('staff-1', 'marie', '$2b$10$fKe3o.ieH5jBcmdQrcto6uV.GAzVrmtRfznE7CVATuKpTDbtd14Py', 'Marie', 'Schmidt', 'marie@wildvogelreha.de', 'staff'),
-('staff-2', 'tobias', '$2b$10$fKe3o.ieH5jBcmdQrcto6uV.GAzVrmtRfznE7CVATuKpTDbtd14Py', 'Tobias', 'Müller', 'tobias@wildvogelreha.de', 'staff'),
-('staff-3', 'lisa', '$2b$10$fKe3o.ieH5jBcmdQrcto6uV.GAzVrmtRfznE7CVATuKpTDbtd14Py', 'Lisa', 'Wagner', 'lisa@wildvogelreha.de', 'staff'),
-('user-1', 'testuser', '$2b$10$fKe3o.ieH5jBcmdQrcto6uV.GAzVrmtRfznE7CVATuKpTDbtd14Py', 'Test', 'User', 'user@wildvogelreha.de', 'user'),
+('admin-1', 'admin', '$2b$10$fKe3o.ieH5jBcmdQrcto6uV.GAzVrmtRfznE7CVATuKpTDbtd14Py', 'Admin', 'User', 'qiiina122@hotmail.de', 'admin'),
+('staff-1', 'marie', '$2b$10$fKe3o.ieH5jBcmdQrcto6uV.GAzVrmtRfznE7CVATuKpTDbtd14Py', 'Marie', 'Schmidt', 'marieqiiina122@hotmail.de', 'staff'),
+('staff-2', 'tobias', '$2b$10$fKe3o.ieH5jBcmdQrcto6uV.GAzVrmtRfznE7CVATuKpTDbtd14Py', 'Tobias', 'Müller', 'tobiasqiiina122@hotmail.de', 'staff'),
+('staff-3', 'lisa', '$2b$10$fKe3o.ieH5jBcmdQrcto6uV.GAzVrmtRfznE7CVATuKpTDbtd14Py', 'Lisa', 'Wagner', 'lisaqiiina122@hotmail.de', 'staff'),
+('user-1', 'testuser', '$2b$10$fKe3o.ieH5jBcmdQrcto6uV.GAzVrmtRfznE7CVATuKpTDbtd14Py', 'Test', 'User', 'userqiiina122@hotmail.de', 'user'),
 ('user-2', 'anna', '$2b$10$fKe3o.ieH5jBcmdQrcto6uV.GAzVrmtRfznE7CVATuKpTDbtd14Py', 'Anna', 'Becker', 'anna@email.de', 'user'),
 ('user-3', 'max', '$2b$10$fKe3o.ieH5jBcmdQrcto6uV.GAzVrmtRfznE7CVATuKpTDbtd14Py', 'Max', 'Hoffmann', 'max@email.de', 'user'),
 ('user-4', 'sarah', '$2b$10$fKe3o.ieH5jBcmdQrcto6uV.GAzVrmtRfznE7CVATuKpTDbtd14Py', 'Sarah', 'Klein', 'sarah@email.de', 'user'),
