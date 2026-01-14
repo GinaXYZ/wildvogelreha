@@ -1127,7 +1127,7 @@ app.get('/api/appointments/:id', authenticateToken, requireStaff, async (req, re
     }
     res.json(results[0]);
   } catch (err) {
-    console.error('Fehler beim Laden des Termins:', err);
+    console.error('Fehler beim Laden des Termins:', err && err.stack ? err.stack : err);
     res.status(500).json({ error: 'Fehler beim Laden des Termins' });
   }
 });
@@ -1169,12 +1169,13 @@ app.post('/api/appointments', authenticateToken, requireStaff, async (req, res) 
     // fire-and-forget: send notification email to test recipient(s)
     (async () => {
       try {
-        const [[aptRows]] = await pool.query('SELECT a.*, p.name as patient_name, u.firstname as assigned_firstname, u.lastname as assigned_lastname FROM appointments a LEFT JOIN patients p ON a.patient_id = p.id LEFT JOIN users u ON a.assigned_to = u.id WHERE a.id = ?', [result.insertId]);
-        const appointmentFull = Array.isArray(aptRows) ? aptRows[0] : aptRows;
-        // placeholder recipient for testing
-        const recipients = ['qiiina122@hotmail.de'];
-        await sendAppointmentEmail(appointmentFull, recipients);
-        console.log('Appointment email sent for id', result.insertId);
+        const [rows] = await pool.query('SELECT a.*, p.name as patient_name, u.firstname as assigned_firstname, u.lastname as assigned_lastname FROM appointments a LEFT JOIN patients p ON a.patient_id = p.id LEFT JOIN users u ON a.assigned_to = u.id WHERE a.id = ?', [result.insertId]);
+        const appointmentFull = (rows && rows.length) ? rows[0] : null;
+        if (appointmentFull) {
+          const recipients = ['qiiina122@hotmail.de'];
+          await sendAppointmentEmail(appointmentFull, recipients);
+          console.log('Appointment email sent for id', result.insertId);
+        }
       } catch (err) {
         console.error('Error sending appointment email (non-fatal):', err);
       }
