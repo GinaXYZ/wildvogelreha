@@ -1023,28 +1023,46 @@ onBeforeUnmount(() => {
 .actions-cell,
 .actions-column {
   white-space: nowrap;
-  width: 100px;
+  width: 140px; /* enough room for inline action buttons */
 }
 
 .actions-wrapper {
   display: flex;
-  gap: 0.4rem;
-  justify-content: center;
+  gap: 0.45rem;
+  justify-content: flex-start;
+  align-items: center;
 }
 
 .action-btn {
   background: #e3f2fd;
   border: none;
-  padding: 0.4rem 0.6rem;
-  border-radius: 6px;
+  padding: 0;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 0.9rem;
-  transition: transform 0.2s, background 0.2s;
+  font-size: 0.95rem;
+  transition: transform 0.12s ease, background 0.12s ease;
 }
 
 .action-btn:hover {
   background: #bbdefb;
-  transform: scale(1.1);
+  transform: translateY(-2px);
+}
+
+.delete-btn {
+  background: #ffebee;
+  color: #c62828;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  padding: 0;
 }
 
 .patients-table th {
@@ -1942,7 +1960,12 @@ onBeforeUnmount(() => {
     display: flex;
     gap: 0.5rem;
     justify-content: flex-end;
-    margin-top: 0.6rem;
+    margin-top: 1rem; /* more space below content */
+  }
+
+  .speech-bubble .bubble-actions button {
+    min-width: 84px;
+    padding: 0.4rem 0.8rem;
   }
   .btn-show {
     background: #e3f2fd;
