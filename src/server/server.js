@@ -285,6 +285,38 @@ app.post('/api/admin/set-all-emails', authenticateToken, requireAdmin, async (re
   }
 });
 
+// Admin debug: list admin emails
+app.get('/api/admin/list-emails', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const [rows] = await pool.query("SELECT id, email, role FROM users WHERE email IS NOT NULL");
+    res.json(rows.map(r => ({ id: r.id, email: r.email, role: r.role })));
+  } catch (err) {
+    console.error('Error listing emails:', err);
+    res.status(500).json({ error: 'Fehler beim Auflisten der E-Mails' });
+  }
+});
+
+// Admin debug: send test email for appointment id
+app.post('/api/admin/send-test-email/:id', authenticateToken, requireAdmin, async (req, res) => {
+  const id = req.params.id;
+  try {
+    const [rows] = await pool.query('SELECT a.*, p.name as patient_name, u.firstname as assigned_firstname, u.lastname as assigned_lastname, u.email as assigned_email FROM appointments a LEFT JOIN patients p ON a.patient_id = p.id LEFT JOIN users u ON a.assigned_to = u.id WHERE a.id = ?', [id]);
+    const appointmentFull = (rows && rows.length) ? rows[0] : null;
+    if (!appointmentFull) return res.status(404).json({ error: 'Termin nicht gefunden' });
+    const [adminRows] = await pool.query("SELECT email FROM users WHERE role = 'admin' AND email IS NOT NULL");
+    const adminEmails = (adminRows || []).map(r => r.email).filter(Boolean);
+    const recipients = new Set(adminEmails);
+    if (appointmentFull.assigned_email) recipients.add(appointmentFull.assigned_email);
+    const recipList = Array.from(recipients);
+    if (recipList.length === 0) return res.status(400).json({ error: 'Keine Empfänger konfiguriert' });
+    const info = await sendAppointmentEmail(appointmentFull, recipList);
+    res.json({ ok: true, preview: nodemailer.getTestMessageUrl ? nodemailer.getTestMessageUrl(info) : null, recipients: recipList });
+  } catch (err) {
+    console.error('Error sending test email:', err);
+    res.status(500).json({ error: 'Fehler beim Senden der Test-Email' });
+  }
+});
+
 
 app.post('/api/register', registerLimiter, async (req, res) => {
   const { username, password, firstname, lastname, email } = req.body;
