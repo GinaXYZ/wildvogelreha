@@ -797,7 +797,6 @@ onBeforeUnmount(() => {
   border-bottom: none;
 }
 
-<<<<<<< HEAD
 .patients-table td,
 .contacts-table td,
 .donations-table td {
@@ -806,12 +805,6 @@ onBeforeUnmount(() => {
   vertical-align: middle;
   color: #333;
   font-size: 0.95rem;
-=======
-.patients-table th {
-  background: #0c4b47;
-  color: #fff;
-  font-weight: 600;
->>>>>>> e064979 (edit style)
 }
 
 .patients-table tbody tr,
@@ -886,19 +879,13 @@ onBeforeUnmount(() => {
   transform: scale(1.1);
 }
 
-.delete-btn {
-  background: #ffebee;
-  border: none;
-  padding: 0.4rem 0.6rem;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: transform 0.2s, background 0.2s;
+.patients-table th {
+  background: #eee;
+  font-weight: bold;
 }
 
-.delete-btn:hover {
-  background: #ffcdd2;
-  transform: scale(1.1);
+.contacts-table tr:nth-child(even) {
+  background: #fafcfd;
 }
 
 /* Status select styling */
@@ -1072,17 +1059,8 @@ onBeforeUnmount(() => {
   max-width: 600px;
   border-collapse: collapse;
   text-align: center;
-<<<<<<< HEAD
+  display: block;
   margin: 0 auto;
-  display: table;
-=======
-  display: table;
-  margin: 0 auto;
-  background: white;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
->>>>>>> e064979 (edit style)
 }
 @media (max-width: 800px) {
   .donations-table {
@@ -1213,14 +1191,6 @@ onBeforeUnmount(() => {
   font-size: 1.08rem;
   overflow: hidden;
 }
-<<<<<<< HEAD
-
-/* Fix menu width so buttons don't shift when table grows */
-.staff-menu {
-  width: 90%;
-  max-width: 1200px;
-  margin: 0 auto 1rem auto;
-=======
 .contacts-table th, .contacts-table td {
   padding: 1rem 0.5rem;
   text-align: center;
@@ -1235,11 +1205,11 @@ onBeforeUnmount(() => {
   padding-right: 0.5rem;
 }
 .contacts-table th {
-  background: #0c4b47;
-  color: #fff;
+  background: #f7fafb;
+  color: #0c4b47;
   font-weight: 600;
   font-size: 1.08rem;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  border-bottom: 1px solid #e0e0e0;
   letter-spacing: 0.02em;
 }
 .contacts-stats {
@@ -1247,44 +1217,6 @@ onBeforeUnmount(() => {
   padding: 1rem;
   background: white;
   border-radius: 8px;
-}
-.status-select {
-  width: 100%;
-  padding: 0.25rem 0.7rem;
-  border: none;
-  border-radius: 8px;
-  background: #f3f3f3;
-  font-size: 1rem;
-  margin-left: 0.2em;
-  flex-grow: 1; 
-  color: #0c4b47;
-  word-break: keep-all;
-  font-family: 'Helvetica', sans-serif;
-}
-.status-select.option {
-  color: #0c4b47;
-  background-color: #ffffff;
-  word-break: keep-all;
-  text-align: center;
-}
-.status-select:focus {
-  outline: 2px solid #0c4b47;
-}
-.delete-btn {
->>>>>>> e064979 (edit style)
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  flex-wrap: nowrap; /* keep buttons in a single row */
-  overflow-x: auto;
-}
-
-/* Ensure staff-content doesn't force header/menu to resize when tables overflow */
-.staff-content {
-  width: 100%;
-  max-width: none;
-  padding: 2rem;
-  box-sizing: border-box;
 }
 
 /* === Schichtplanung Styles === */
@@ -1520,11 +1452,6 @@ onBeforeUnmount(() => {
   justify-content: center;
   line-height: 1;
 }
-<<<<<<< HEAD
-
-.staff-assignment .remove-staff-btn:hover {
-  background: rgba(255,255,255,0.5);
-=======
 .task-table {
   width: 100%;
   border-collapse: collapse;
@@ -1539,8 +1466,8 @@ onBeforeUnmount(() => {
   text-align: left;
 }
 .task-table th {
-  background: #0c4b47;
-  color: #fff;
+  background: #f7fafb;
+  color: #0c4b47;
   font-weight: 600;
 }
 .task-done {
@@ -1573,7 +1500,6 @@ onBeforeUnmount(() => {
   border: none;
   cursor: pointer;
   font-weight: bold;
->>>>>>> e064979 (edit style)
 }
 
 /* Responsive Styles for Staff Component */
