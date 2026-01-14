@@ -287,7 +287,7 @@
 
   <!-- Speech bubble overlay for messages/details -->
   <div v-if="messageBubble.visible" class="speech-bubble-overlay" @click.self="closeBubble">
-    <div class="speech-bubble" :style="{ top: messageBubble.y + 'px', left: messageBubble.x + 'px' }">
+      <div class="speech-bubble" ref="bubbleRef" :class="{ 'arrow-bottom': messageBubble.placement === 'above', 'arrow-top': messageBubble.placement === 'below' }" :style="{ top: messageBubble.y + 'px', left: messageBubble.x + 'px' }">
       <button class="bubble-close" @click="closeBubble">✖</button>
       <div v-if="!messageBubble.editing">
         <div class="bubble-text">{{ messageBubble.content || '(keine Nachricht)' }}</div>
@@ -307,7 +307,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch, onBeforeUnmount } from 'vue';
+import { ref, onMounted, computed, watch, onBeforeUnmount, nextTick } from 'vue';
 import { useAuthStore } from './auth.js';
 import Appointments from './Appointments.vue';
 const API_BASE = '/api';
@@ -495,19 +495,52 @@ function closePatientsSearchPopup() {
 }
 // Message/Details speech-bubble state
 const messageBubble = ref({ visible: false, x: 0, y: 0, content: '', editing: false, id: null, type: null });
+const bubbleRef = ref(null);
 
-function showContactBubble(event, contact) {
+async function showContactBubble(event, contact) {
   event.stopPropagation();
-  const x = Math.min(window.innerWidth - 340, event.clientX + 8);
-  const y = Math.max(8, event.clientY - 16);
-  messageBubble.value = { visible: true, x, y, content: contact.msg || '', editing: false, id: contact.id, type: 'contact' };
+  const rect = event.currentTarget.getBoundingClientRect();
+  // temporarily place in middle of button
+  messageBubble.value = { visible: true, x: rect.left + rect.width / 2, y: rect.bottom + 8, content: contact.msg || '', editing: false, id: contact.id, type: 'contact' };
+  await nextTick();
+  const b = bubbleRef.value;
+  if (b && b.getBoundingClientRect) {
+    const br = b.getBoundingClientRect();
+    let left = rect.left + rect.width / 2 - br.width / 2;
+    let top = rect.bottom + 8;
+    // if not enough space below, place above
+    let placement = 'below';
+    if (top + br.height + 8 > window.innerHeight) {
+      top = rect.top - br.height - 8;
+      placement = 'above';
+    }
+    left = Math.max(8, Math.min(left, window.innerWidth - br.width - 8));
+    messageBubble.value.x = left;
+    messageBubble.value.y = Math.max(8, top);
+    messageBubble.value.placement = placement;
+  }
 }
 
-function showPatientBubble(event, patient) {
+async function showPatientBubble(event, patient) {
   event.stopPropagation();
-  const x = Math.min(window.innerWidth - 340, event.clientX + 8);
-  const y = Math.max(8, event.clientY - 16);
-  messageBubble.value = { visible: true, x, y, content: patient.details || '', editing: false, id: patient.id, type: 'patient' };
+  const rect = event.currentTarget.getBoundingClientRect();
+  messageBubble.value = { visible: true, x: rect.left + rect.width / 2, y: rect.bottom + 8, content: patient.details || '', editing: false, id: patient.id, type: 'patient' };
+  await nextTick();
+  const b = bubbleRef.value;
+  if (b && b.getBoundingClientRect) {
+    const br = b.getBoundingClientRect();
+    let left = rect.left + rect.width / 2 - br.width / 2;
+    let top = rect.bottom + 8;
+    let placement = 'below';
+    if (top + br.height + 8 > window.innerHeight) {
+      top = rect.top - br.height - 8;
+      placement = 'above';
+    }
+    left = Math.max(8, Math.min(left, window.innerWidth - br.width - 8));
+    messageBubble.value.x = left;
+    messageBubble.value.y = Math.max(8, top);
+    messageBubble.value.placement = placement;
+  }
 }
 
 function closeBubble() {
@@ -1969,5 +2002,75 @@ onBeforeUnmount(() => {
   white-space: normal !important;
   overflow: visible !important;
   text-overflow: clip !important;
+}
+
+/* Global speech-bubble styles (desktop & mobile) */
+.speech-bubble-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20000;
+}
+.speech-bubble {
+  position: absolute;
+  width: 340px;
+  max-width: calc(100vw - 24px);
+  background: white;
+  border: 2px solid #0c4b47;
+  border-radius: 8px;
+  padding: 0.8rem;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  z-index: 20001;
+}
+.speech-bubble.arrow-top::before,
+.speech-bubble.arrow-top::after {
+  left: 50%;
+  transform: translateX(-50%);
+}
+.speech-bubble.arrow-top::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 10px solid #0c4b47;
+}
+.speech-bubble.arrow-top::after {
+  content: '';
+  position: absolute;
+  top: -8px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid white;
+}
+.speech-bubble.arrow-bottom::before {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid #0c4b47;
+}
+.speech-bubble.arrow-bottom::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid white;
 }
 </style>
