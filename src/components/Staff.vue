@@ -126,9 +126,11 @@
               <td>{{ contact.telefon }}</td>
               <td>{{ formatDate(contact.created_at) }}</td>
               <td class="actions-cell">
-                <button @click="editContact(contact)" class="action-btn" title="Kontakt bearbeiten">✏️</button>
-                <button @click="convertToPatient(contact)" class="action-btn" title="Als Patient anlegen">➕</button>
-                <button @click="deleteContact(contact.id)" class="delete-btn" title="Kontakt löschen">🗑️</button>
+                <div class="actions-wrapper">
+                  <button @click="editContact(contact)" class="action-btn" title="Kontakt bearbeiten">✏️</button>
+                  <button @click="convertToPatient(contact)" class="action-btn" title="Als Patient anlegen">➕</button>
+                  <button @click="deleteContact(contact.id)" class="delete-btn" title="Kontakt löschen">🗑️</button>
+                </div>
               </td>
               <td class="message-cell">
                 <button class="btn-show" @click.stop="showContactBubble($event, contact)">Anzeigen</button>
@@ -1935,12 +1937,13 @@ onBeforeUnmount(() => {
   }
   .bubble-close {
     position: absolute;
-    top: 6px;
-    right: 8px;
+    top: 10px;
+    right: 10px;
     border: none;
     background: transparent;
     cursor: pointer;
     font-size: 0.95rem;
+    z-index: 20003;
   }
   .bubble-text {
     white-space: pre-wrap;
@@ -1960,7 +1963,7 @@ onBeforeUnmount(() => {
     display: flex;
     gap: 0.5rem;
     justify-content: flex-end;
-    margin-top: 1rem; /* more space below content */
+    margin-top: 1.2rem; /* more space below content */
   }
 
   .speech-bubble .bubble-actions button {
