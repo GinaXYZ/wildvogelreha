@@ -73,18 +73,6 @@
         <div class="today-overlay" ref="todayOverlay"></div>
       </div>
       <div class="week-body" ref="weekBodyRef">
-        <div class="time-row">
-          <div class="time-col">{{ String(hour).padStart(2, '0') }}:00</div>
-        </div>
-        <div class="time-row">
-          <div class="time-col">{{ String(hour).padStart(2, '0') }}:00</div>
-        </div>
-        <div class="time-row">
-          <div class="time-col">{{ String(hour).padStart(2, '0') }}:00</div>
-        </div>
-        <div class="time-row">
-          <div class="time-col">{{ String(hour).padStart(2, '0') }}:00</div>
-        </div>
         <div v-for="hour in hours" :key="hour" class="time-row">
           <div class="time-col">{{ String(hour).padStart(2, '0') }}:00</div>
           <div v-for="day in weekDays" :key="day.date" class="day-cell" 
@@ -1257,11 +1245,15 @@ function handleDocClick() {
   color: white;
   padding-right: var(--week-scrollbar, 0px);
   position: relative;
+  align-items: stretch;
 }
 
 .time-col-header {
   padding: 0.8rem;
-  background: transparent;
+  background: #0c4b47;
+  color: white;
+  text-align: center;
+  font-size: 0.8rem;
 }
 
 .week-header .day-col {
@@ -1271,10 +1263,7 @@ function handleDocClick() {
 }
 
 .week-header .day-col.today {
-  background: rgba(255,255,255,0.2);
-}
-
-.week-header .day-col.today {
+  background: rgba(230, 247, 242, 0.3);
   border-left: 1px solid rgba(0,0,0,0.06);
   border-right: 1px solid rgba(0,0,0,0.06);
 }
@@ -1297,9 +1286,9 @@ function handleDocClick() {
 .time-row {
   display: grid;
   grid-template-columns: 90px repeat(7, minmax(140px, 1fr));
-  /* make row tall enough to show up to maxVisibleSlot compact pills */
   min-height: calc( (26px * 3) + 12px );
   border-bottom: 1px solid #eee;
+  align-items: stretch;
 }
 
 .time-col {
@@ -1308,6 +1297,10 @@ function handleDocClick() {
   color: #666;
   background: #f9f9f9;
   text-align: center;
+  border-right: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .day-cell {
@@ -1323,7 +1316,7 @@ function handleDocClick() {
 }
 
 .day-cell.today {
-  background: #e3f2fd;
+  background: #e6f7f2;
 }
 
 .day-cell {
@@ -1516,20 +1509,12 @@ function handleDocClick() {
 
 .appointments-table {
   width: 100%;
-  max-width: 1400px;
+  max-width: none;
   margin: 1rem auto;
   border-collapse: separate;
-  white-space: normal;
-  overflow: visible;
-  text-overflow: clip;
   border-spacing: 0;
   background: white;
-  border-radius: 12px;
-  overflow: hidden;
   box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-  white-space: normal;
-  overflow: visible;
-  text-overflow: clip;
 }
 
 .appointments-table thead {
@@ -1665,25 +1650,32 @@ function handleDocClick() {
 
 .today-overlay {
   position: absolute;
-  background: rgba(227,242,253,0.95);
+  background: #e6f7f2;
+  opacity: 0.6;
   pointer-events: none;
   z-index: 1;
-  border-left: 1px solid rgba(0,0,0,0.06);
-  border-right: 1px solid rgba(0,0,0,0.06);
+  top: 0;
+  bottom: 0;
+  transition: left 0.1s, width 0.1s;
 }
 
 .day-cell.today {
-  /* stronger separators so borders show on light-blue background */
   box-shadow: inset 0 0 0 1px rgba(0,0,0,0.03);
   border-left-color: rgba(0,0,0,0.06);
 }
 
 .modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10000;
+  overflow-y: auto;
 }
 
 .modal {
@@ -1694,6 +1686,8 @@ function handleDocClick() {
   width: 90%;
   max-height: 90vh;
   overflow-y: auto;
+  position: relative;
+  margin: 2rem auto;
 }
 
 .modal h3 {
@@ -2005,28 +1999,34 @@ function handleDocClick() {
   font-family: inherit;
   font-size: 0.95rem;
   color: #0c4b47;
-  max-width: 1400px;
+  max-width: none;
 }
 
 .list-pagination button {
-  padding: 0.45rem 0.85rem;
+  padding: 0.6rem 1.2rem;
   border-radius: 8px;
-  border: 1px solid rgba(12,75,71,0.12);
+  border: 1px solid #0c4b47;
   background: #ffffff;
   color: #0c4b47;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(12,75,71,0.03);
+  box-shadow: 0 2px 6px rgba(12,75,71,0.1);
   font-weight: 600;
+  transition: all 0.2s;
 }
 
 .list-pagination button:hover:not(:disabled) {
-  background: #f1fbfa;
+  background: #0c4b47;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(12,75,71,0.2);
 }
 
 .list-pagination button:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
-  background: #fafafa;
+  background: #f5f5f5;
+  border-color: #ddd;
+  color: #999;
 }
 
 .list-pagination span {
