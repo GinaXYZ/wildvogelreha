@@ -1284,7 +1284,14 @@ onBeforeUnmount(() => {
   white-space: normal;
 }
 
-.appointments-table th.sortable { cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+.appointments-table th.sortable {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap; /* prevent label and icon wrapping onto separate lines */
+  flex-wrap: nowrap;
+}
 .sort-btn {
   background: transparent;
   border: none;
@@ -1293,6 +1300,7 @@ onBeforeUnmount(() => {
   padding: 0 0.25rem;
   margin-left: 0.25rem;
   cursor: pointer;
+  line-height: 1; /* keep icon aligned */
 }
 .sort-btn:hover { color: #e0f7f5; }
 
