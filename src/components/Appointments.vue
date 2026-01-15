@@ -31,7 +31,7 @@
       </div>
       <div class="filters">
         <div class="dd" ref="catDd">
-          <button type="button" class="dd-btn" @click.stop="showCategoryDropdown = !showCategoryDropdown">{{ filterCategory ? getCategoryLabel(filterCategory) : 'Alle Kategorien' }}</button>
+          <button type="button" class="dd-btn" @click.stop="toggleDropdown('category')">{{ filterCategory ? getCategoryLabel(filterCategory) : 'Alle Kategorien' }}</button>
           <div v-if="showCategoryDropdown" class="dd-menu" @click.stop>
             <div class="dd-item" :class="{selected: filterCategory === ''}" @click="selectCategory('')">Alle Kategorien</div>
             <div v-for="opt in allCategories" :key="opt" class="dd-item" :class="{selected: filterCategory === opt}" @click="selectCategory(opt)">{{ getCategoryLabel(opt) }}</div>
@@ -39,7 +39,7 @@
         </div>
 
         <div class="dd" ref="statusDd">
-          <button type="button" class="dd-btn" @click.stop="showStatusDropdown = !showStatusDropdown">{{ filterStatus ? filterStatus.replace('_',' ') : 'Alle Status' }}</button>
+          <button type="button" class="dd-btn" @click.stop="toggleDropdown('status')">{{ filterStatus ? filterStatus.replace('_',' ') : 'Alle Status' }}</button>
           <div v-if="showStatusDropdown" class="dd-menu" @click.stop>
             <div class="dd-item" :class="{selected: filterStatus === ''}" @click="selectStatus('')">Alle Status</div>
             <div v-for="opt in allStatuses" :key="opt" class="dd-item" :class="{selected: filterStatus === opt}" @click="selectStatus(opt)">{{ opt.replace('_',' ') }}</div>
@@ -47,7 +47,7 @@
         </div>
 
         <div class="dd" ref="staffDd">
-          <button type="button" class="dd-btn" @click.stop="showStaffDropdown = !showStaffDropdown">{{ filterStaff ? (staffUsers.find(s=>String(s.id)===String(filterStaff)) ? staffUsers.find(s=>String(s.id)===String(filterStaff)).firstname + ' ' + staffUsers.find(s=>String(s.id)===String(filterStaff)).lastname : 'Ausgewählt') : 'Alle Mitarbeiter' }}</button>
+          <button type="button" class="dd-btn" @click.stop="toggleDropdown('staff')">{{ filterStaff ? (staffUsers.find(s=>String(s.id)===String(filterStaff)) ? staffUsers.find(s=>String(s.id)===String(filterStaff)).firstname + ' ' + staffUsers.find(s=>String(s.id)===String(filterStaff)).lastname : 'Ausgewählt') : 'Alle Mitarbeiter' }}</button>
           <div v-if="showStaffDropdown" class="dd-menu" @click.stop>
             <div class="dd-item" :class="{selected: filterStaff === ''}" @click="selectStaff('')">Alle Mitarbeiter</div>
             <div v-for="staff in staffUsers" :key="staff.id" class="dd-item" :class="{selected: String(filterStaff) === String(staff.id)}" @click="selectStaff(String(staff.id))">{{ staff.firstname }} {{ staff.lastname }}</div>
@@ -63,7 +63,7 @@
     </div>
 
     <!-- Kalender Wochenansicht -->
-    <div v-if="viewMode === 'week'" class="week-view">
+    <div v-if="viewMode === 'week'" class="week-view" ref="weekViewRef">
       <div class="week-header">
         <div class="time-col"></div>
         <div v-for="day in weekDays" :key="day.date" class="day-col" :class="{ today: isToday(day.date) }">
@@ -376,11 +376,31 @@ const showCategoryDropdown = ref(false);
 const showStatusDropdown = ref(false);
 const showStaffDropdown = ref(false);
 
-function selectCategory(val) { filterCategory.value = val; showCategoryDropdown.value = false; }
+function closeAllDropdowns() {
+  showCategoryDropdown.value = false;
+  showStatusDropdown.value = false;
+  showStaffDropdown.value = false;
+}
+
+function toggleDropdown(which) {
+  // ensure only one open at a time
+  if (which === 'category') {
+    showCategoryDropdown.value = !showCategoryDropdown.value;
+    showStatusDropdown.value = false; showStaffDropdown.value = false;
+  } else if (which === 'status') {
+    showStatusDropdown.value = !showStatusDropdown.value;
+    showCategoryDropdown.value = false; showStaffDropdown.value = false;
+  } else if (which === 'staff') {
+    showStaffDropdown.value = !showStaffDropdown.value;
+    showCategoryDropdown.value = false; showStatusDropdown.value = false;
+  }
+}
+
+function selectCategory(val) { filterCategory.value = val; closeAllDropdowns(); }
 function clearCategory() { filterCategory.value = ''; }
-function selectStatus(val) { filterStatus.value = val; showStatusDropdown.value = false; }
+function selectStatus(val) { filterStatus.value = val; closeAllDropdowns(); }
 function clearStatus() { filterStatus.value = ''; }
-function selectStaff(val) { filterStaff.value = val; showStaffDropdown.value = false; }
+function selectStaff(val) { filterStaff.value = val; closeAllDropdowns(); }
 function clearStaff() { filterStaff.value = ''; }
 
 const allCategories = ['behandlung','fuetterung','medikation','reinigung','auswilderung','kontrolle','sonstiges'];
@@ -388,12 +408,15 @@ const allStatuses = ['geplant','in_bearbeitung','erledigt','abgesagt'];
 
 // week body ref for scrollbar sync
 const weekBodyRef = ref(null);
+const weekViewRef = ref(null);
 function updateWeekScrollbar() {
   nextTick(() => {
     const el = weekBodyRef.value;
-    if (!el) return;
+    const vw = weekViewRef.value;
+    if (!el || !vw) return;
     const scrollbar = el.offsetWidth - el.clientWidth;
-    document.documentElement.style.setProperty('--week-scrollbar', `${scrollbar}px`);
+    // set as inline style on week view so header uses local var
+    vw.style.setProperty('--week-scrollbar', `${scrollbar}px`);
   });
 }
 
@@ -967,9 +990,8 @@ async function deleteAppointment(id) {
 function exportCSV() {
   const token = authStore.token || localStorage.getItem('token');
   if (!token) { alert('Bitte anmelden um CSV-Export auszuführen.'); return; }
-  const startDate = weekDays.value[0].date;
-  const endDate = weekDays.value[6].date;
-  fetch(`${API_BASE}/appointments/export/csv?start_date=${startDate}&end_date=${endDate}`, {
+  // Export ALL appointments
+  fetch(`${API_BASE}/appointments/export/csv`, {
     headers: { 'Authorization': `Bearer ${token}` }
   }).then(async res => {
     if (!res.ok) {
@@ -1169,8 +1191,8 @@ function handleDocClick() {
 /* Simple dropdown checkbox menus for filters */
 .filters { display:flex; gap:0.75rem; align-items:center; }
 .dd { position: relative; }
-.dd-btn { padding:0.5rem 0.75rem; border:1px solid #ddd; background:white; border-radius:6px; cursor:pointer; }
-.dd-menu { position: absolute; right: 0; top: calc(100% + 6px); background: white; border:1px solid #ddd; box-shadow: 0 6px 18px rgba(0,0,0,0.08); padding:0.5rem; z-index:30; width:220px; max-height:220px; overflow:auto; }
+.dd-btn { padding:0.75rem 1rem; border:1px solid #ddd; background:white; border-radius:8px; cursor:pointer; font-size:1rem; min-width:150px; text-align:left; }
+.dd-menu { position: absolute; left: 0; right: auto; top: calc(100% + 6px); background: white; border:1px solid #ddd; box-shadow: 0 6px 18px rgba(0,0,0,0.08); padding:0.5rem; z-index:30; width:220px; max-height:320px; overflow:auto; }
 .dd-item { display:block; padding:0.25rem 0.5rem; font-size:0.95rem; cursor:pointer; }
 .dd-item.selected { background: #e6f7f2; }
 .dd-actions { display:flex; justify-content:flex-end; margin-top:0.5rem; }
