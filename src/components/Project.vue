@@ -22,5 +22,20 @@ import Appointments from './Appointments.vue';
 :root {
   --app-padding-top: 0px;
 }
+  
+/* Ensure Appointments uses full width and no extra top padding */
+.project-wrapper .appointments-container {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding-top: 16px !important;
+  margin: 0 auto !important;
+  box-sizing: border-box;
+}
+
+.project-wrapper .appointments-header {
+  padding: 0 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
 
 </style>
