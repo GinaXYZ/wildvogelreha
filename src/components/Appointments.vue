@@ -2020,6 +2020,7 @@ function handleDocClick() {
   color: #0c4b47;
   font-weight: 600;
 }
+}
 </style>
 <style scoped>
 /* Appointment speech-bubble styles (overlay + bubble) */
