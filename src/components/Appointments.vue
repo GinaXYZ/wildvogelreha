@@ -731,7 +731,9 @@ function goToToday() {
 }
 
 function selectDayForDetails(date) {
-  currentDate.value = new Date(date);
+  // Parse date string as local time to avoid timezone shifting
+  const [year, month, day] = date.split('-').map(Number);
+  currentDate.value = new Date(year, month - 1, day);
   viewMode.value = 'week';
 }
 
@@ -1269,10 +1271,12 @@ function handleDocClick() {
   box-sizing: border-box;
 }
 
+.week-header .day-col:first-of-type {
+  border-left: none;
+}
+
 .week-header .day-col.today {
   background: rgba(230, 247, 242, 0.3);
-  border-left: 1px solid rgba(0,0,0,0.06);
-  border-right: 1px solid rgba(0,0,0,0.06);
 }
 
 .day-name {
@@ -1320,6 +1324,10 @@ function handleDocClick() {
   box-sizing: border-box;
   position: relative;
   overflow: hidden;
+}
+
+.day-cell:first-of-type {
+  border-left: none;
 }
 
 .day-cell:hover {
