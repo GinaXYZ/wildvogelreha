@@ -625,6 +625,7 @@ function navigateDate(direction) {
 
 function goToToday() {
   currentDate.value = new Date();
+  viewMode.value = 'week';
   fetchAppointments();
 }
 
@@ -1132,7 +1133,8 @@ onBeforeUnmount(() => {
 .time-row {
   display: grid;
   grid-template-columns: 90px repeat(7, minmax(140px, 1fr));
-  min-height: 60px;
+  /* make row tall enough to show up to maxVisibleSlot compact pills */
+  min-height: calc( (26px * 3) + 12px );
   border-bottom: 1px solid #eee;
 }
 
@@ -1179,21 +1181,21 @@ onBeforeUnmount(() => {
   overflow: hidden;
 }
 .appointment-block {
-    background: #e3f2fd;
-    border-radius: 6px;
-    padding: 0.22rem 0.45rem;
-    margin-bottom: 0.18rem;
-    font-size: 0.9rem;
-    display: inline-flex;
-    gap: 0.4rem;
-    align-items: center;
-    max-width: 100%;
-    box-sizing: border-box;
-    height: 36px; /* fixed block height */
-    line-height: 1;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+  background: #e3f2fd;
+  border-radius: 6px;
+  padding: 0.15rem 0.4rem;
+  margin-bottom: 0.12rem;
+  font-size: 0.85rem;
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  max-width: 100%;
+  box-sizing: border-box;
+  height: 26px; /* compact pill height to allow stacking */
+  line-height: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
   .appointment-block .apt-title { overflow: hidden; text-overflow: ellipsis; }
 
