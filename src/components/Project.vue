@@ -45,4 +45,6 @@ import Appointments from './Appointments.vue';
   box-sizing: border-box;
 }
 
+
+/* Additional styling adjustments can be added here as needed */
 </style>
