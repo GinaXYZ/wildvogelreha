@@ -85,7 +85,7 @@
               <span class="apt-title">{{ apt.title }}</span>
               <span v-if="apt.patient_name" class="apt-patient">🐦 {{ apt.patient_name }}</span>
             </div>
-            <div v-if="getAppointmentsForSlot(day.date, hour).length > maxVisibleSlot" class="more-count" @click.stop="openSlotModal(day.date, hour, getAppointmentsForSlot(day.date, hour))">
+            <div v-if="getAppointmentsForSlot(day.date, hour).length > maxVisibleSlot" class="more-count" @click.stop="openSlotList(day.date, hour)">
               +{{ getAppointmentsForSlot(day.date, hour).length - maxVisibleSlot }} weitere
             </div>
           </div>
@@ -353,9 +353,12 @@ const bubbleApt = computed(() => {
 // View & Filter
 const viewMode = ref('week');
 const currentDate = ref(new Date());
-const filterCategory = ref('');
-const filterStatus = ref('');
-const filterStaff = ref('');
+// multi-select filters (arrays). empty = all
+const filterCategories = ref([]);
+const filterStatuses = ref([]);
+const filterStaffs = ref([]);
+const filterDate = ref(''); // ISO date string or empty
+const filterHour = ref(null);
 
 // Modal State
 const showAddModal = ref(false);
@@ -383,7 +386,8 @@ function getEmptyFormData() {
 
 // Computed
 // full day hours 0:00 - 23:00 so we can add entries at any hour
-const hours = computed(() => Array.from({ length: 24 }, (_, i) => i)); // 0 - 23
+// show times 6:00 - 20:00
+const hours = computed(() => Array.from({ length: 15 }, (_, i) => i + 6)); // 6 - 20
 
 const weekDays = computed(() => {
   const days = [];
@@ -535,12 +539,15 @@ const paginatedAppointments = computed(() => {
 });
 
 // Quick slot overflow handling for week view
-const maxVisibleSlot = 3; // show up to 3 pills per time-slot
-const slotModal = ref({ visible: false, date: null, hour: null, appointments: [] });
-function openSlotModal(date, hour, appointments) {
-  slotModal.value = { visible: true, date, hour, appointments: appointments.slice() };
+const maxVisibleSlot = 2; // show up to 2 pills per time-slot
+
+function openSlotList(date, hour) {
+  // switch to list view and apply filters for this slot
+  viewMode.value = 'list';
+  filterDate.value = date;
+  filterHour.value = hour;
+  page.value = 1;
 }
-function closeSlotModal() { slotModal.value.visible = false; slotModal.value.appointments = []; }
 
 // Reset to first page when filters change
 watch(filteredAppointments, () => { page.value = 1; });
