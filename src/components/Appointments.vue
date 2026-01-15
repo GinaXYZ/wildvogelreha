@@ -1231,10 +1231,30 @@ onBeforeUnmount(() => {
 }
 
 .month-cell {
-  min-height: 140px; /* larger cells to look like a calendar */
+  height: 140px; /* fixed height so all days are equal */
   padding: 0.6rem;
   border: 1px solid #eee;
   cursor: pointer;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+/* keep date header at top and make appointments list scrollable inside the fixed cell */
+.cell-date {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 0.4rem;
+}
+.cell-appointments {
+  overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 0; /* allow flex child to shrink for proper scrolling */
+}
+.cell-appointments .mini-appointment,
+.cell-appointments .more-appointments {
+  display: block;
+  margin-bottom: 0.3rem;
 }
 
 .month-cell:hover {
