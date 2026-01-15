@@ -31,43 +31,26 @@
       </div>
       <div class="filters">
         <div class="dd" ref="catDd">
-          <button type="button" class="dd-btn" @click.stop="showCategoryDropdown = !showCategoryDropdown">Kategorien <span v-if="filterCategories.length">({{ filterCategories.length }})</span></button>
+          <button type="button" class="dd-btn" @click.stop="showCategoryDropdown = !showCategoryDropdown">{{ filterCategory ? getCategoryLabel(filterCategory) : 'Alle Kategorien' }}</button>
           <div v-if="showCategoryDropdown" class="dd-menu" @click.stop>
-            <label class="dd-item">
-              <input type="checkbox" :checked="filterCategories.length === allCategories.length" @change="e => e.target.checked ? selectAll(filterCategories, allCategories) : clearArray(filterCategories)"> Alle Kategorien
-            </label>
-            <label v-for="opt in allCategories" :key="opt" class="dd-item">
-              <input type="checkbox" :value="opt" @change="toggleArray(filterCategories, opt)" :checked="filterCategories.includes(opt)"> {{ getCategoryLabel(opt) }}
-            </label>
-            <div class="dd-actions">
-              <button @click.stop="clearArray(filterCategories)">Alle</button>
-            </div>
+            <div class="dd-item" :class="{selected: filterCategory === ''}" @click="selectCategory('')">Alle Kategorien</div>
+            <div v-for="opt in allCategories" :key="opt" class="dd-item" :class="{selected: filterCategory === opt}" @click="selectCategory(opt)">{{ getCategoryLabel(opt) }}</div>
           </div>
         </div>
 
         <div class="dd" ref="statusDd">
-          <button type="button" class="dd-btn" @click.stop="showStatusDropdown = !showStatusDropdown">Status <span v-if="filterStatuses.length">({{ filterStatuses.length }})</span></button>
+          <button type="button" class="dd-btn" @click.stop="showStatusDropdown = !showStatusDropdown">{{ filterStatus ? filterStatus.replace('_',' ') : 'Alle Status' }}</button>
           <div v-if="showStatusDropdown" class="dd-menu" @click.stop>
-            <label class="dd-item">
-              <input type="checkbox" :checked="filterStatuses.length === allStatuses.length" @change="e => e.target.checked ? selectAll(filterStatuses, allStatuses) : clearArray(filterStatuses)"> Alle Status
-            </label>
-            <label v-for="opt in allStatuses" :key="opt" class="dd-item">
-              <input type="checkbox" :value="opt" @change="toggleArray(filterStatuses, opt)" :checked="filterStatuses.includes(opt)"> {{ opt.replace('_',' ') }}
-            </label>
-            <div class="dd-actions"><button @click.stop="clearArray(filterStatuses)">Alle</button></div>
+            <div class="dd-item" :class="{selected: filterStatus === ''}" @click="selectStatus('')">Alle Status</div>
+            <div v-for="opt in allStatuses" :key="opt" class="dd-item" :class="{selected: filterStatus === opt}" @click="selectStatus(opt)">{{ opt.replace('_',' ') }}</div>
           </div>
         </div>
 
         <div class="dd" ref="staffDd">
-          <button type="button" class="dd-btn" @click.stop="showStaffDropdown = !showStaffDropdown">Mitarbeiter <span v-if="filterStaffs.length">({{ filterStaffs.length }})</span></button>
+          <button type="button" class="dd-btn" @click.stop="showStaffDropdown = !showStaffDropdown">{{ filterStaff ? (staffUsers.find(s=>String(s.id)===String(filterStaff)) ? staffUsers.find(s=>String(s.id)===String(filterStaff)).firstname + ' ' + staffUsers.find(s=>String(s.id)===String(filterStaff)).lastname : 'Ausgewählt') : 'Alle Mitarbeiter' }}</button>
           <div v-if="showStaffDropdown" class="dd-menu" @click.stop>
-            <label class="dd-item">
-              <input type="checkbox" :checked="filterStaffs.length === (staffUsers || []).length" @change="e => e.target.checked ? selectAllStaff() : clearArray(filterStaffs)"> Alle Mitarbeiter
-            </label>
-            <label v-for="staff in staffUsers" :key="staff.id" class="dd-item">
-              <input type="checkbox" :value="String(staff.id)" @change="toggleArray(filterStaffs, String(staff.id))" :checked="filterStaffs.includes(String(staff.id))"> {{ staff.firstname }} {{ staff.lastname }}
-            </label>
-            <div class="dd-actions"><button @click.stop="clearArray(filterStaffs)">Alle</button></div>
+            <div class="dd-item" :class="{selected: filterStaff === ''}" @click="selectStaff('')">Alle Mitarbeiter</div>
+            <div v-for="staff in staffUsers" :key="staff.id" class="dd-item" :class="{selected: String(filterStaff) === String(staff.id)}" @click="selectStaff(String(staff.id))">{{ staff.firstname }} {{ staff.lastname }}</div>
           </div>
         </div>
       </div>
@@ -88,7 +71,7 @@
           <span class="day-date">{{ formatDayDate(day.date) }}</span>
         </div>
       </div>
-      <div class="week-body">
+      <div class="week-body" ref="weekBodyRef">
         <div v-for="hour in hours" :key="hour" class="time-row">
           <div class="time-col">{{ String(hour).padStart(2, '0') }}:00</div>
           <div v-for="day in weekDays" :key="day.date" class="day-cell" 
@@ -382,10 +365,10 @@ function closeSlotModal() {
 // View & Filter
 const viewMode = ref('week');
 const currentDate = ref(new Date());
-// multi-select filters (arrays). empty = all
-const filterCategories = ref([]);
-const filterStatuses = ref([]);
-const filterStaffs = ref([]);
+// single-select filters. empty = all
+const filterCategory = ref('');
+const filterStatus = ref('');
+const filterStaff = ref('');
 const filterDate = ref(''); // ISO date string or empty
 const filterHour = ref(null);
 // dropdown states for filters
@@ -393,26 +376,25 @@ const showCategoryDropdown = ref(false);
 const showStatusDropdown = ref(false);
 const showStaffDropdown = ref(false);
 
-function toggleArray(arrRef, value) {
-  const idx = arrRef.value.indexOf(value);
-  if (idx === -1) arrRef.value.push(value);
-  else arrRef.value.splice(idx, 1);
-}
-
-function clearArray(arrRef) {
-  arrRef.value = [];
-}
+function selectCategory(val) { filterCategory.value = val; showCategoryDropdown.value = false; }
+function clearCategory() { filterCategory.value = ''; }
+function selectStatus(val) { filterStatus.value = val; showStatusDropdown.value = false; }
+function clearStatus() { filterStatus.value = ''; }
+function selectStaff(val) { filterStaff.value = val; showStaffDropdown.value = false; }
+function clearStaff() { filterStaff.value = ''; }
 
 const allCategories = ['behandlung','fuetterung','medikation','reinigung','auswilderung','kontrolle','sonstiges'];
 const allStatuses = ['geplant','in_bearbeitung','erledigt','abgesagt'];
 
-function selectAll(arrRef, options) {
-  arrRef.value = options.slice();
-}
-
-function selectAllStaff() {
-  const ids = (staffUsers.value || []).map(s => String(s.id));
-  filterStaffs.value = ids;
+// week body ref for scrollbar sync
+const weekBodyRef = ref(null);
+function updateWeekScrollbar() {
+  nextTick(() => {
+    const el = weekBodyRef.value;
+    if (!el) return;
+    const scrollbar = el.offsetWidth - el.clientWidth;
+    document.documentElement.style.setProperty('--week-scrollbar', `${scrollbar}px`);
+  });
 }
 
 // Modal State
@@ -500,16 +482,14 @@ const currentDateLabel = computed(() => {
 
 const filteredAppointments = computed(() => {
   return appointments.value.filter(apt => {
-    // categories (multi-select)
-    if (filterCategories.value && filterCategories.value.length > 0 && !filterCategories.value.includes(apt.category)) return false;
-    // statuses (multi-select)
-    if (filterStatuses.value && filterStatuses.value.length > 0 && !filterStatuses.value.includes(apt.status)) return false;
-    // staffs (multi-select) - compare as strings
-    if (filterStaffs.value && filterStaffs.value.length > 0 && !filterStaffs.value.includes(String(apt.assigned_to || ''))) return false;
+    // single category
+    if (filterCategory.value && apt.category !== filterCategory.value) return false;
+    if (filterStatus.value && apt.status !== filterStatus.value) return false;
+    if (filterStaff.value && String(apt.assigned_to || '') !== String(filterStaff.value)) return false;
     // date filter (exact match)
     if (filterDate.value && String(apt.appointment_date || '').split('T')[0] !== filterDate.value) return false;
     // hour filter (number)
-    if (filterHour.value !== null && filterHour.value !== undefined) {
+    if (filterHour.value !== null && filterHour.value !== undefined && filterHour.value !== '') {
       const aptHour = parseInt((apt.appointment_time || '00:00').split(':')[0], 10);
       if (aptHour !== Number(filterHour.value)) return false;
     }
@@ -847,13 +827,15 @@ async function fetchAppointments() {
     console.debug('[Appointments] response status', res.status);
     if (res.ok) {
       const data = await res.json();
-      console.debug('[Appointments] fetched', data.length || 0, 'appointments');
-      appointments.value = data;
+      console.debug('[Appointments] fetched', (data && data.length) || 0, 'appointments');
+      appointments.value = data || [];
+      updateWeekScrollbar();
     } else {
       const text = await res.text();
       console.error('[Appointments] fetch failed:', res.status, text);
       // clear appointments so UI shows empty state explicitly
       appointments.value = [];
+      updateWeekScrollbar();
     }
   } catch (err) {
     console.error('Fehler beim Laden der Termine:', err);
@@ -1018,11 +1000,15 @@ onMounted(() => {
   fetchStaffUsers();
   // close filter dropdowns when clicking elsewhere
   document.addEventListener('click', handleDocClick);
+  // update scrollbar sync and listen for resize
+  updateWeekScrollbar();
+  window.addEventListener('resize', updateWeekScrollbar);
 });
 
 onBeforeUnmount(() => {
   if (bubbleSaveTimer) clearTimeout(bubbleSaveTimer);
   document.removeEventListener('click', handleDocClick);
+  window.removeEventListener('resize', updateWeekScrollbar);
 });
 
 function handleDocClick() {
@@ -1185,7 +1171,8 @@ function handleDocClick() {
 .dd { position: relative; }
 .dd-btn { padding:0.5rem 0.75rem; border:1px solid #ddd; background:white; border-radius:6px; cursor:pointer; }
 .dd-menu { position: absolute; right: 0; top: calc(100% + 6px); background: white; border:1px solid #ddd; box-shadow: 0 6px 18px rgba(0,0,0,0.08); padding:0.5rem; z-index:30; width:220px; max-height:220px; overflow:auto; }
-.dd-item { display:block; padding:0.25rem 0.5rem; font-size:0.95rem; }
+.dd-item { display:block; padding:0.25rem 0.5rem; font-size:0.95rem; cursor:pointer; }
+.dd-item.selected { background: #e6f7f2; }
 .dd-actions { display:flex; justify-content:flex-end; margin-top:0.5rem; }
 .dd-actions button { padding:0.25rem 0.5rem; border:1px solid #eee; background:#fafafa; border-radius:4px; cursor:pointer; }
 
@@ -1206,6 +1193,7 @@ function handleDocClick() {
   grid-template-columns: 90px repeat(7, minmax(140px, 1fr));
   background: #0c4b47;
   color: white;
+  padding-right: var(--week-scrollbar, 0px);
 }
 
 .week-header .time-col {
