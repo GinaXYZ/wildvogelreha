@@ -77,13 +77,16 @@
           <div v-for="day in weekDays" :key="day.date" class="day-cell" 
                :class="{ today: isToday(day.date) }"
                @click="openAddModalForSlot(day.date, hour)">
-               <div v-for="apt in getAppointmentsForSlot(day.date, hour)" :key="apt.id"
+               <div v-for="apt in getAppointmentsForSlot(day.date, hour).slice(0, maxVisibleSlot)" :key="apt.id"
                  class="appointment-block"
                  :class="[`priority-${apt.priority}`, `status-${apt.status}`]"
                  @click.stop="showAppointmentBubble($event, apt)">
               <span class="apt-time">{{ formatTime(apt.appointment_time) }}</span>
               <span class="apt-title">{{ apt.title }}</span>
               <span v-if="apt.patient_name" class="apt-patient">🐦 {{ apt.patient_name }}</span>
+            </div>
+            <div v-if="getAppointmentsForSlot(day.date, hour).length > maxVisibleSlot" class="more-count" @click.stop="openSlotModal(day.date, hour, getAppointmentsForSlot(day.date, hour))">
+              +{{ getAppointmentsForSlot(day.date, hour).length - maxVisibleSlot }} weitere
             </div>
           </div>
         </div>
@@ -299,6 +302,27 @@
         </div>
       </div>
     </div>
+    <!-- Slot modal for overflowing events in a time slot -->
+    <div v-if="slotModal.visible" class="modal-overlay" @click.self="closeSlotModal">
+      <div class="modal">
+        <h3>Termine: {{ slotModal.date }} {{ String(slotModal.hour).padStart(2,'0') }}:00</h3>
+        <ul style="list-style:none;padding:0;margin:0;">
+          <li v-for="apt in slotModal.appointments" :key="apt.id" style="padding:0.4rem 0;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="font-weight:600">{{ formatTime(apt.appointment_time) }} — {{ apt.title }}</div>
+              <div style="font-size:0.9rem;color:#666">{{ apt.patient_name || '' }}</div>
+            </div>
+            <div style="display:flex;gap:0.4rem;align-items:center;">
+              <button @click="openEditModal(apt)" class="btn-edit">✏️</button>
+              <button @click="deleteAppointment(apt.id); closeSlotModal()" class="btn-delete">🗑️</button>
+            </div>
+          </li>
+        </ul>
+        <div class="modal-actions" style="margin-top:1rem;">
+          <button @click="closeSlotModal" class="btn-cancel">Schließen</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -509,6 +533,14 @@ const paginatedAppointments = computed(() => {
   const start = (page.value - 1) * perPage;
   return sortedAppointments.value.slice(start, start + perPage);
 });
+
+// Quick slot overflow handling for week view
+const maxVisibleSlot = 3; // show up to 3 pills per time-slot
+const slotModal = ref({ visible: false, date: null, hour: null, appointments: [] });
+function openSlotModal(date, hour, appointments) {
+  slotModal.value = { visible: true, date, hour, appointments: appointments.slice() };
+}
+function closeSlotModal() { slotModal.value.visible = false; slotModal.value.appointments = []; }
 
 // Reset to first page when filters change
 watch(filteredAppointments, () => { page.value = 1; });
@@ -1255,6 +1287,16 @@ onBeforeUnmount(() => {
 .cell-appointments .more-appointments {
   display: block;
   margin-bottom: 0.3rem;
+}
+.more-count {
+  font-size: 0.85rem;
+  color: #0c4b47;
+  background: rgba(12,75,71,0.06);
+  border-radius: 8px;
+  padding: 0.18rem 0.5rem;
+  display: inline-block;
+  cursor: pointer;
+  margin-top: 0.2rem;
 }
 
 .month-cell:hover {
