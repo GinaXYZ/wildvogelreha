@@ -1228,22 +1228,22 @@ function handleDocClick() {
 /* Week View */
 .week-view {
   position: relative;
-  background: transparent; /* removed gray card */
+  background: transparent;
   border-radius: 0;
-  overflow: hidden;
+  overflow: visible;
   box-shadow: none;
   width: 100%;
-  max-width: 1600px; /* allow wider calendar on desktop */
+  max-width: 100%;
   margin: 0 auto;
 }
 
 
 .week-header {
   display: grid;
-  grid-template-columns: 90px repeat(7, minmax(140px, 1fr));
+  grid-template-columns: 90px repeat(7, 1fr);
   background: #0c4b47;
   color: white;
-  padding-right: var(--week-scrollbar, 0px);
+  padding-right: 0;
   position: relative;
   align-items: stretch;
 }
@@ -1251,7 +1251,7 @@ function handleDocClick() {
 .time-col-header {
   padding: 0.8rem;
   background: #0c4b47;
-  color: white;
+  color: #0c4b47;
   text-align: center;
   font-size: 0.8rem;
 }
@@ -1278,14 +1278,14 @@ function handleDocClick() {
 }
 
 .week-body {
-  max-height: 700px; /* taller so content doesn't look cut */
+  max-height: 700px;
   overflow-y: auto;
-  scrollbar-gutter: stable both-edges;
+  overflow-x: hidden;
 }
 
 .time-row {
   display: grid;
-  grid-template-columns: 90px repeat(7, minmax(140px, 1fr));
+  grid-template-columns: 90px repeat(7, 1fr);
   min-height: calc( (26px * 3) + 12px );
   border-bottom: 1px solid #eee;
   align-items: stretch;
@@ -1308,7 +1308,6 @@ function handleDocClick() {
   padding: 0.3rem;
   cursor: pointer;
   min-height: 60px;
-  min-width: 140px; /* ensure fairly wide day columns */
 }
 
 .day-cell:hover {
