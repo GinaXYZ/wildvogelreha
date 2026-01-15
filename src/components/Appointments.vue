@@ -152,7 +152,7 @@
             <th>Patient</th>
             <th>Zugewiesen</th>
             <th>Status</th>
-            <th>Aktionen</th>
+            <th class="actions-col">Aktionen</th>
           </tr>
         </thead>
         <tbody>
@@ -1535,22 +1535,42 @@ function handleDocClick() {
 /* List View */
 .list-view {
   width: 100%;
-  overflow-x: auto;
+  overflow-x: hidden; /* no side-scrolling */
   overflow-y: visible;
   padding-bottom: 1rem;
 }
 
 .appointments-table {
-  width: max-content;
-  min-width: 100%;
+  width: 100%;
+  table-layout: fixed; /* ensure columns align and fit container */
   margin: 1rem 0;
-  border-collapse: separate;
-  border-spacing: 0;
+  border-collapse: collapse;
   background: white;
   box-shadow: 0 4px 16px rgba(0,0,0,0.08);
   border-radius: 8px;
   overflow: visible;
 }
+
+/* Make header/body cells truncate content instead of forcing scroll */
+.appointments-table th,
+.appointments-table td {
+  padding: 0.9rem 1rem;
+  vertical-align: middle;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Force Aktionen column to a fixed width so buttons remain visible */
+.appointments-table th.actions-col,
+.appointments-table td.actions {
+  width: 140px;
+  min-width: 140px;
+  max-width: 140px;
+  text-align: center;
+}
+
+.appointments-table th.sortable { cursor: pointer; }
 
 .appointments-table thead {
   display: table-header-group;
