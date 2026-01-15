@@ -1308,29 +1308,33 @@ onBeforeUnmount(() => {
   display: table-header-group;
 }
 
+.appointments-table thead tr { display: table-row; }
 .appointments-table th {
   background: #0c4b47;
   color: white;
-  padding: 1rem 0.8rem;
+  padding: 0.9rem 1rem;
   text-align: left;
-  font-weight: 600;
-  font-size: 0.85rem;
+  font-weight: 700;
+  font-size: 0.95rem;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  white-space: normal;
+  letter-spacing: 0.6px;
+  white-space: nowrap; /* keep header labels on one line */
+  vertical-align: middle;
 }
 
 .appointments-table th.sortable {
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  white-space: nowrap; /* prevent label and icon wrapping onto separate lines */
-  flex-wrap: nowrap;
+  display: table-cell; /* keep native table layout */
+  vertical-align: middle;
+  padding-right: 1rem;
 }
 .sort-wrap { display: inline-flex; align-items: center; gap: 0.35rem; }
-.sort-ind { color: rgba(255,255,255,0.95); font-size: 0.95rem; line-height: 1; }
+.sort-ind { color: rgba(255,255,255,0.95); font-size: 0.95rem; line-height: 1; margin-left: 0.25rem; }
 .sort-wrap:hover .sort-ind { color: #e0f7f5; }
+
+/* visually separate header like old design */
+.appointments-table thead th:first-child { border-top-left-radius: 12px; }
+.appointments-table thead th:last-child { border-top-right-radius: 12px; }
 
 .appointments-table tbody {
   display: table-row-group;
