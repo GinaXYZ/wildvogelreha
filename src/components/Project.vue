@@ -361,43 +361,908 @@ function updateWeekScrollbar(){ nextTick(()=>{ const el = weekBodyRef.value; con
 </script>
 
 <style scoped>
-/* keep Project wrapper styles from original Project.vue */
-.project-wrapper {
-  /* occupy full viewport without site chrome */
-  min-height: 100vh;
-  margin: 0;
-  padding: 0;
+.appointments-container {
+  font-family: 'Helvetica', sans-serif;
+  color: #0c4b47;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  align-items: stretch;
-  padding-bottom: 4rem; /* give pagination space from browser bottom */
-  background: var(--bg-color, #fff);
+  width: 100%;
+  max-width: 100%;
 }
 
-/* Reset some global layout spacing to avoid the shifted look */
-:root { --app-padding-top: 0px; }
+/* Header & Stats */
+.appointments-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
 
-/* Ensure inner appointments container uses full width */
-.project-wrapper .appointments-container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 1rem; box-sizing: border-box; }
+.stats-cards {
+  display: flex;
+  gap: 1rem;
+}
 
-/* --- Appointments styles (trimmed to essentials) --- */
-.appointments-container { font-family: 'Helvetica', sans-serif; color: #0c4b47; display: flex; flex-direction: column; width: 100%; max-width: 100%; }
-.appointments-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
-.stats-cards { display:flex; gap:1rem; }
-.stat-card { background:white; padding:1rem 1.5rem; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1); text-align:center; min-width:80px; }
-.header-actions { display:flex; gap:0.5rem; }
-.btn-add { background:#0c4b47; color:white; border:none; padding:0.7rem 1.2rem; border-radius:8px; cursor:pointer; font-weight:bold; }
-.btn-export { background:#f5f5f5; color:#0c4b47; border:1px solid #ddd; padding:0.7rem 1.2rem; border-radius:8px; cursor:pointer; }
+.stat-card {
+  background: white;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  text-align: center;
+  min-width: 80px;
+}
 
-/* Reuse list/week/month styles from Appointments component (kept minimal) */
-.list-view { width:100%; overflow-x:hidden; padding-bottom:1rem; }
-.appointments-table { width:100%; table-layout:fixed; margin:1rem 0; border-collapse:collapse; background:white; box-shadow:0 4px 16px rgba(0,0,0,0.08); border-radius:8px; }
-.appointments-table th, .appointments-table td { padding:0.9rem 1rem; vertical-align:middle; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.appointments-table th.actions-col, .appointments-table td.actions { width:140px; min-width:140px; max-width:140px; text-align:center; }
+.stat-card.urgent {
+  background: #ffebee;
+  border-left: 4px solid #e53935;
+}
 
-.week-view { width:100%; background:white; box-shadow:0 2px 8px rgba(0,0,0,0.08); border-radius:8px; overflow:hidden; }
-.week-table { width:100%; border-collapse:collapse; table-layout:fixed; }
+.stat-number {
+  display: block;
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #0c4b47;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-add {
+  background: #0c4b47;
+  color: white;
+  border: none;
+  padding: 0.7rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-add:hover {
+  background: #0a3a36;
+}
+
+.btn-export {
+  background: #f5f5f5;
+  color: #0c4b47;
+  border: 1px solid #ddd;
+  padding: 0.7rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Filter Bar */
+.filter-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.view-toggle button {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  background: white;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.view-toggle button.active {
+  background: #0c4b47;
+  color: white;
+  border-color: #0c4b47;
+}
+
+.filters {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.filters select {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  min-width: 140px;
+}
+
+.date-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.date-nav button {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  background: white;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.current-date {
+  font-weight: bold;
+  min-width: 180px;
+  text-align: center;
+}
+
+.btn-today {
+  background: #e3f2fd;
+  border-color: #2196f3;
+  color: #1976d2;
+}
+
+/* Simple dropdown checkbox menus for filters */
+.filters { display:flex; gap:0.75rem; align-items:center; }
+.dd { position: relative; }
+.dd-btn { padding:0.5rem 0.75rem; border:1px solid #ddd; background:white; border-radius:6px; cursor:pointer; }
+.dd-menu { position: absolute; right: 0; top: calc(100% + 6px); background: white; border:1px solid #ddd; box-shadow: 0 6px 18px rgba(0,0,0,0.08); padding:0.5rem; z-index:30; width:220px; max-height:220px; overflow:auto; }
+.dd-item { display:block; padding:0.25rem 0.5rem; font-size:0.95rem; cursor:pointer; }
+.dd-item.selected { background: #e6f7f2; }
+.dd-actions { display:flex; justify-content:flex-end; margin-top:0.5rem; }
+.dd-actions button { padding:0.25rem 0.5rem; border:1px solid #eee; background:#fafafa; border-radius:4px; cursor:pointer; }
+
+/* Week View */
+.week-view {
+  width: 100%;
+  max-width: 100%;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.week-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.week-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.week-header {
+  background: #0c4b47;
+  color: white;
+}
+
+.time-col-header {
+  width: 100px;
+  padding: 1rem;
+  background: #0c4b47;
+  color: white;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  border-right: 1px solid rgba(255,255,255,0.15);
+}
+
+.week-header .day-col {
+  padding: 1rem;
+  text-align: center;
+  border-right: 1px solid rgba(255,255,255,0.15);
+  font-weight: 600;
+}
+
+.week-header .day-col:last-child {
+  border-right: none;
+}
+
+.week-header .day-col.today {
+  background: #0a3f3b;
+}
+
+.day-name {
+  display: block;
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 0.3rem;
+}
+
+.day-date {
+  display: block;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.week-body {
+  background: white;
+}
+
+.time-row {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.time-row:last-child {
+  border-bottom: none;
+}
+
+.time-col {
+  width: 100px;
+  padding: 0.8rem 0.5rem;
+  font-size: 0.85rem;
+  color: #666;
+  background: #f9f9f9;
+  text-align: center;
+  border-right: 1px solid #e0e0e0;
+  font-weight: 600;
+  vertical-align: top;
+}
+
+.day-cell {
+  padding: 0.5rem;
+  cursor: pointer;
+  border-right: 1px solid #e0e0e0;
+  background: white;
+  transition: background 0.15s;
+  vertical-align: top;
+  min-height: 80px;
+  height: 80px;
+}
+
+.day-cell:last-child {
+  border-right: none;
+}
+
+.day-cell:hover {
+  background: #f5f5f5;
+}
+
+.day-cell.today {
+  background: #e6f7f2;
+}
+
+.appointment-block {
+  background: #e3f2fd;
+  border-radius: 6px;
+  padding: 0.15rem 0.4rem;
+  margin-bottom: 0.12rem;
+  font-size: 0.85rem;
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  max-width: 100%;
+  box-sizing: border-box;
+  height: 26px; /* compact pill height to allow stacking */
+  line-height: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+  .appointment-block .apt-title { overflow: hidden; text-overflow: ellipsis; }
+
+.appointment-block:hover {
+  transform: scale(1.02);
+}
+
+.appointment-block.priority-hoch {
+  background: #fff3e0;
+  border-left-color: #ff9800;
+}
+
+.appointment-block.priority-dringend {
+  background: #ffebee;
+  border-left-color: #e53935;
+}
+
+.appointment-block.status-erledigt {
+  opacity: 0.6;
+  text-decoration: line-through;
+}
+
+.apt-time {
+  font-weight: bold;
+  display: block;
+}
+
+.apt-title {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.apt-patient {
+  display: block;
+  font-size: 0.7rem;
+  color: #666;
+}
+
+/* Month View */
+.month-view {
+  background: transparent;
+  border-radius: 0;
+  overflow: hidden;
+  box-shadow: none;
+}
+
+.month-header {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(120px, 1fr));
+  background: #0c4b47;
+  color: white;
+}
+
+.month-day-name {
+  padding: 0.8rem;
+  text-align: center;
+  font-weight: bold;
+}
+
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(120px, 1fr));
+  gap: 6px;
+  align-items: stretch;
+}
+
+.month-cell {
+  height: 140px; /* fixed height so all days are equal */
+  padding: 0.6rem;
+  border: 1px solid #eee;
+  cursor: pointer;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+/* keep date header at top and make appointments list scrollable inside the fixed cell */
+.cell-date {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 0.4rem;
+}
+.cell-appointments {
+  overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 0; /* allow flex child to shrink for proper scrolling */
+}
+.cell-appointments .mini-appointment,
+.cell-appointments .more-appointments {
+  display: block;
+  margin-bottom: 0.3rem;
+}
+.more-count {
+  font-size: 0.85rem;
+  color: #0c4b47;
+  background: rgba(12,75,71,0.06);
+  border-radius: 8px;
+  padding: 0.18rem 0.5rem;
+  display: inline-block;
+  cursor: pointer;
+  margin-top: 0.2rem;
+}
+
+.month-cell:hover {
+  background: #f5f5f5;
+}
+
+.month-cell.other-month {
+  background: #fafafa;
+  color: #bbb;
+}
+
+.month-cell.today {
+  background: #e3f2fd;
+}
+
+.cell-date {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 0.3rem;
+}
+
+.mini-appointment {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.4rem;
+  margin-bottom: 0.2rem;
+  border-radius: 3px;
+  background: #e8f5e9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mini-appointment.priority-hoch {
+  background: #fff3e0;
+}
+
+.mini-appointment.priority-dringend {
+  background: #ffebee;
+}
+
+.more-appointments {
+  font-size: 0.7rem;
+  color: #666;
+}
+
+/* List View */
+.list-view {
+  width: 100%;
+  overflow-x: hidden; /* no side-scrolling */
+  overflow-y: visible;
+  padding-bottom: 1rem;
+}
+
+.appointments-table {
+  width: 100%;
+  table-layout: fixed; /* ensure columns align and fit container */
+  margin: 1rem 0;
+  border-collapse: collapse;
+  background: white;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  border-radius: 8px;
+  overflow: visible;
+}
+
+/* Make header/body cells truncate content instead of forcing scroll */
+.appointments-table th,
+.appointments-table td {
+  padding: 0.9rem 1rem;
+  vertical-align: middle;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Force Aktionen column to a fixed width so buttons remain visible */
+.appointments-table th.actions-col,
+.appointments-table td.actions {
+  width: 140px;
+  min-width: 140px;
+  max-width: 140px;
+  text-align: center;
+}
+
+.appointments-table th.sortable { cursor: pointer; }
+
+.appointments-table thead {
+  display: table-header-group;
+}
+
+.appointments-table thead tr { display: table-row; }
+.appointments-table th {
+  background: #0c4b47;
+  color: white;
+  padding: 0.9rem 1rem;
+  text-align: left;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  white-space: nowrap; /* keep header labels on one line */
+  vertical-align: middle;
+}
+
+.appointments-table th.sortable {
+  cursor: pointer;
+  display: table-cell; /* keep native table layout */
+  vertical-align: middle;
+  padding-right: 1rem;
+}
+.sort-wrap { display: inline-flex; align-items: center; gap: 0.35rem; }
+.sort-ind { color: rgba(255,255,255,0.95); font-size: 0.95rem; line-height: 1; margin-left: 0.25rem; }
+.sort-wrap:hover .sort-ind { color: #e0f7f5; }
+
+.appointments-table thead th:first-child { border-top-left-radius: 0; }
+.appointments-table thead th:last-child { border-top-right-radius: 0; }
+
+.appointments-table tbody {
+  display: table-row-group;
+}
+
+.appointments-table tbody tr {
+  display: table-row;
+  background: white;
+  transition: background 0.2s;
+}
+
+.appointments-table tbody tr:hover {
+  background: #f8fffe;
+  cursor: pointer;
+}
+
+.appointments-table td {
+  padding: 0.9rem 0.8rem;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+  font-size: 0.95rem;
+}
+
+.appointments-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Priority row backgrounds */
+.priority-row-niedrig { background: white; }
+.priority-row-mittel { background: white; }
+.priority-row-hoch { background: #fff8e1; }
+.priority-row-dringend { background: #ffebee; }
+
+/* Category badge */
+.category-badge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.cat-behandlung { background: #e3f2fd; color: #1976d2; }
+.cat-fuetterung { background: #fff3e0; color: #f57c00; }
+.cat-medikation { background: #fce4ec; color: #c2185b; }
+.cat-reinigung { background: #e8f5e9; color: #388e3c; }
+.cat-auswilderung { background: #f3e5f5; color: #7b1fa2; }
+.cat-kontrolle { background: #e0f7fa; color: #0097a7; }
+.cat-sonstiges { background: #f5f5f5; color: #616161; }
+
+/* Priority badge */
+.priority-badge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.prio-niedrig { background: #e8f5e9; color: #388e3c; }
+.prio-mittel { background: #fff3e0; color: #f57c00; }
+.prio-hoch { background: #fff3e0; color: #e65100; }
+.prio-dringend { background: #ffebee; color: #c62828; }
+
+/* Recurring badge */
+.recurring-badge {
+  margin-left: 0.3rem;
+  font-size: 0.85rem;
+}
+
+/* Actions column */
+.actions {
+  white-space: nowrap;
+  display: flex;
+  gap: 0.5rem;
+  min-width: 120px;
+  justify-content: flex-start;
+}
+
+.btn-edit, .btn-delete {
+  border: none;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s;
+}
+.btn-edit { 
+  background: #e3f2fd; 
+  color: #1976d2; 
+}
+.btn-edit:hover {
+  background: #bbdefb;
+  transform: scale(1.1);
+}
+.btn-delete { 
+  background: #ffebee; 
+  color: #c62828; 
+}
+.btn-delete:hover {
+  background: #ffcdd2;
+  transform: scale(1.1);
+}
+
+.day-cell.today {
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.03);
+  border-left-color: rgba(0,0,0,0.06);
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  overflow-y: auto;
+}
+
+.modal {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  margin: 2rem auto;
+}
+
+.modal h3 {
+  margin: 0 0 1.5rem 0;
+  color: #0c4b47;
+}
+
+.form-row {
+  margin-bottom: 1rem;
+}
+
+.form-row label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.form-row input, .form-row select, .form-row textarea {
+  width: 100%;
+  padding: 0.7rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.form-row textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.form-row-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.recurring-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.checkbox-label input {
+  width: auto;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.btn-cancel {
+  padding: 0.7rem 1.5rem;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-save {
+  padding: 0.7rem 1.5rem;
+  background: #0c4b47;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-save:hover {
+  background: #0a3a36;
+}
+
+.loading, .no-appointments {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .header-actions {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .btn-add, .btn-export {
+    flex: 1 1 auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .appointments-container {
+    padding: 0.5rem;
+  }
+  
+  .appointments-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .header-actions {
+    width: 100%;
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  .header-actions button {
+    flex: 1;
+  }
+  
+  .filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.8rem;
+  }
+  
+  .view-toggle {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .view-toggle button {
+    flex: 1;
+    padding: 0.5rem;
+  }
+  
+  .filters {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .filters select {
+    flex: 1 1 45%;
+    min-width: 120px;
+  }
+  
+  .date-nav {
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  
+  .week-header, .time-row {
+    grid-template-columns: 35px repeat(7, 1fr);
+  }
+  
+  .appointments-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    font-size: 0.85rem;
+  }
+  
+  .appointments-table th,
+  .appointments-table td {
+    padding: 0.5rem 0.3rem;
+    white-space: nowrap;
+
+  }
+  /* Pagination styles */
+  .list-pagination {
+    display: flex;
+    gap: 0.6rem;
+    justify-content: center;
+    align-items: center;
+    margin: 0.8rem 0 1.6rem 0;
+  }
+  .list-pagination button {
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background: #fff;
+    cursor: pointer;
+  }
+  .list-pagination button:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+  .list-pagination span {
+    font-weight: 600;
+  }
+  
+  .stats-cards {
+    width: 100%;
+    justify-content: space-around;
+  }
+  
+  .stat-card {
+    padding: 0.8rem;
+    min-width: 80px;
+  }
+  
+  /* Modal responsive */
+  .modal {
+    width: 95%;
+    max-width: 95%;
+    padding: 1rem;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  .form-row-group {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .form-row-group .form-row {
+    width: 100%;
+  }
+  
+  /* Month view responsive */
+  .month-cell {
+    min-height: 60px;
+    padding: 0.3rem;
+  }
+  
+  .mini-appointment {
+    font-size: 0.6rem;
+    padding: 0.1rem 0.2rem;
+  }
+  
+  .cell-date {
+    font-size: 0.75rem;
+  }
+
+.stat-number {
+  font-size: 1.2rem;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+}
+
+.view-toggle button {
+  font-size: 0.8rem;
+    padding: 0.4rem;
+  }
+  
+.filters select {
+    flex: 1 1 100%;
+    font-size: 0.9rem;
+  }
+  
+.week-view {
+    font-size: 0.75rem;
+  }
+  
+.time-col {
+    font-size: 0.65rem;
+  }
 .time-col-header { width:100px; padding:1rem; background:#0c4b47; color:white; text-align:center; font-weight:700; }
 .day-col { padding:1rem; text-align:center; font-weight:600; }
 .day-col.today { background:#0a3f3b; }
@@ -406,6 +1271,7 @@ function updateWeekScrollbar(){ nextTick(()=>{ const el = weekBodyRef.value; con
 
 /* bubble/modal minimal */
 .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:10000; overflow-y:auto; }
-.modal { background:white; padding:2rem; border-radius:12px; max-width:600px; width:90%; max-height:90vh; overflow-y:auto; position:relative; margin:2rem auto; }
 
+.modal { background:white; padding:2rem; border-radius:12px; max-width:600px; width:90%; max-height:90vh; overflow-y:auto; position:relative; margin:2rem auto; }
+}
 </style>
