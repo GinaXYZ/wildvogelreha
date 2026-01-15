@@ -15,6 +15,8 @@ import Contact from '../components/Contact.vue';
 import Appointments from '../components/Appointments.vue';
 
 const routes = [
+  // Isolated project route: serves only the appointments UI at /projekt
+  { path: '/projekt', name: 'ProjektAppointments', component: Appointments },
   {
     path: '/',
     component: AppLayout,

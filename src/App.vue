@@ -1,23 +1,33 @@
 <template>
-  <div class="app-container">
-    <Header />
-    <main class="main-content">
-      <router-view />
-    </main>
+  <div>
+    <PasswordGate v-if="!unlocked" />
+    <div v-else class="app-container">
+      <Header />
+      <main class="main-content">
+        <router-view />
+      </main>
+    </div>
   </div>
 </template>
 
 <script setup>
 import Header from './components/Header.vue'
-import { onMounted } from 'vue';
+import PasswordGate from './components/PasswordGate.vue'
+import { onMounted, ref } from 'vue';
 import { useAuthStore } from './components/auth.js';
 import { loadCartFromDB } from './components/cartState.js';
 
 const authStore = useAuthStore();
+const unlocked = ref(sessionStorage.getItem('site_unlocked') === 'true');
+
+function handleGlobalUnlock() {
+  unlocked.value = true;
+}
 
 onMounted(() => {
   authStore.initAuth();
   loadCartFromDB();
+  window.addEventListener('site-unlocked', handleGlobalUnlock);
 });
 </script>
 
