@@ -872,12 +872,17 @@ async function saveAppointmentBubbleContent() {
     const apt = appointments.value.find(a => a.id === appointmentBubble.value.id);
     if (apt) {
       apt.description = appointmentBubble.value.content;
-      // send only description update to server
+      // send full appointment payload to server (server expects full object;
+      // avoid overwriting fields with NULL by ensuring title and date)
       const token = authStore.token || localStorage.getItem('token');
+      const payload = Object.assign({}, apt);
+      payload.description = appointmentBubble.value.content;
+      payload.title = payload.title ?? apt.title ?? 'Unbenannter Termin';
+      payload.appointment_date = normalizeToDate(payload.appointment_date);
       await fetch(`${API_BASE}/appointments/${apt.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ description: appointmentBubble.value.content })
+        body: JSON.stringify(payload)
       });
     }
   } catch (err) {
@@ -1005,6 +1010,7 @@ async function createAppointment() {
     const token = authStore.token || localStorage.getItem('token');
     const payload = Object.assign({}, formData.value);
     payload.appointment_date = normalizeToDate(payload.appointment_date);
+    payload.title = payload.title ?? 'Unbenannter Termin';
     const res = await fetch(`${API_BASE}/appointments`, {
       method: 'POST',
       headers: {
@@ -1028,6 +1034,7 @@ async function updateAppointment() {
     const token = authStore.token || localStorage.getItem('token');
     const payload = Object.assign({}, formData.value);
     payload.appointment_date = normalizeToDate(payload.appointment_date);
+    payload.title = payload.title ?? (formData.value.title || 'Unbenannter Termin');
     const res = await fetch(`${API_BASE}/appointments/${formData.value.id}`, {
       method: 'PUT',
       headers: {
@@ -1051,6 +1058,7 @@ async function updateStatus(apt) {
     const token = authStore.token || localStorage.getItem('token');
     const payload = Object.assign({}, apt);
     payload.appointment_date = normalizeToDate(payload.appointment_date);
+    payload.title = payload.title ?? (apt.title || 'Unbenannter Termin');
     await fetch(`${API_BASE}/appointments/${apt.id}`, {
       method: 'PUT',
       headers: {
