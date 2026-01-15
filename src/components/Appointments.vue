@@ -482,10 +482,12 @@ const weekDays = computed(() => {
   const days = [];
   const startOfWeek = getStartOfWeek(currentDate.value);
   for (let i = 0; i < 7; i++) {
-    const d = new Date(startOfWeek);
-    d.setDate(d.getDate() + i);
+    const d = new Date(startOfWeek.getFullYear(), startOfWeek.getMonth(), startOfWeek.getDate() + i);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
     days.push({
-      date: d.toISOString().split('T')[0],
+      date: `${year}-${month}-${day}`,
       name: ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][d.getDay()]
     });
   }
@@ -651,10 +653,11 @@ watch(filteredAppointments, () => { page.value = 1; });
 
 // Helper Functions
 function getStartOfWeek(date) {
-  const d = new Date(date);
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
   const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  return new Date(d.setDate(diff));
+  const diff = day === 0 ? -6 : 1 - day; // Monday is start of week
+  d.setDate(d.getDate() + diff);
+  return d;
 }
 
 function isToday(dateStr) {
@@ -677,10 +680,19 @@ function formatTime(timeStr) {
 
 function getAppointmentsForSlot(date, hour) {
   return filteredAppointments.value.filter(apt => {
-    // Normalize appointment_date (may be a Date object or ISO string from API)
-    const aptDate = typeof apt.appointment_date === 'string' 
-      ? apt.appointment_date.split('T')[0] 
-      : (apt.appointment_date instanceof Date ? apt.appointment_date.toISOString().split('T')[0] : String(apt.appointment_date));
+    // Normalize appointment_date to YYYY-MM-DD in local time
+    let aptDate;
+    if (typeof apt.appointment_date === 'string') {
+      aptDate = apt.appointment_date.split('T')[0];
+    } else if (apt.appointment_date instanceof Date) {
+      const d = apt.appointment_date;
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      aptDate = `${year}-${month}-${day}`;
+    } else {
+      aptDate = String(apt.appointment_date);
+    }
     if (aptDate !== date) return false;
     const aptHour = parseInt(apt.appointment_time.split(':')[0]);
     return aptHour === hour;
@@ -689,10 +701,19 @@ function getAppointmentsForSlot(date, hour) {
 
 function getAppointmentsForDay(date) {
   return filteredAppointments.value.filter(apt => {
-    // Normalize appointment_date (may be a Date object or ISO string from API)
-    const aptDate = typeof apt.appointment_date === 'string' 
-      ? apt.appointment_date.split('T')[0] 
-      : (apt.appointment_date instanceof Date ? apt.appointment_date.toISOString().split('T')[0] : String(apt.appointment_date));
+    // Normalize appointment_date to YYYY-MM-DD in local time
+    let aptDate;
+    if (typeof apt.appointment_date === 'string') {
+      aptDate = apt.appointment_date.split('T')[0];
+    } else if (apt.appointment_date instanceof Date) {
+      const d = apt.appointment_date;
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      aptDate = `${year}-${month}-${day}`;
+    } else {
+      aptDate = String(apt.appointment_date);
+    }
     return aptDate === date;
   });
 }
@@ -814,12 +835,12 @@ async function saveAppointmentBubbleContent() {
     const apt = appointments.value.find(a => a.id === appointmentBubble.value.id);
     if (apt) {
       apt.description = appointmentBubble.value.content;
-      // send update to server
+      // send only description update to server
       const token = authStore.token || localStorage.getItem('token');
       await fetch(`${API_BASE}/appointments/${apt.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify(apt)
+        body: JSON.stringify({ description: appointmentBubble.value.content })
       });
     }
   } catch (err) {
@@ -1515,13 +1536,14 @@ function handleDocClick() {
 .list-view {
   width: 100%;
   overflow-x: auto;
+  overflow-y: visible;
   padding-bottom: 1rem;
 }
 
 .appointments-table {
-  width: 100%;
-  min-width: 1200px;
-  margin: 1rem auto;
+  width: max-content;
+  min-width: 100%;
+  margin: 1rem 0;
   border-collapse: separate;
   border-spacing: 0;
   background: white;
