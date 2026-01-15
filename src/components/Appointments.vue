@@ -64,34 +64,37 @@
 
     <!-- Kalender Wochenansicht -->
     <div v-if="viewMode === 'week'" class="week-view">
-      <div class="week-header" ref="weekHeaderRef">
-        <div class="time-col-header">Zeit</div>
-        <div v-for="day in weekDays" :key="day.date" class="day-col" :class="{ today: isToday(day.date) }">
-          <span class="day-name">{{ day.name }}</span>
-          <span class="day-date">{{ formatDayDate(day.date) }}</span>
-        </div>
-        <div class="today-overlay" ref="todayOverlay"></div>
-      </div>
-      <div class="week-body" ref="weekBodyRef">
-        <div v-for="hour in hours" :key="hour" class="time-row">
-          <div class="time-col">{{ String(hour).padStart(2, '0') }}:00</div>
-          <div v-for="day in weekDays" :key="day.date" class="day-cell" 
-               :class="{ today: isToday(day.date) }"
-               @click="openAddModalForSlot(day.date, hour)">
-               <div v-for="apt in getAppointmentsForSlot(day.date, hour).slice(0, maxVisibleSlot)" :key="apt.id"
-                 class="appointment-block"
-                 :class="[`priority-${apt.priority}`, `status-${apt.status}`]"
-                 @click.stop="showAppointmentBubble($event, apt)">
-              <span class="apt-time">{{ formatTime(apt.appointment_time) }}</span>
-              <span class="apt-title">{{ apt.title }}</span>
-              <span v-if="apt.patient_name" class="apt-patient">🐦 {{ apt.patient_name }}</span>
-            </div>
-            <div v-if="getAppointmentsForSlot(day.date, hour).length > maxVisibleSlot" class="more-count" @click.stop="openSlotList(day.date, hour)">
-              +{{ getAppointmentsForSlot(day.date, hour).length - maxVisibleSlot }} weitere
-            </div>
-          </div>
-        </div>
-      </div>
+      <table class="week-table">
+        <thead>
+          <tr class="week-header">
+            <th class="time-col-header">Zeit</th>
+            <th v-for="day in weekDays" :key="day.date" class="day-col" :class="{ today: isToday(day.date) }">
+              <span class="day-name">{{ day.name }}</span>
+              <span class="day-date">{{ formatDayDate(day.date) }}</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody class="week-body">
+          <tr v-for="hour in hours" :key="hour" class="time-row">
+            <td class="time-col">{{ String(hour).padStart(2, '0') }}:00</td>
+            <td v-for="day in weekDays" :key="day.date" class="day-cell" 
+                 :class="{ today: isToday(day.date) }"
+                 @click="openAddModalForSlot(day.date, hour)">
+                 <div v-for="apt in getAppointmentsForSlot(day.date, hour).slice(0, maxVisibleSlot)" :key="apt.id"
+                   class="appointment-block"
+                   :class="[`priority-${apt.priority}`, `status-${apt.status}`]"
+                   @click.stop="showAppointmentBubble($event, apt)">
+                <span class="apt-time">{{ formatTime(apt.appointment_time) }}</span>
+                <span class="apt-title">{{ apt.title }}</span>
+                <span v-if="apt.patient_name" class="apt-patient">🐦 {{ apt.patient_name }}</span>
+              </div>
+              <div v-if="getAppointmentsForSlot(day.date, hour).length > maxVisibleSlot" class="more-count" @click.stop="openSlotList(day.date, hour)">
+                +{{ getAppointmentsForSlot(day.date, hour).length - maxVisibleSlot }} weitere
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <!-- Kalender Monatsansicht -->
@@ -1076,7 +1079,8 @@ function handleDocClick() {
   color: #0c4b47;
   display: flex;
   flex-direction: column;
-  align-items: center; /* center content */
+  width: 100%;
+  max-width: 100%;
 }
 
 /* Header & Stats */
@@ -1238,15 +1242,25 @@ function handleDocClick() {
   overflow: hidden;
 }
 
+.week-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.week-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
 .week-header {
-  display: grid;
-  grid-template-columns: 100px repeat(7, minmax(0, 1fr));
   background: #0c4b47;
   color: white;
-  border-bottom: 2px solid #084039;
 }
 
 .time-col-header {
+  width: 100px;
   padding: 1rem;
   background: #0c4b47;
   color: white;
@@ -1255,9 +1269,6 @@ function handleDocClick() {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   border-right: 1px solid rgba(255,255,255,0.15);
 }
 
@@ -1265,11 +1276,7 @@ function handleDocClick() {
   padding: 1rem;
   text-align: center;
   border-right: 1px solid rgba(255,255,255,0.15);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.3rem;
+  font-weight: 600;
 }
 
 .week-header .day-col:last-child {
@@ -1277,31 +1284,27 @@ function handleDocClick() {
 }
 
 .week-header .day-col.today {
-  background: rgba(230, 247, 242, 0.3);
+  background: #0a3f3b;
 }
 
 .day-name {
   display: block;
   font-weight: 700;
   font-size: 0.9rem;
+  margin-bottom: 0.3rem;
 }
 
 .day-date {
+  display: block;
   font-size: 1.3rem;
   font-weight: 600;
 }
 
 .week-body {
-  max-height: 700px;
-  overflow-y: auto;
-  overflow-x: hidden;
   background: white;
 }
 
 .time-row {
-  display: grid;
-  grid-template-columns: 100px repeat(7, minmax(0, 1fr));
-  min-height: 80px;
   border-bottom: 1px solid #e0e0e0;
 }
 
@@ -1310,25 +1313,26 @@ function handleDocClick() {
 }
 
 .time-col {
+  width: 100px;
   padding: 0.8rem 0.5rem;
   font-size: 0.85rem;
   color: #666;
   background: #f9f9f9;
   text-align: center;
   border-right: 1px solid #e0e0e0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   font-weight: 600;
+  vertical-align: top;
 }
 
 .day-cell {
-  padding: 0.4rem;
+  padding: 0.5rem;
   cursor: pointer;
   border-right: 1px solid #e0e0e0;
-  position: relative;
   background: white;
   transition: background 0.15s;
+  vertical-align: top;
+  min-height: 80px;
+  height: 80px;
 }
 
 .day-cell:last-child {
@@ -1657,19 +1661,6 @@ function handleDocClick() {
 .btn-delete:hover {
   background: #ffcdd2;
   transform: scale(1.1);
-}
-
-.today-overlay {
-  position: absolute;
-  background: #e6f7f2;
-  opacity: 0.6;
-  pointer-events: none;
-  z-index: 1;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  transition: left 0.1s, width 0.1s;
 }
 
 .day-cell.today {
