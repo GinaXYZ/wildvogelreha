@@ -376,11 +376,31 @@ const showCategoryDropdown = ref(false);
 const showStatusDropdown = ref(false);
 const showStaffDropdown = ref(false);
 
-function selectCategory(val) { filterCategory.value = val; showCategoryDropdown.value = false; }
+function closeAllDropdowns() {
+  showCategoryDropdown.value = false;
+  showStatusDropdown.value = false;
+  showStaffDropdown.value = false;
+}
+
+function toggleDropdown(which) {
+  // ensure only one open at a time
+  if (which === 'category') {
+    showCategoryDropdown.value = !showCategoryDropdown.value;
+    showStatusDropdown.value = false; showStaffDropdown.value = false;
+  } else if (which === 'status') {
+    showStatusDropdown.value = !showStatusDropdown.value;
+    showCategoryDropdown.value = false; showStaffDropdown.value = false;
+  } else if (which === 'staff') {
+    showStaffDropdown.value = !showStaffDropdown.value;
+    showCategoryDropdown.value = false; showStatusDropdown.value = false;
+  }
+}
+
+function selectCategory(val) { filterCategory.value = val; closeAllDropdowns(); }
 function clearCategory() { filterCategory.value = ''; }
-function selectStatus(val) { filterStatus.value = val; showStatusDropdown.value = false; }
+function selectStatus(val) { filterStatus.value = val; closeAllDropdowns(); }
 function clearStatus() { filterStatus.value = ''; }
-function selectStaff(val) { filterStaff.value = val; showStaffDropdown.value = false; }
+function selectStaff(val) { filterStaff.value = val; closeAllDropdowns(); }
 function clearStaff() { filterStaff.value = ''; }
 
 const allCategories = ['behandlung','fuetterung','medikation','reinigung','auswilderung','kontrolle','sonstiges'];
@@ -388,12 +408,40 @@ const allStatuses = ['geplant','in_bearbeitung','erledigt','abgesagt'];
 
 // week body ref for scrollbar sync
 const weekBodyRef = ref(null);
+const weekViewRef = ref(null);
+const todayOverlay = ref(null);
+const resizeHandler = () => { updateWeekScrollbar(); updateTodayOverlay(); };
 function updateWeekScrollbar() {
   nextTick(() => {
     const el = weekBodyRef.value;
-    if (!el) return;
+    const vw = weekViewRef.value;
+    if (!el || !vw) return;
     const scrollbar = el.offsetWidth - el.clientWidth;
-    document.documentElement.style.setProperty('--week-scrollbar', `${scrollbar}px`);
+    vw.style.setProperty('--week-scrollbar', `${scrollbar}px`);
+    updateTodayOverlay();
+  });
+}
+
+function updateTodayOverlay() {
+  nextTick(() => {
+    const vw = weekViewRef.value;
+    const overlay = vw && vw.querySelector('.today-overlay');
+    const header = vw && vw.querySelector('.week-header');
+    if (!vw || !overlay || !header) return;
+    const todayHeader = header.querySelector('.day-col.today');
+    if (!todayHeader) {
+      overlay.style.display = 'none';
+      return;
+    }
+    overlay.style.display = 'block';
+    const vwRect = vw.getBoundingClientRect();
+    const thRect = todayHeader.getBoundingClientRect();
+    const left = thRect.left - vwRect.left;
+    const width = thRect.width;
+    const headerHeight = header.getBoundingClientRect().height;
+    overlay.style.left = `${left}px`;
+    overlay.style.width = `${width}px`;
+    overlay.style.top = `${headerHeight}px`;
   });
 }
 
@@ -1002,13 +1050,14 @@ onMounted(() => {
   document.addEventListener('click', handleDocClick);
   // update scrollbar sync and listen for resize
   updateWeekScrollbar();
-  window.addEventListener('resize', updateWeekScrollbar);
+  updateTodayOverlay();
+  window.addEventListener('resize', resizeHandler);
 });
 
 onBeforeUnmount(() => {
   if (bubbleSaveTimer) clearTimeout(bubbleSaveTimer);
   document.removeEventListener('click', handleDocClick);
-  window.removeEventListener('resize', updateWeekScrollbar);
+  window.removeEventListener('resize', resizeHandler);
 });
 
 function handleDocClick() {
@@ -1178,6 +1227,7 @@ function handleDocClick() {
 
 /* Week View */
 .week-view {
+  position: relative;
   background: transparent; /* removed gray card */
   border-radius: 0;
   overflow: hidden;
@@ -1208,6 +1258,11 @@ function handleDocClick() {
 
 .week-header .day-col.today {
   background: rgba(255,255,255,0.2);
+}
+
+.week-header .day-col.today {
+  border-left: 1px solid rgba(0,0,0,0.06);
+  border-right: 1px solid rgba(0,0,0,0.06);
 }
 
 .day-name {
@@ -1595,12 +1650,20 @@ function handleDocClick() {
 }
 
 /* Modal */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+.today-overlay {
+  position: absolute;
+  background: rgba(227,242,253,0.95);
+  pointer-events: none;
+  z-index: 1;
+  border-left: 1px solid rgba(0,0,0,0.06);
+  border-right: 1px solid rgba(0,0,0,0.06);
+}
+
+.day-cell.today {
+  /* stronger separators so borders show on light-blue background */
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.03);
+  border-left-color: rgba(0,0,0,0.06);
+}
   background: rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
@@ -1772,7 +1835,7 @@ function handleDocClick() {
   }
   
   .week-header, .time-row {
-    grid-template-columns: 40px repeat(7, 1fr);
+    grid-template-columns: 35px repeat(7, 1fr);
   }
   
   .appointments-table {
@@ -1879,7 +1942,6 @@ function handleDocClick() {
   
   .time-col {
     font-size: 0.65rem;
-    width: 35px !important;
   }
   
   .day-col, .day-cell {
