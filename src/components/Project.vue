@@ -26,10 +26,11 @@ import Appointments from './Appointments.vue';
 /* Ensure Appointments uses full width and no extra top padding */
 .project-wrapper .appointments-container {
   width: 100% !important;
-  max-width: 100% !important;
-  padding-top: 16px !important;
+  max-width: 1000px !important; /* match typical staff content width */
+  padding-top: 0 !important;
   margin: 0 auto !important;
   box-sizing: border-box;
+  align-items: stretch; /* allow content to use full inner width */
 }
 
 .project-wrapper .appointments-header {
