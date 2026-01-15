@@ -131,9 +131,18 @@
       <table v-else class="appointments-table">
         <thead>
           <tr>
-            <th>Datum</th>
-            <th>Zeit</th>
-            <th>Titel</th>
+            <th class="sortable" @click="toggleSort('appointment_date')">
+              Datum
+              <button class="sort-btn" aria-label="Sort by date">{{ sortIndicator('appointment_date') }}</button>
+            </th>
+            <th class="sortable" @click="toggleSort('appointment_time')">
+              Zeit
+              <button class="sort-btn" aria-label="Sort by time">{{ sortIndicator('appointment_time') }}</button>
+            </th>
+            <th class="sortable" @click="toggleSort('title')">
+              Titel
+              <button class="sort-btn" aria-label="Sort by title">{{ sortIndicator('title') }}</button>
+            </th>
             <th>Kategorie</th>
             <th>Priorität</th>
             <th>Patient</th>
@@ -169,7 +178,7 @@
           </tr>
         </tbody>
       </table>
-      <div class="list-pagination" v-if="totalPages > 1">
+      <div class="list-pagination" v-if="totalPages >= 1">
         <button @click="page = Math.max(1, page - 1)" :disabled="page === 1">Zurück</button>
         <span>Seite {{ page }} / {{ totalPages }}</span>
         <button @click="page = Math.min(totalPages, page + 1)" :disabled="page >= totalPages">Weiter</button>
@@ -417,13 +426,56 @@ const filteredAppointments = computed(() => {
   });
 });
 
+// Sorting & Pagination for list view
+const sortField = ref('appointment_date');
+const sortDir = ref('desc'); // 'asc' or 'desc' — default newest first
+
+function toggleSort(field) {
+  if (sortField.value === field) {
+    sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortField.value = field;
+    // default direction: date desc, others asc
+    sortDir.value = field === 'appointment_date' ? 'desc' : 'asc';
+  }
+}
+
+function sortIndicator(field) {
+  if (sortField.value !== field) return '↕';
+  return sortDir.value === 'asc' ? '⬆' : '⬇';
+}
+
+const sortedAppointments = computed(() => {
+  const arr = filteredAppointments.value.slice();
+  const field = sortField.value;
+  const dir = sortDir.value === 'asc' ? 1 : -1;
+  arr.sort((a, b) => {
+    let va, vb;
+    if (field === 'appointment_date') {
+      const da = new Date((a.appointment_date || '') + 'T' + (a.appointment_time || '00:00'));
+      const db = new Date((b.appointment_date || '') + 'T' + (b.appointment_time || '00:00'));
+      va = da.getTime(); vb = db.getTime();
+    } else if (field === 'appointment_time') {
+      va = (a.appointment_time || '00:00'); vb = (b.appointment_time || '00:00');
+    } else if (field === 'title') {
+      va = (a.title || '').toLowerCase(); vb = (b.title || '').toLowerCase();
+    } else {
+      va = a[field]; vb = b[field];
+    }
+    if (va > vb) return dir;
+    if (va < vb) return -dir;
+    return 0;
+  });
+  return arr;
+});
+
 // Pagination for list view
 const page = ref(1);
 const perPage = 25;
 const totalPages = computed(() => Math.max(1, Math.ceil(filteredAppointments.value.length / perPage)));
 const paginatedAppointments = computed(() => {
   const start = (page.value - 1) * perPage;
-  return filteredAppointments.value.slice(start, start + perPage);
+  return sortedAppointments.value.slice(start, start + perPage);
 });
 
 // Reset to first page when filters change
@@ -1231,6 +1283,18 @@ onBeforeUnmount(() => {
   letter-spacing: 0.5px;
   white-space: normal;
 }
+
+.appointments-table th.sortable { cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+.sort-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.95);
+  font-size: 0.95rem;
+  padding: 0 0.25rem;
+  margin-left: 0.25rem;
+  cursor: pointer;
+}
+.sort-btn:hover { color: #e0f7f5; }
 
 .appointments-table tbody {
   display: table-row-group;
