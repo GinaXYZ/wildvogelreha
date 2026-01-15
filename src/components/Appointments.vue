@@ -31,10 +31,13 @@
       </div>
       <div class="filters">
         <div class="dd" ref="catDd">
-          <button type="button" class="dd-btn" @click.stop="showCategoryDropdown = !showCategoryDropdown">Kategorien <span v-if="filterCategories.value.length">({{ filterCategories.value.length }})</span></button>
+          <button type="button" class="dd-btn" @click.stop="showCategoryDropdown = !showCategoryDropdown">Kategorien <span v-if="filterCategories.length">({{ filterCategories.length }})</span></button>
           <div v-if="showCategoryDropdown" class="dd-menu" @click.stop>
-            <label v-for="opt in ['behandlung','fuetterung','medikation','reinigung','auswilderung','kontrolle','sonstiges']" :key="opt" class="dd-item">
-              <input type="checkbox" :value="opt" @change="toggleArray(filterCategories, opt)" :checked="filterCategories.value.includes(opt)"> {{ getCategoryLabel(opt) }}
+            <label class="dd-item">
+              <input type="checkbox" :checked="filterCategories.length === allCategories.length" @change="e => e.target.checked ? selectAll(filterCategories, allCategories) : clearArray(filterCategories)"> Alle Kategorien
+            </label>
+            <label v-for="opt in allCategories" :key="opt" class="dd-item">
+              <input type="checkbox" :value="opt" @change="toggleArray(filterCategories, opt)" :checked="filterCategories.includes(opt)"> {{ getCategoryLabel(opt) }}
             </label>
             <div class="dd-actions">
               <button @click.stop="clearArray(filterCategories)">Alle</button>
@@ -43,20 +46,26 @@
         </div>
 
         <div class="dd" ref="statusDd">
-          <button type="button" class="dd-btn" @click.stop="showStatusDropdown = !showStatusDropdown">Status <span v-if="filterStatuses.value.length">({{ filterStatuses.value.length }})</span></button>
+          <button type="button" class="dd-btn" @click.stop="showStatusDropdown = !showStatusDropdown">Status <span v-if="filterStatuses.length">({{ filterStatuses.length }})</span></button>
           <div v-if="showStatusDropdown" class="dd-menu" @click.stop>
-            <label v-for="opt in ['geplant','in_bearbeitung','erledigt','abgesagt']" :key="opt" class="dd-item">
-              <input type="checkbox" :value="opt" @change="toggleArray(filterStatuses, opt)" :checked="filterStatuses.value.includes(opt)"> {{ opt.replace('_',' ') }}
+            <label class="dd-item">
+              <input type="checkbox" :checked="filterStatuses.length === allStatuses.length" @change="e => e.target.checked ? selectAll(filterStatuses, allStatuses) : clearArray(filterStatuses)"> Alle Status
+            </label>
+            <label v-for="opt in allStatuses" :key="opt" class="dd-item">
+              <input type="checkbox" :value="opt" @change="toggleArray(filterStatuses, opt)" :checked="filterStatuses.includes(opt)"> {{ opt.replace('_',' ') }}
             </label>
             <div class="dd-actions"><button @click.stop="clearArray(filterStatuses)">Alle</button></div>
           </div>
         </div>
 
         <div class="dd" ref="staffDd">
-          <button type="button" class="dd-btn" @click.stop="showStaffDropdown = !showStaffDropdown">Mitarbeiter <span v-if="filterStaffs.value.length">({{ filterStaffs.value.length }})</span></button>
+          <button type="button" class="dd-btn" @click.stop="showStaffDropdown = !showStaffDropdown">Mitarbeiter <span v-if="filterStaffs.length">({{ filterStaffs.length }})</span></button>
           <div v-if="showStaffDropdown" class="dd-menu" @click.stop>
+            <label class="dd-item">
+              <input type="checkbox" :checked="filterStaffs.length === (staffUsers || []).length" @change="e => e.target.checked ? selectAllStaff() : clearArray(filterStaffs)"> Alle Mitarbeiter
+            </label>
             <label v-for="staff in staffUsers" :key="staff.id" class="dd-item">
-              <input type="checkbox" :value="String(staff.id)" @change="toggleArray(filterStaffs, String(staff.id))" :checked="filterStaffs.value.includes(String(staff.id))"> {{ staff.firstname }} {{ staff.lastname }}
+              <input type="checkbox" :value="String(staff.id)" @change="toggleArray(filterStaffs, String(staff.id))" :checked="filterStaffs.includes(String(staff.id))"> {{ staff.firstname }} {{ staff.lastname }}
             </label>
             <div class="dd-actions"><button @click.stop="clearArray(filterStaffs)">Alle</button></div>
           </div>
@@ -392,6 +401,18 @@ function toggleArray(arrRef, value) {
 
 function clearArray(arrRef) {
   arrRef.value = [];
+}
+
+const allCategories = ['behandlung','fuetterung','medikation','reinigung','auswilderung','kontrolle','sonstiges'];
+const allStatuses = ['geplant','in_bearbeitung','erledigt','abgesagt'];
+
+function selectAll(arrRef, options) {
+  arrRef.value = options.slice();
+}
+
+function selectAllStaff() {
+  const ids = (staffUsers.value || []).map(s => String(s.id));
+  filterStaffs.value = ids;
 }
 
 // Modal State
