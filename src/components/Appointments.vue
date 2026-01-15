@@ -30,8 +30,7 @@
         <button :class="{ active: viewMode === 'list' }" @click="viewMode = 'list'">Liste</button>
       </div>
       <div class="filters">
-        <select v-model="filterCategory">
-          <option value="">Alle Kategorien</option>
+        <select multiple v-model="filterCategories">
           <option value="behandlung">Behandlung</option>
           <option value="fuetterung">Fütterung</option>
           <option value="medikation">Medikation</option>
@@ -40,16 +39,14 @@
           <option value="kontrolle">Kontrolle</option>
           <option value="sonstiges">Sonstiges</option>
         </select>
-        <select v-model="filterStatus">
-          <option value="">Alle Status</option>
+        <select multiple v-model="filterStatuses">
           <option value="geplant">Geplant</option>
           <option value="in_bearbeitung">In Bearbeitung</option>
           <option value="erledigt">Erledigt</option>
           <option value="abgesagt">Abgesagt</option>
         </select>
-        <select v-model="filterStaff">
-          <option value="">Alle Mitarbeiter</option>
-          <option v-for="staff in staffUsers" :key="staff.id" :value="staff.id">
+        <select multiple v-model="filterStaffs">
+          <option v-for="staff in staffUsers" :key="staff.id" :value="String(staff.id)">
             {{ staff.firstname }} {{ staff.lastname }}
           </option>
         </select>
@@ -350,6 +347,18 @@ const bubbleApt = computed(() => {
   return appointments.value.find(a => String(a.id) === String(appointmentBubble.value.id)) || null;
 });
 
+// Slot modal (kept for compatibility with modal that lists overflowed slot appointments)
+const slotModal = ref({ visible: false, date: '', hour: null, appointments: [] });
+
+function openSlotModal(date, hour, appts = []) {
+  slotModal.value = { visible: true, date, hour, appointments: appts };
+}
+
+function closeSlotModal() {
+  slotModal.value.visible = false;
+  slotModal.value.appointments = [];
+}
+
 // View & Filter
 const viewMode = ref('week');
 const currentDate = ref(new Date());
@@ -445,9 +454,19 @@ const currentDateLabel = computed(() => {
 
 const filteredAppointments = computed(() => {
   return appointments.value.filter(apt => {
-    if (filterCategory.value && apt.category !== filterCategory.value) return false;
-    if (filterStatus.value && apt.status !== filterStatus.value) return false;
-    if (filterStaff.value && apt.assigned_to !== filterStaff.value) return false;
+    // categories (multi-select)
+    if (filterCategories.value && filterCategories.value.length > 0 && !filterCategories.value.includes(apt.category)) return false;
+    // statuses (multi-select)
+    if (filterStatuses.value && filterStatuses.value.length > 0 && !filterStatuses.value.includes(apt.status)) return false;
+    // staffs (multi-select) - compare as strings
+    if (filterStaffs.value && filterStaffs.value.length > 0 && !filterStaffs.value.includes(String(apt.assigned_to || ''))) return false;
+    // date filter (exact match)
+    if (filterDate.value && String(apt.appointment_date || '').split('T')[0] !== filterDate.value) return false;
+    // hour filter (number)
+    if (filterHour.value !== null && filterHour.value !== undefined) {
+      const aptHour = parseInt((apt.appointment_time || '00:00').split(':')[0], 10);
+      if (aptHour !== Number(filterHour.value)) return false;
+    }
     return true;
   });
 });
