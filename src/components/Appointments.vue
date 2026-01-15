@@ -1230,30 +1230,24 @@ function handleDocClick() {
 
 /* Week View */
 .week-view {
-  position: relative;
-  background: transparent;
-  border-radius: 0;
-  overflow: visible;
-  box-shadow: none;
   width: 100%;
   max-width: 100%;
-  margin: 0 auto;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border-radius: 8px;
+  overflow: hidden;
 }
-
 
 .week-header {
   display: grid;
-  grid-template-columns: 90px repeat(7, 1fr);
+  grid-template-columns: 100px repeat(7, minmax(0, 1fr));
   background: #0c4b47;
   color: white;
-  padding-right: 0;
-  position: relative;
-  align-items: stretch;
-  box-sizing: border-box;
+  border-bottom: 2px solid #084039;
 }
 
 .time-col-header {
-  padding: 0.8rem;
+  padding: 1rem;
   background: #0c4b47;
   color: white;
   text-align: center;
@@ -1261,18 +1255,25 @@ function handleDocClick() {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.6px;
-  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid rgba(255,255,255,0.15);
 }
 
 .week-header .day-col {
-  padding: 0.8rem;
+  padding: 1rem;
   text-align: center;
-  border-left: 1px solid rgba(255,255,255,0.2);
-  box-sizing: border-box;
+  border-right: 1px solid rgba(255,255,255,0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
 }
 
-.week-header .day-col:first-of-type {
-  border-left: none;
+.week-header .day-col:last-child {
+  border-right: none;
 }
 
 .week-header .day-col.today {
@@ -1281,53 +1282,57 @@ function handleDocClick() {
 
 .day-name {
   display: block;
-  font-weight: bold;
+  font-weight: 700;
+  font-size: 0.9rem;
 }
 
 .day-date {
-  font-size: 1.2rem;
+  font-size: 1.3rem;
+  font-weight: 600;
 }
 
 .week-body {
   max-height: 700px;
   overflow-y: auto;
   overflow-x: hidden;
+  background: white;
 }
 
 .time-row {
   display: grid;
-  grid-template-columns: 90px repeat(7, 1fr);
-  min-height: calc( (26px * 3) + 12px );
-  border-bottom: 1px solid #eee;
-  align-items: stretch;
-  box-sizing: border-box;
+  grid-template-columns: 100px repeat(7, minmax(0, 1fr));
+  min-height: 80px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.time-row:last-child {
+  border-bottom: none;
 }
 
 .time-col {
-  padding: 0.5rem;
-  font-size: 0.8rem;
+  padding: 0.8rem 0.5rem;
+  font-size: 0.85rem;
   color: #666;
   background: #f9f9f9;
   text-align: center;
-  border-right: 1px solid #eee;
+  border-right: 1px solid #e0e0e0;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-sizing: border-box;
+  font-weight: 600;
 }
 
 .day-cell {
-  border-left: 1px solid #eee;
-  padding: 0.3rem;
+  padding: 0.4rem;
   cursor: pointer;
-  min-height: 60px;
-  box-sizing: border-box;
+  border-right: 1px solid #e0e0e0;
   position: relative;
-  overflow: hidden;
+  background: white;
+  transition: background 0.15s;
 }
 
-.day-cell:first-of-type {
-  border-left: none;
+.day-cell:last-child {
+  border-right: none;
 }
 
 .day-cell:hover {
@@ -1506,16 +1511,19 @@ function handleDocClick() {
 .list-view {
   width: 100%;
   overflow-x: auto;
+  padding-bottom: 1rem;
 }
 
 .appointments-table {
   width: 100%;
-  max-width: none;
+  min-width: 1200px;
   margin: 1rem auto;
   border-collapse: separate;
   border-spacing: 0;
   background: white;
   box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  border-radius: 8px;
+  overflow: visible;
 }
 
 .appointments-table thead {
@@ -1622,7 +1630,9 @@ function handleDocClick() {
 .actions {
   white-space: nowrap;
   display: flex;
-  gap: 0.4rem;
+  gap: 0.5rem;
+  min-width: 120px;
+  justify-content: flex-start;
 }
 
 .btn-edit, .btn-delete {
