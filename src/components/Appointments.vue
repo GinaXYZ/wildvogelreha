@@ -1652,6 +1652,49 @@ onBeforeUnmount(() => {
     padding: 0.2rem;
     font-size: 0.8rem;
   }
+/* Pagination: centered and styled to match the table (desktop + mobile override)
+   - centered horizontally
+   - generous bottom spacing so it doesn't hug the browser bottom
+   - inherits font-family, uses same font-size/color as table rows
+*/
+.list-pagination {
+  display: flex;
+  gap: 0.8rem;
+  justify-content: center;
+  align-items: center;
+  margin: 1.25rem auto 3.5rem auto;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: #0c4b47;
+  max-width: 1400px;
+}
+
+.list-pagination button {
+  padding: 0.45rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid rgba(12,75,71,0.12);
+  background: #ffffff;
+  color: #0c4b47;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(12,75,71,0.03);
+  font-weight: 600;
+}
+
+.list-pagination button:hover:not(:disabled) {
+  background: #f1fbfa;
+}
+
+.list-pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #fafafa;
+}
+
+.list-pagination span {
+  padding: 0 0.5rem;
+  color: #0c4b47;
+  font-weight: 600;
+}
 </style>
 <style scoped>
 /* Appointment speech-bubble styles (overlay + bubble) */
