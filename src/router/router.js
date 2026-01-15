@@ -17,7 +17,8 @@ import Project from '../components/Project.vue';
 
 const routes = [
   // Isolated project route: serves only the appointments UI at /projekt
-  { path: '/projekt', name: 'ProjektAppointments', component: Project },
+  // Pass `useMock: true` so the project runs standalone without backend
+  { path: '/projekt', name: 'ProjektAppointments', component: Project, props: { useMock: true } },
   {
     path: '/',
     component: AppLayout,

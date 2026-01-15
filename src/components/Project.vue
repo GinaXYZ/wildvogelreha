@@ -218,6 +218,9 @@
 <script setup>
 import { ref, computed, onMounted, watch, nextTick, onBeforeUnmount } from 'vue';
 
+// Allow running the component in a mocked mode for isolated UI testing
+const props = defineProps({ useMock: { type: Boolean, default: false } });
+
 // Standalone minimal auth-like object (reads token from localStorage)
 const authStore = { token: localStorage.getItem('token') || null };
 const API_BASE = '/api';
@@ -228,6 +231,20 @@ const patients = ref([]);
 const staffUsers = ref([]);
 const loading = ref(false);
 const stats = ref({ today: 0, pending: 0, urgent: 0 });
+
+// Simple mock data for offline/dev mode
+function getMockData(){
+  const staff = [ { id: 1, firstname: 'Max', lastname: 'Mustermann' }, { id:2, firstname:'Sarah', lastname:'Mayer' } ];
+  const pats = [ { id: 1, name: 'Kleiner Spatz', species: 'Spatz' }, { id:2, name: 'Großer Star', species: 'Star' } ];
+  const today = new Date().toISOString().split('T')[0];
+  const mockApts = [
+    { id: 'm1', title: 'Fütterung', description: 'Morgens füttern', appointment_date: today, appointment_time: '09:00', priority: 'mittel', category: 'fuetterung', status: 'geplant', patient_name: pats[0].name, assigned_firstname: staff[0].firstname, assigned_lastname: staff[0].lastname },
+    { id: 'm2', title: 'Wundversorgung', description: 'Verbandswechsel', appointment_date: today, appointment_time: '11:00', priority: 'hoch', category: 'behandlung', status: 'in_bearbeitung', patient_name: pats[1].name, assigned_firstname: staff[1].firstname, assigned_lastname: staff[1].lastname }
+  ];
+  return { staff, pats, mockApts, stats: { today: 2, pending: 1, urgent: 0 } };
+}
+
+function enableMock(){ const d = getMockData(); staffUsers.value = d.staff; patients.value = d.pats; appointments.value = d.mockApts.slice(); stats.value = d.stats; }
 
 // Speech-bubble for appointment details in week view
 const appointmentBubble = ref({ visible: false, x: 0, y: 0, content: '', id: null });
@@ -281,14 +298,14 @@ const monthDays = computed(() => { const days=[]; const year=currentDate.value.g
 
 const currentDateLabel = computed(() => { if (viewMode.value === 'week'){ const start = weekDays.value[0]; const end=weekDays.value[6]; return `${formatDate(start.date)} - ${formatDate(end.date)}`; } else { return currentDate.value.toLocaleDateString('de-DE',{ month: 'long', year: 'numeric'}); } });
 
-const filteredAppointments = computed(() => { return appointments.value.filter(apt => { if (filterCategory.value && apt.category !== filterCategory.value) return false; if (filterStatus.value && apt.status !== filterStatus.value) return false; if (filterStaff.value && String(apt.assigned_to || '') !== String(filterStaff.value)) return false; if (filterDate.value && String(apt.appointment_date || '').split('T')[0] !== filterDate.value) return false; if (filterHour.value !== null && filterHour.value !== undefined && filterHour.value !== ''){ const aptHour = parseInt((apt.appointment_time || '00:00').split(':')[0],10); if (aptHour !== Number(filterHour.value)) return false; } return true; }); });
+const filteredAppointments = computed(() => { return (appointments.value || []).filter(Boolean).filter(apt => { if (filterCategory.value && apt.category !== filterCategory.value) return false; if (filterStatus.value && apt.status !== filterStatus.value) return false; if (filterStaff.value && String(apt.assigned_to || '') !== String(filterStaff.value)) return false; if (filterDate.value && String(apt.appointment_date || '').split('T')[0] !== filterDate.value) return false; if (filterHour.value !== null && filterHour.value !== undefined && filterHour.value !== ''){ const aptHour = parseInt((apt.appointment_time || '00:00').split(':')[0],10); if (aptHour !== Number(filterHour.value)) return false; } return true; }); });
 
 // Sorting & pagination (same as Appointments)
 const sortField = ref('appointment_date'); const sortDir = ref('desc'); function toggleSort(field){ if (sortField.value === field) sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'; else { sortField.value = field; sortDir.value = field === 'appointment_date' ? 'desc' : 'asc'; } }
 function sortIndicator(field){ if (sortField.value !== field) return '↕'; return sortDir.value === 'asc' ? '⬆' : '⬇'; }
-const sortedAppointments = computed(() => { const arr = filteredAppointments.value.slice(); const field = sortField.value; const dir = sortDir.value === 'asc' ? 1 : -1; function parseDateValue(item){ const dateRaw = item.appointment_date || ''; const timeRaw = item.appointment_time || '00:00'; if (dateRaw.includes('-')){ const d = new Date(`${dateRaw}T${timeRaw}`); if (!isNaN(d)) return d.getTime(); } if (dateRaw.includes('.')){ const parts = dateRaw.split('.').map(p=>p.trim()); if (parts.length>=3){ const d=parseInt(parts[0],10)||1; const m=(parseInt(parts[1],10)||1)-1; const y=parseInt(parts[2],10)||1970; const [h,min] = (timeRaw||'00:00').split(':').map(n=>parseInt(n,10)||0); const dt = new Date(y,m,d,h,min); if (!isNaN(dt)) return dt.getTime(); } } const fallback = new Date(dateRaw); return isNaN(fallback) ? 0 : fallback.getTime(); }
-function parseTimeValue(item){ const t = (item.appointment_time || '00:00').split(':'); const h = parseInt(t[0],10)||0; const m = parseInt(t[1],10)||0; return h*60 + m; }
-arr.sort((a,b)=>{ let va,vb; if (field === 'appointment_date'){ va = parseDateValue(a); vb = parseDateValue(b); } else if (field === 'appointment_time'){ va = parseTimeValue(a); vb = parseTimeValue(b); } else if (field === 'title'){ va = (a.title||'').toLowerCase(); vb = (b.title||'').toLowerCase(); } else { va = a[field]; vb = b[field]; } if (va > vb) return dir; if (va < vb) return -dir; return 0; }); return arr; });
+const sortedAppointments = computed(() => { const arr = (filteredAppointments.value || []).filter(Boolean).slice(); const field = sortField.value; const dir = sortDir.value === 'asc' ? 1 : -1; function parseDateValue(item){ if (!item) return 0; const dateRaw = item.appointment_date || ''; const timeRaw = item.appointment_time || '00:00'; if (dateRaw.includes('-')){ const d = new Date(`${dateRaw}T${timeRaw}`); if (!isNaN(d)) return d.getTime(); } if (dateRaw.includes('.')){ const parts = dateRaw.split('.').map(p=>p.trim()); if (parts.length>=3){ const d=parseInt(parts[0],10)||1; const m=(parseInt(parts[1],10)||1)-1; const y=parseInt(parts[2],10)||1970; const [h,min] = (timeRaw||'00:00').split(':').map(n=>parseInt(n,10)||0); const dt = new Date(y,m,d,h,min); if (!isNaN(dt)) return dt.getTime(); } } const fallback = new Date(dateRaw); return isNaN(fallback) ? 0 : fallback.getTime(); }
+function parseTimeValue(item){ if (!item) return 0; const t = (item.appointment_time || '00:00').split(':'); const h = parseInt(t[0],10)||0; const m = parseInt(t[1],10)||0; return h*60 + m; }
+arr.sort((a,b)=>{ let va,vb; if (field === 'appointment_date'){ va = parseDateValue(a); vb = parseDateValue(b); } else if (field === 'appointment_time'){ va = parseTimeValue(a); vb = parseTimeValue(b); } else if (field === 'title'){ va = (a && a.title ? a.title : '').toLowerCase(); vb = (b && b.title ? b.title : '').toLowerCase(); } else { va = a ? a[field] : undefined; vb = b ? b[field] : undefined; } if (va > vb) return dir; if (va < vb) return -dir; return 0; }); return arr; });
 
 const page = ref(1); const perPage = 25; const totalPages = computed(()=> Math.max(1, Math.ceil(filteredAppointments.value.length / perPage))); const paginatedAppointments = computed(()=> { const start = (page.value-1)*perPage; return sortedAppointments.value.slice(start, start+perPage); });
 
@@ -321,33 +338,58 @@ function closeAppointmentBubble(){ if (bubbleSaveTimer){ clearTimeout(bubbleSave
 
 async function saveAppointmentBubbleContent(){ if (!appointmentBubble.value.id) return; try{ const apt = appointments.value.find(a => a.id === appointmentBubble.value.id); if (apt){ apt.description = appointmentBubble.value.content; const token = authStore.token || localStorage.getItem('token'); await fetch(`${API_BASE}/appointments/${apt.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ description: appointmentBubble.value.content }) }); } }catch(err){ console.error('Fehler beim Speichern der Termin-Details:', err); } }
 
+async function saveAppointmentBubbleContent(){ if (!appointmentBubble.value.id) return; try{ const apt = appointments.value.find(a => a.id === appointmentBubble.value.id); if (apt){ apt.description = appointmentBubble.value.content; if (props.useMock){ // local only
+        return; }
+      const token = authStore.token || localStorage.getItem('token');
+      await fetch(`${API_BASE}/appointments/${apt.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ description: appointmentBubble.value.content }) }); } }catch(err){ console.error('Fehler beim Speichern der Termin-Details:', err); } }
+
 function scheduleSaveAppointmentBubble(){ if (bubbleSaveTimer) clearTimeout(bubbleSaveTimer); bubbleSaveTimer = setTimeout(()=>{ saveAppointmentBubbleContent().catch(e=>console.error(e)); }, 700); }
 
 async function deleteAppointmentFromBubble(id){ if (!confirm('Termin wirklich löschen?')) return; try{ const token = authStore.token || localStorage.getItem('token'); const res = await fetch(`${API_BASE}/appointments/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } }); if (res.ok){ appointmentBubble.value.visible = false; await fetchAppointments(); await fetchStats(); } }catch(err){ console.error(err); } }
+
+async function deleteAppointmentFromBubble(id){ if (!confirm('Termin wirklich löschen?')) return; try{ if (props.useMock){ appointmentBubble.value.visible = false; appointments.value = (appointments.value || []).filter(a => String(a.id) !== String(id)); return; } const token = authStore.token || localStorage.getItem('token'); const res = await fetch(`${API_BASE}/appointments/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } }); if (res.ok){ appointmentBubble.value.visible = false; await fetchAppointments(); await fetchStats(); } }catch(err){ console.error(err); } }
 
 function openEditFromBubble(){ const id = appointmentBubble.value && appointmentBubble.value.id; if (!id) return; const apt = appointments.value.find(a => String(a.id) === String(id)); if (!apt) return; openEditModal(apt); appointmentBubble.value.visible = false; }
 
 async function fetchAppointments(){ loading.value = true; try{ const token = authStore.token || localStorage.getItem('token'); let url = `${API_BASE}/appointments`; if (viewMode.value === 'week') url += `?week=${weekDays.value[0].date}`; else if (viewMode.value === 'month'){ const year = currentDate.value.getFullYear(); const month = currentDate.value.getMonth() + 1; url += `?month=${month}&year=${year}`; } else if (viewMode.value === 'list') url += `?limit=10000`; console.debug('[Appointments] fetching', url, 'token?', !!token); const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } }); console.debug('[Appointments] response status', res.status); if (res.ok){ const data = await res.json(); appointments.value = data || []; updateWeekScrollbar(); } else { const text = await res.text(); console.error('[Appointments] fetch failed:', res.status, text); appointments.value = []; updateWeekScrollbar(); } }catch(err){ console.error('Fehler beim Laden der Termine:', err); appointments.value = []; } finally { loading.value = false; } }
 
+async function fetchAppointmentsMock(){ loading.value = true; try{ enableMock(); }catch(e){ console.error(e); } finally { loading.value = false; updateWeekScrollbar(); } }
+
 async function fetchStats(){ try{ const token = authStore.token || localStorage.getItem('token'); const res = await fetch(`${API_BASE}/appointments/stats/overview`, { headers: { 'Authorization': `Bearer ${token}` } }); if (res.ok) stats.value = await res.json(); }catch(err){ console.error('Fehler beim Laden der Statistiken:', err); } }
+
+async function fetchStatsMock(){ try{ const d = getMockData(); stats.value = d.stats; }catch(e){ console.error(e); } }
 
 async function fetchPatients(){ try{ const token = authStore.token || localStorage.getItem('token'); const res = await fetch(`${API_BASE}/patients?limit=100`, { headers: { 'Authorization': `Bearer ${token}` } }); if (res.ok){ const data = await res.json(); patients.value = data.results || data; } }catch(err){ console.error('Fehler beim Laden der Patienten:', err); } }
 
+async function fetchPatientsMock(){ try{ const d = getMockData(); patients.value = d.pats; }catch(e){ console.error(e); } }
+
 async function fetchStaffUsers(){ try{ const token = authStore.token || localStorage.getItem('token'); const res = await fetch(`${API_BASE}/staff-users`, { headers: { 'Authorization': `Bearer ${token}` } }); if (res.ok) staffUsers.value = await res.json(); }catch(err){ console.error('Fehler beim Laden der Mitarbeiter:', err); } }
 
-async function createAppointment(){ try{ const token = authStore.token || localStorage.getItem('token'); const res = await fetch(`${API_BASE}/appointments`, { method: 'POST', headers: { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(formData.value) }); if (res.ok){ closeModals(); fetchAppointments(); fetchStats(); } }catch(err){ console.error('Fehler beim Erstellen:', err); } }
+async function fetchStaffUsersMock(){ try{ const d = getMockData(); staffUsers.value = d.staff; }catch(e){ console.error(e); } }
 
-async function updateAppointment(){ try{ const token = authStore.token || localStorage.getItem('token'); const res = await fetch(`${API_BASE}/appointments/${formData.value.id}`, { method: 'PUT', headers: { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(formData.value) }); if (res.ok){ closeModals(); fetchAppointments(); fetchStats(); } }catch(err){ console.error('Fehler beim Aktualisieren:', err); } }
+async function createAppointment(){ if (props.useMock) return createAppointmentMock(); try{ const token = authStore.token || localStorage.getItem('token'); const res = await fetch(`${API_BASE}/appointments`, { method: 'POST', headers: { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(formData.value) }); if (res.ok){ closeModals(); fetchAppointments(); fetchStats(); } }catch(err){ console.error('Fehler beim Erstellen:', err); } }
+
+async function createAppointmentMock(){ try{ const newApt = Object.assign({}, formData.value); newApt.id = `m${Date.now()}`; appointments.value.unshift(newApt); closeModals(); }catch(e){ console.error(e); } }
+
+async function updateAppointment(){ if (props.useMock) return updateAppointmentMock(); try{ const token = authStore.token || localStorage.getItem('token'); const res = await fetch(`${API_BASE}/appointments/${formData.value.id}`, { method: 'PUT', headers: { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(formData.value) }); if (res.ok){ closeModals(); fetchAppointments(); fetchStats(); } }catch(err){ console.error('Fehler beim Aktualisieren:', err); } }
+
+async function updateAppointmentMock(){ try{ const idx = appointments.value.findIndex(a => String(a.id) === String(formData.value.id)); if (idx !== -1){ appointments.value[idx] = Object.assign({}, appointments.value[idx], formData.value); } closeModals(); }catch(e){ console.error(e); } }
 
 async function updateStatus(apt){ try{ const token = authStore.token || localStorage.getItem('token'); await fetch(`${API_BASE}/appointments/${apt.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(apt) }); fetchStats(); }catch(err){ console.error('Fehler beim Status-Update:', err); } }
 
-async function deleteAppointment(id){ if (!confirm('Termin wirklich löschen?')) return; try{ const token = authStore.token || localStorage.getItem('token'); const res = await fetch(`${API_BASE}/appointments/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } }); if (res.ok){ fetchAppointments(); fetchStats(); } }catch(err){ console.error('Fehler beim Löschen:', err); } }
+async function deleteAppointment(id){ if (!confirm('Termin wirklich löschen?')) return; if (props.useMock) return deleteAppointmentMock(id); try{ const token = authStore.token || localStorage.getItem('token'); const res = await fetch(`${API_BASE}/appointments/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } }); if (res.ok){ fetchAppointments(); fetchStats(); } }catch(err){ console.error('Fehler beim Löschen:', err); } }
+
+async function deleteAppointmentMock(id){ if (!confirm('Termin wirklich löschen?')) return; try{ appointments.value = (appointments.value || []).filter(a => String(a.id) !== String(id)); }catch(e){ console.error(e); } }
 
 function exportCSV(){ const token = authStore.token || localStorage.getItem('token'); if (!token){ alert('Bitte anmelden um CSV-Export auszuführen.'); return; } const startDate = weekDays.value[0].date; const endDate = weekDays.value[6].date; fetch(`${API_BASE}/appointments/export/csv?start_date=${startDate}&end_date=${endDate}`, { headers: { 'Authorization': `Bearer ${token}` } }).then(async res=>{ if (!res.ok){ const text = await res.text(); alert('Export fehlgeschlagen: ' + text); return; } const blob = await res.blob(); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `termine_${startDate}_to_${endDate}.csv`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); }).catch(err=>{ console.error('Export Fehler', err); alert('Export fehlgeschlagen'); }); }
 
 watch(viewMode, () => fetchAppointments());
 
-onMounted(()=>{ fetchAppointments(); fetchStats(); fetchPatients(); fetchStaffUsers(); document.addEventListener('click', handleDocClick); updateWeekScrollbar(); window.addEventListener('resize', resizeHandler); });
+onMounted(()=>{
+  if (props.useMock){ fetchAppointmentsMock(); fetchStatsMock(); fetchPatientsMock(); fetchStaffUsersMock(); }
+  else { fetchAppointments(); fetchStats(); fetchPatients(); fetchStaffUsers(); }
+  document.addEventListener('click', handleDocClick); updateWeekScrollbar(); window.addEventListener('resize', resizeHandler);
+});
 onBeforeUnmount(()=>{ if (bubbleSaveTimer) clearTimeout(bubbleSaveTimer); document.removeEventListener('click', handleDocClick); window.removeEventListener('resize', resizeHandler); });
 
 function handleDocClick(){ showCategoryDropdown.value = false; showStatusDropdown.value = false; showStaffDropdown.value = false; }
@@ -357,6 +399,11 @@ function getEmptyFormData(){ return { id: null, title: '', description: '', appo
 // Week header helpers (kept but today-overlay removed)
 const weekBodyRef = ref(null); const weekHeaderRef = ref(null); const todayOverlay = ref(null); const resizeHandler = () => { updateWeekScrollbar(); };
 function updateWeekScrollbar(){ nextTick(()=>{ const el = weekBodyRef.value; const wh = weekHeaderRef.value; if (!el || !wh) return; const scrollbar = el.offsetWidth - el.clientWidth; wh.style.setProperty('--week-scrollbar', `${scrollbar}px`); }); }
+
+// Modal state (kept minimal and local to this component)
+const showAddModal = ref(false);
+const showEditModal = ref(false);
+const formData = ref(getEmptyFormData());
 
 </script>
 
