@@ -1649,7 +1649,6 @@ function handleDocClick() {
   transform: scale(1.1);
 }
 
-/* Modal */
 .today-overlay {
   position: absolute;
   background: rgba(227,242,253,0.95);
@@ -1664,6 +1663,8 @@ function handleDocClick() {
   box-shadow: inset 0 0 0 1px rgba(0,0,0,0.03);
   border-left-color: rgba(0,0,0,0.06);
 }
+
+.modal-overlay {
   background: rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
@@ -1850,6 +1851,7 @@ function handleDocClick() {
     padding: 0.5rem 0.3rem;
     white-space: nowrap;
 
+  }
   /* Pagination styles */
   .list-pagination {
     display: flex;
@@ -1871,7 +1873,6 @@ function handleDocClick() {
   }
   .list-pagination span {
     font-weight: 600;
-  }
   }
   
   .stats-cards {
@@ -1916,7 +1917,6 @@ function handleDocClick() {
   .cell-date {
     font-size: 0.75rem;
   }
-}
 
 .stat-number {
   font-size: 1.2rem;
