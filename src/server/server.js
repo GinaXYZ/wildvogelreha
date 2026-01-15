@@ -594,7 +594,8 @@ app.get('/api/products', async (req, res) => {
   const category = req.query.category; 
   const searchTerm = req.query.search; 
 
-  let whereClauses = ['deleted_at IS NULL']; // Soft-Delete Filter
+  // Note: products table doesn't have `deleted_at` column, use a neutral clause
+  let whereClauses = ['1=1'];
   let queryParams = [];
 
   if (category && category !== 'Alle') {
@@ -1334,23 +1335,6 @@ app.post('/api/appointments', authenticateToken, requireStaff, async (req, res) 
   const safeDescription = description ? sanitizeInput(description) : null;
   const safeNotes = notes ? sanitizeInput(notes) : null;
 
-  // Normalize appointment_date to YYYY-MM-DD for MySQL DATE columns
-  let safeAppointmentDate = null;
-  if (appointment_date) {
-    try {
-      const d = new Date(appointment_date);
-      if (!isNaN(d.getTime())) {
-        safeAppointmentDate = d.toISOString().slice(0, 10); // YYYY-MM-DD
-      } else if (typeof appointment_date === 'string' && appointment_date.includes('T')) {
-        safeAppointmentDate = appointment_date.split('T')[0];
-      } else {
-        safeAppointmentDate = appointment_date;
-      }
-    } catch (e) {
-      safeAppointmentDate = appointment_date;
-    }
-  }
-
   try {
     const [result] = await pool.query(`
       INSERT INTO appointments 
@@ -1420,7 +1404,7 @@ app.put('/api/appointments/:id', authenticateToken, requireStaff, async (req, re
         recurring = ?, recurring_interval = ?, notes = ?
       WHERE id = ? AND deleted_at IS NULL
     `, [
-      safeTitle, safeDescription, safeAppointmentDate, appointment_time, end_time,
+      safeTitle, safeDescription, appointment_date, appointment_time, end_time,
       category, priority, status, patient_id || null, assigned_to || null,
       recurring, recurring_interval, safeNotes, id
     ]);

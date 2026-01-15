@@ -143,7 +143,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="apt in filteredAppointments" :key="apt.id" :class="`priority-row-${apt.priority}`">
+          <tr v-for="apt in paginatedAppointments" :key="apt.id" :class="`priority-row-${apt.priority}`">
             <td>{{ formatDate(apt.appointment_date) }}</td>
             <td>{{ formatTime(apt.appointment_time) }} - {{ apt.end_time ? formatTime(apt.end_time) : '' }}</td>
             <td>
@@ -169,6 +169,11 @@
           </tr>
         </tbody>
       </table>
+      <div class="list-pagination" v-if="filteredAppointments.length > perPage">
+        <button @click="page = Math.max(1, page - 1)" :disabled="page === 1">Zurück</button>
+        <span>Seite {{ page }} / {{ totalPages }}</span>
+        <button @click="page = Math.min(totalPages, page + 1)" :disabled="page >= totalPages">Weiter</button>
+      </div>
     </div>
 
     <!-- Modal: Termin hinzufügen/bearbeiten -->
@@ -411,6 +416,18 @@ const filteredAppointments = computed(() => {
     return true;
   });
 });
+
+// Pagination for list view
+const page = ref(1);
+const perPage = 25;
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredAppointments.value.length / perPage)));
+const paginatedAppointments = computed(() => {
+  const start = (page.value - 1) * perPage;
+  return filteredAppointments.value.slice(start, start + perPage);
+});
+
+// Reset to first page when filters change
+watch(filteredAppointments, () => { page.value = 1; });
 
 // Helper Functions
 function getStartOfWeek(date) {
