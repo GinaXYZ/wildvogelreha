@@ -132,16 +132,13 @@
         <thead>
           <tr>
             <th class="sortable" @click="toggleSort('appointment_date')">
-              Datum
-              <button class="sort-btn" aria-label="Sort by date">{{ sortIndicator('appointment_date') }}</button>
+              <span class="sort-wrap">Datum <span class="sort-ind">{{ sortIndicator('appointment_date') }}</span></span>
             </th>
             <th class="sortable" @click="toggleSort('appointment_time')">
-              Zeit
-              <button class="sort-btn" aria-label="Sort by time">{{ sortIndicator('appointment_time') }}</button>
+              <span class="sort-wrap">Zeit <span class="sort-ind">{{ sortIndicator('appointment_time') }}</span></span>
             </th>
             <th class="sortable" @click="toggleSort('title')">
-              Titel
-              <button class="sort-btn" aria-label="Sort by title">{{ sortIndicator('title') }}</button>
+              <span class="sort-wrap">Titel <span class="sort-ind">{{ sortIndicator('title') }}</span></span>
             </th>
             <th>Kategorie</th>
             <th>Priorität</th>
@@ -449,16 +446,50 @@ const sortedAppointments = computed(() => {
   const arr = filteredAppointments.value.slice();
   const field = sortField.value;
   const dir = sortDir.value === 'asc' ? 1 : -1;
+
+  function parseDateValue(item) {
+    const dateRaw = item.appointment_date || '';
+    const timeRaw = item.appointment_time || '00:00';
+    // ISO-like (YYYY-MM-DD)
+    if (dateRaw.includes('-')) {
+      const d = new Date(`${dateRaw}T${timeRaw}`);
+      if (!isNaN(d)) return d.getTime();
+    }
+    // European format D.M.YYYY or DD.MM.YYYY
+    if (dateRaw.includes('.')) {
+      const parts = dateRaw.split('.').map(p => p.trim());
+      if (parts.length >= 3) {
+        const d = parseInt(parts[0], 10) || 1;
+        const m = (parseInt(parts[1], 10) || 1) - 1;
+        const y = parseInt(parts[2], 10) || 1970;
+        const [h, min] = (timeRaw || '00:00').split(':').map(n => parseInt(n, 10) || 0);
+        const dt = new Date(y, m, d, h, min);
+        if (!isNaN(dt)) return dt.getTime();
+      }
+    }
+    // fallback
+    const fallback = new Date(dateRaw);
+    return isNaN(fallback) ? 0 : fallback.getTime();
+  }
+
+  function parseTimeValue(item) {
+    const t = (item.appointment_time || '00:00').split(':');
+    const h = parseInt(t[0], 10) || 0;
+    const m = parseInt(t[1], 10) || 0;
+    return h * 60 + m;
+  }
+
   arr.sort((a, b) => {
     let va, vb;
     if (field === 'appointment_date') {
-      const da = new Date((a.appointment_date || '') + 'T' + (a.appointment_time || '00:00'));
-      const db = new Date((b.appointment_date || '') + 'T' + (b.appointment_time || '00:00'));
-      va = da.getTime(); vb = db.getTime();
+      va = parseDateValue(a);
+      vb = parseDateValue(b);
     } else if (field === 'appointment_time') {
-      va = (a.appointment_time || '00:00'); vb = (b.appointment_time || '00:00');
+      va = parseTimeValue(a);
+      vb = parseTimeValue(b);
     } else if (field === 'title') {
-      va = (a.title || '').toLowerCase(); vb = (b.title || '').toLowerCase();
+      va = (a.title || '').toLowerCase();
+      vb = (b.title || '').toLowerCase();
     } else {
       va = a[field]; vb = b[field];
     }
@@ -1292,17 +1323,9 @@ onBeforeUnmount(() => {
   white-space: nowrap; /* prevent label and icon wrapping onto separate lines */
   flex-wrap: nowrap;
 }
-.sort-btn {
-  background: transparent;
-  border: none;
-  color: rgba(255,255,255,0.95);
-  font-size: 0.95rem;
-  padding: 0 0.25rem;
-  margin-left: 0.25rem;
-  cursor: pointer;
-  line-height: 1; /* keep icon aligned */
-}
-.sort-btn:hover { color: #e0f7f5; }
+.sort-wrap { display: inline-flex; align-items: center; gap: 0.35rem; }
+.sort-ind { color: rgba(255,255,255,0.95); font-size: 0.95rem; line-height: 1; }
+.sort-wrap:hover .sort-ind { color: #e0f7f5; }
 
 .appointments-table tbody {
   display: table-row-group;
