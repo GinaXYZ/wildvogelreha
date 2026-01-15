@@ -678,6 +678,43 @@ function formatTime(timeStr) {
   return timeStr.substring(0, 5);
 }
 
+// Normalize various date representations to `YYYY-MM-DD`
+function normalizeToDate(val) {
+  if (!val && val !== 0) return '';
+  if (typeof val === 'string') {
+    // already yyyy-mm-dd
+    if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
+    // ISO datetime -> take date part
+    if (val.indexOf('T') !== -1) return val.split('T')[0];
+    // try Date parse fallback
+    const d = new Date(val);
+    if (!isNaN(d)) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+    return val;
+  }
+  if (val instanceof Date) {
+    const y = val.getFullYear();
+    const m = String(val.getMonth() + 1).padStart(2, '0');
+    const day = String(val.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+  // numbers or other
+  try {
+    const d = new Date(val);
+    if (!isNaN(d)) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+  } catch (e) {}
+  return String(val);
+}
+
 function getAppointmentsForSlot(date, hour) {
   return filteredAppointments.value.filter(apt => {
     // Normalize appointment_date to YYYY-MM-DD in local time
@@ -774,7 +811,7 @@ function openEditModal(apt) {
     id: apt.id,
     title: apt.title,
     description: apt.description || '',
-    appointment_date: apt.appointment_date,
+    appointment_date: normalizeToDate(apt.appointment_date),
     appointment_time: apt.appointment_time,
     end_time: apt.end_time || '',
     category: apt.category,
@@ -966,13 +1003,15 @@ async function fetchStaffUsers() {
 async function createAppointment() {
   try {
     const token = authStore.token || localStorage.getItem('token');
+    const payload = Object.assign({}, formData.value);
+    payload.appointment_date = normalizeToDate(payload.appointment_date);
     const res = await fetch(`${API_BASE}/appointments`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify(formData.value)
+      body: JSON.stringify(payload)
     });
     if (res.ok) {
       closeModals();
@@ -987,13 +1026,15 @@ async function createAppointment() {
 async function updateAppointment() {
   try {
     const token = authStore.token || localStorage.getItem('token');
+    const payload = Object.assign({}, formData.value);
+    payload.appointment_date = normalizeToDate(payload.appointment_date);
     const res = await fetch(`${API_BASE}/appointments/${formData.value.id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify(formData.value)
+      body: JSON.stringify(payload)
     });
     if (res.ok) {
       closeModals();
@@ -1008,13 +1049,15 @@ async function updateAppointment() {
 async function updateStatus(apt) {
   try {
     const token = authStore.token || localStorage.getItem('token');
+    const payload = Object.assign({}, apt);
+    payload.appointment_date = normalizeToDate(payload.appointment_date);
     await fetch(`${API_BASE}/appointments/${apt.id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify(apt)
+      body: JSON.stringify(payload)
     });
     fetchStats();
   } catch (err) {
