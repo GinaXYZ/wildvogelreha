@@ -63,7 +63,7 @@
     </div>
 
     <!-- Kalender Wochenansicht -->
-    <div v-if="viewMode === 'week'" class="week-view" ref="weekViewRef">
+    <div v-if="viewMode === 'week'" class="week-view">
       <div class="week-header">
         <div class="time-col"></div>
         <div v-for="day in weekDays" :key="day.date" class="day-col" :class="{ today: isToday(day.date) }">
@@ -376,31 +376,11 @@ const showCategoryDropdown = ref(false);
 const showStatusDropdown = ref(false);
 const showStaffDropdown = ref(false);
 
-function closeAllDropdowns() {
-  showCategoryDropdown.value = false;
-  showStatusDropdown.value = false;
-  showStaffDropdown.value = false;
-}
-
-function toggleDropdown(which) {
-  // ensure only one open at a time
-  if (which === 'category') {
-    showCategoryDropdown.value = !showCategoryDropdown.value;
-    showStatusDropdown.value = false; showStaffDropdown.value = false;
-  } else if (which === 'status') {
-    showStatusDropdown.value = !showStatusDropdown.value;
-    showCategoryDropdown.value = false; showStaffDropdown.value = false;
-  } else if (which === 'staff') {
-    showStaffDropdown.value = !showStaffDropdown.value;
-    showCategoryDropdown.value = false; showStatusDropdown.value = false;
-  }
-}
-
-function selectCategory(val) { filterCategory.value = val; closeAllDropdowns(); }
+function selectCategory(val) { filterCategory.value = val; showCategoryDropdown.value = false; }
 function clearCategory() { filterCategory.value = ''; }
-function selectStatus(val) { filterStatus.value = val; closeAllDropdowns(); }
+function selectStatus(val) { filterStatus.value = val; showStatusDropdown.value = false; }
 function clearStatus() { filterStatus.value = ''; }
-function selectStaff(val) { filterStaff.value = val; closeAllDropdowns(); }
+function selectStaff(val) { filterStaff.value = val; showStaffDropdown.value = false; }
 function clearStaff() { filterStaff.value = ''; }
 
 const allCategories = ['behandlung','fuetterung','medikation','reinigung','auswilderung','kontrolle','sonstiges'];
@@ -408,15 +388,12 @@ const allStatuses = ['geplant','in_bearbeitung','erledigt','abgesagt'];
 
 // week body ref for scrollbar sync
 const weekBodyRef = ref(null);
-const weekViewRef = ref(null);
 function updateWeekScrollbar() {
   nextTick(() => {
     const el = weekBodyRef.value;
-    const vw = weekViewRef.value;
-    if (!el || !vw) return;
+    if (!el) return;
     const scrollbar = el.offsetWidth - el.clientWidth;
-    // set as inline style on week view so header uses local var
-    vw.style.setProperty('--week-scrollbar', `${scrollbar}px`);
+    document.documentElement.style.setProperty('--week-scrollbar', `${scrollbar}px`);
   });
 }
 
@@ -990,8 +967,9 @@ async function deleteAppointment(id) {
 function exportCSV() {
   const token = authStore.token || localStorage.getItem('token');
   if (!token) { alert('Bitte anmelden um CSV-Export auszuführen.'); return; }
-  // Export ALL appointments
-  fetch(`${API_BASE}/appointments/export/csv`, {
+  const startDate = weekDays.value[0].date;
+  const endDate = weekDays.value[6].date;
+  fetch(`${API_BASE}/appointments/export/csv?start_date=${startDate}&end_date=${endDate}`, {
     headers: { 'Authorization': `Bearer ${token}` }
   }).then(async res => {
     if (!res.ok) {
@@ -1191,8 +1169,8 @@ function handleDocClick() {
 /* Simple dropdown checkbox menus for filters */
 .filters { display:flex; gap:0.75rem; align-items:center; }
 .dd { position: relative; }
-.dd-btn { padding:0.75rem 1rem; border:1px solid #ddd; background:white; border-radius:8px; cursor:pointer; font-size:1rem; min-width:150px; text-align:left; }
-.dd-menu { position: absolute; left: 0; right: auto; top: calc(100% + 6px); background: white; border:1px solid #ddd; box-shadow: 0 6px 18px rgba(0,0,0,0.08); padding:0.5rem; z-index:30; width:220px; max-height:320px; overflow:auto; }
+.dd-btn { padding:0.5rem 0.75rem; border:1px solid #ddd; background:white; border-radius:6px; cursor:pointer; }
+.dd-menu { position: absolute; right: 0; top: calc(100% + 6px); background: white; border:1px solid #ddd; box-shadow: 0 6px 18px rgba(0,0,0,0.08); padding:0.5rem; z-index:30; width:220px; max-height:220px; overflow:auto; }
 .dd-item { display:block; padding:0.25rem 0.5rem; font-size:0.95rem; cursor:pointer; }
 .dd-item.selected { background: #e6f7f2; }
 .dd-actions { display:flex; justify-content:flex-end; margin-top:0.5rem; }
@@ -1513,9 +1491,8 @@ function handleDocClick() {
 .sort-ind { color: rgba(255,255,255,0.95); font-size: 0.95rem; line-height: 1; margin-left: 0.25rem; }
 .sort-wrap:hover .sort-ind { color: #e0f7f5; }
 
-/* visually separate header like old design */
-.appointments-table thead th:first-child { border-top-left-radius: 12px; }
-.appointments-table thead th:last-child { border-top-right-radius: 12px; }
+.appointments-table thead th:first-child { border-top-left-radius: 0; }
+.appointments-table thead th:last-child { border-top-right-radius: 0; }
 
 .appointments-table tbody {
   display: table-row-group;
@@ -1529,6 +1506,7 @@ function handleDocClick() {
 
 .appointments-table tbody tr:hover {
   background: #f8fffe;
+  cursor: pointer;
 }
 
 .appointments-table td {
