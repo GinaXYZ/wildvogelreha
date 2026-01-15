@@ -18,7 +18,15 @@
       </div>
       <div class="header-actions">
         <button @click="showAddModal = true" class="btn-add">+ Neuer Termin</button>
-        <button @click="exportCSV" class="btn-export">📥 CSV Export</button>
+        <div class="export-controls">
+          <select v-model="exportRange" class="export-select">
+            <option value="week">Woche</option>
+            <option value="month">Monat</option>
+            <option value="year">Jahr</option>
+            <option value="all">Alle</option>
+          </select>
+          <button @click="exportCSV" class="btn-export">📥 Export</button>
+        </div>
       </div>
     </div>
 
@@ -86,7 +94,7 @@
                    @click.stop="showAppointmentBubble($event, apt)">
                 <span class="apt-time">{{ formatTime(apt.appointment_time) }}</span>
                 <span class="apt-title">{{ apt.title }}</span>
-                <span v-if="apt.patient_name" class="apt-patient">🐦 {{ apt.patient_name }}</span>
+                <span v-if="apt.patient_name" class="apt-patient">{{ apt.patient_name }}</span>
               </div>
               <div v-if="getAppointmentsForSlot(day.date, hour).length > maxVisibleSlot" class="more-count" @click.stop="openSlotList(day.date, hour)">
                 +{{ getAppointmentsForSlot(day.date, hour).length - maxVisibleSlot }} weitere
@@ -453,6 +461,9 @@ function updateTodayOverlay() {
 const showAddModal = ref(false);
 const showEditModal = ref(false);
 const formData = ref(getEmptyFormData());
+
+// Export range: 'all' | 'week' | 'month' | 'year'
+const exportRange = ref('week');
 
 function getEmptyFormData() {
   return {
@@ -1093,25 +1104,48 @@ async function deleteAppointment(id) {
 function exportCSV() {
   const token = authStore.token || localStorage.getItem('token');
   if (!token) { alert('Bitte anmelden um CSV-Export auszuführen.'); return; }
-  const startDate = weekDays.value[0].date;
-  const endDate = weekDays.value[6].date;
-  fetch(`${API_BASE}/appointments/export/csv?start_date=${startDate}&end_date=${endDate}`, {
-    headers: { 'Authorization': `Bearer ${token}` }
-  }).then(async res => {
+  const range = exportRange.value || 'week';
+  let url = `${API_BASE}/appointments/export/csv`;
+  let filename = 'termine';
+
+  if (range === 'week') {
+    const startDate = (weekDays.value && weekDays.value[0] && weekDays.value[0].date) ? weekDays.value[0].date : currentDate.value.toISOString().split('T')[0];
+    const endDate = (weekDays.value && weekDays.value[6] && weekDays.value[6].date) ? weekDays.value[6].date : currentDate.value.toISOString().split('T')[0];
+    url += `?start_date=${startDate}&end_date=${endDate}`;
+    filename += `_${startDate}_to_${endDate}`;
+  } else if (range === 'month') {
+    const y = currentDate.value.getFullYear();
+    const m = currentDate.value.getMonth();
+    const first = new Date(y, m, 1).toISOString().split('T')[0];
+    const last = new Date(y, m + 1, 0).toISOString().split('T')[0];
+    url += `?start_date=${first}&end_date=${last}`;
+    filename += `_${first}_to_${last}`;
+  } else if (range === 'year') {
+    const y = currentDate.value.getFullYear();
+    const first = `${y}-01-01`;
+    const last = `${y}-12-31`;
+    url += `?start_date=${first}&end_date=${last}`;
+    filename += `_${first}_to_${last}`;
+  } else {
+    // all
+    filename += `_all`;
+  }
+
+  fetch(url, { headers: { 'Authorization': `Bearer ${token}` } }).then(async res => {
     if (!res.ok) {
       const text = await res.text();
       alert('Export fehlgeschlagen: ' + text);
       return;
     }
     const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
+    const urlObj = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url;
-    a.download = `termine_${startDate}_to_${endDate}.csv`;
+    a.href = urlObj;
+    a.download = `${filename}.csv`;
     document.body.appendChild(a);
     a.click();
     a.remove();
-    URL.revokeObjectURL(url);
+    URL.revokeObjectURL(urlObj);
   }).catch(err => { console.error('Export Fehler', err); alert('Export fehlgeschlagen'); });
 }
 
