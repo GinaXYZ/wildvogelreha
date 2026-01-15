@@ -73,6 +73,18 @@
         <div class="today-overlay" ref="todayOverlay"></div>
       </div>
       <div class="week-body" ref="weekBodyRef">
+        <div class="time-row">
+          <div class="time-col">{{ String(hour).padStart(2, '0') }}:00</div>
+        </div>
+        <div class="time-row">
+          <div class="time-col">{{ String(hour).padStart(2, '0') }}:00</div>
+        </div>
+        <div class="time-row">
+          <div class="time-col">{{ String(hour).padStart(2, '0') }}:00</div>
+        </div>
+        <div class="time-row">
+          <div class="time-col">{{ String(hour).padStart(2, '0') }}:00</div>
+        </div>
         <div v-for="hour in hours" :key="hour" class="time-row">
           <div class="time-col">{{ String(hour).padStart(2, '0') }}:00</div>
           <div v-for="day in weekDays" :key="day.date" class="day-cell" 
