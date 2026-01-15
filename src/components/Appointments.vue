@@ -73,7 +73,7 @@
       </div>
       <div class="week-body">
         <div v-for="hour in hours" :key="hour" class="time-row">
-          <div class="time-col">{{ hour }}:00</div>
+          <div class="time-col">{{ String(hour).padStart(2, '0') }}:00</div>
           <div v-for="day in weekDays" :key="day.date" class="day-cell" 
                :class="{ today: isToday(day.date) }"
                @click="openAddModalForSlot(day.date, hour)">
@@ -358,7 +358,8 @@ function getEmptyFormData() {
 }
 
 // Computed
-const hours = computed(() => Array.from({ length: 14 }, (_, i) => i + 6)); // 6:00 - 19:00
+// full day hours 0:00 - 23:00 so we can add entries at any hour
+const hours = computed(() => Array.from({ length: 24 }, (_, i) => i)); // 0 - 23
 
 const weekDays = computed(() => {
   const days = [];
@@ -1062,7 +1063,8 @@ onBeforeUnmount(() => {
 
 .week-header {
   display: grid;
-  grid-template-columns: 80px repeat(7, 1fr); /* slightly wider time column */
+  /* fixed time column + 7 flexible day columns with a reasonable minimum so the calendar looks regular */
+  grid-template-columns: 90px repeat(7, minmax(140px, 1fr));
   background: #0c4b47;
   color: white;
 }
@@ -1097,7 +1099,7 @@ onBeforeUnmount(() => {
 
 .time-row {
   display: grid;
-  grid-template-columns: 80px repeat(7, 1fr);
+  grid-template-columns: 90px repeat(7, minmax(140px, 1fr));
   min-height: 60px;
   border-bottom: 1px solid #eee;
 }
@@ -1115,6 +1117,7 @@ onBeforeUnmount(() => {
   padding: 0.3rem;
   cursor: pointer;
   min-height: 60px;
+  min-width: 140px; /* ensure fairly wide day columns */
 }
 
 .day-cell:hover {
@@ -1209,7 +1212,7 @@ onBeforeUnmount(() => {
 
 .month-header {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(120px, 1fr));
   background: #0c4b47;
   color: white;
 }
@@ -1222,12 +1225,14 @@ onBeforeUnmount(() => {
 
 .month-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(120px, 1fr));
+  gap: 6px;
+  align-items: stretch;
 }
 
 .month-cell {
-  min-height: 100px;
-  padding: 0.5rem;
+  min-height: 140px; /* larger cells to look like a calendar */
+  padding: 0.6rem;
   border: 1px solid #eee;
   cursor: pointer;
 }
