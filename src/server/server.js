@@ -1247,7 +1247,7 @@ app.get('/api/appointments', authenticateToken, requireStaff, async (req, res) =
     FROM appointments a
     LEFT JOIN patients p ON a.patient_id = p.id
     LEFT JOIN users u ON a.assigned_to = u.id
-    WHERE a.deleted_at IS NULL
+    WHERE 1=1
   `;
   const params = [];
 
@@ -1304,7 +1304,7 @@ app.get('/api/appointments/:id', authenticateToken, requireStaff, async (req, re
       FROM appointments a
       LEFT JOIN patients p ON a.patient_id = p.id
       LEFT JOIN users u ON a.assigned_to = u.id
-      WHERE a.id = ? AND a.deleted_at IS NULL
+      WHERE a.id = ?
     `, [req.params.id]);
     
     if (results.length === 0) {
@@ -1402,7 +1402,7 @@ app.put('/api/appointments/:id', authenticateToken, requireStaff, async (req, re
         title = ?, description = ?, appointment_date = ?, appointment_time = ?, end_time = ?,
         category = ?, priority = ?, status = ?, patient_id = ?, assigned_to = ?,
         recurring = ?, recurring_interval = ?, notes = ?
-      WHERE id = ? AND deleted_at IS NULL
+      WHERE id = ?
     `, [
       safeTitle, safeDescription, appointment_date, appointment_time, end_time,
       category, priority, status, patient_id || null, assigned_to || null,
@@ -1423,7 +1423,7 @@ app.put('/api/appointments/:id', authenticateToken, requireStaff, async (req, re
 // DELETE Termin löschen (Soft-Delete)
 app.delete('/api/appointments/:id', authenticateToken, requireStaff, async (req, res) => {
   try {
-    const [result] = await pool.query('UPDATE appointments SET deleted_at = NOW() WHERE id = ? AND deleted_at IS NULL', [req.params.id]);
+    const [result] = await pool.query('DELETE FROM appointments WHERE id = ?', [req.params.id]);
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Termin nicht gefunden' });
     }
@@ -1440,13 +1440,13 @@ app.get('/api/appointments/stats/overview', authenticateToken, requireStaff, asy
   try {
     const today = new Date().toISOString().split('T')[0];
     const [[todayCount]] = await pool.query(
-      'SELECT COUNT(*) as count FROM appointments WHERE appointment_date = ? AND deleted_at IS NULL', [today]
+      'SELECT COUNT(*) as count FROM appointments WHERE appointment_date = ?', [today]
     );
     const [[pendingCount]] = await pool.query(
-      "SELECT COUNT(*) as count FROM appointments WHERE status = 'geplant' AND deleted_at IS NULL"
+      "SELECT COUNT(*) as count FROM appointments WHERE status = 'geplant'"
     );
     const [[urgentCount]] = await pool.query(
-      "SELECT COUNT(*) as count FROM appointments WHERE priority = 'dringend' AND status = 'geplant' AND deleted_at IS NULL"
+      "SELECT COUNT(*) as count FROM appointments WHERE priority = 'dringend' AND status = 'geplant'"
     );
     
     res.json({

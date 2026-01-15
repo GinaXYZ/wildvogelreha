@@ -30,26 +30,37 @@
         <button :class="{ active: viewMode === 'list' }" @click="viewMode = 'list'">Liste</button>
       </div>
       <div class="filters">
-        <select multiple v-model="filterCategories">
-          <option value="behandlung">Behandlung</option>
-          <option value="fuetterung">Fütterung</option>
-          <option value="medikation">Medikation</option>
-          <option value="reinigung">Reinigung</option>
-          <option value="auswilderung">Auswilderung</option>
-          <option value="kontrolle">Kontrolle</option>
-          <option value="sonstiges">Sonstiges</option>
-        </select>
-        <select multiple v-model="filterStatuses">
-          <option value="geplant">Geplant</option>
-          <option value="in_bearbeitung">In Bearbeitung</option>
-          <option value="erledigt">Erledigt</option>
-          <option value="abgesagt">Abgesagt</option>
-        </select>
-        <select multiple v-model="filterStaffs">
-          <option v-for="staff in staffUsers" :key="staff.id" :value="String(staff.id)">
-            {{ staff.firstname }} {{ staff.lastname }}
-          </option>
-        </select>
+        <div class="dd" ref="catDd">
+          <button type="button" class="dd-btn" @click.stop="showCategoryDropdown = !showCategoryDropdown">Kategorien <span v-if="filterCategories.value.length">({{ filterCategories.value.length }})</span></button>
+          <div v-if="showCategoryDropdown" class="dd-menu" @click.stop>
+            <label v-for="opt in ['behandlung','fuetterung','medikation','reinigung','auswilderung','kontrolle','sonstiges']" :key="opt" class="dd-item">
+              <input type="checkbox" :value="opt" @change="toggleArray(filterCategories, opt)" :checked="filterCategories.value.includes(opt)"> {{ getCategoryLabel(opt) }}
+            </label>
+            <div class="dd-actions">
+              <button @click.stop="clearArray(filterCategories)">Alle</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="dd" ref="statusDd">
+          <button type="button" class="dd-btn" @click.stop="showStatusDropdown = !showStatusDropdown">Status <span v-if="filterStatuses.value.length">({{ filterStatuses.value.length }})</span></button>
+          <div v-if="showStatusDropdown" class="dd-menu" @click.stop>
+            <label v-for="opt in ['geplant','in_bearbeitung','erledigt','abgesagt']" :key="opt" class="dd-item">
+              <input type="checkbox" :value="opt" @change="toggleArray(filterStatuses, opt)" :checked="filterStatuses.value.includes(opt)"> {{ opt.replace('_',' ') }}
+            </label>
+            <div class="dd-actions"><button @click.stop="clearArray(filterStatuses)">Alle</button></div>
+          </div>
+        </div>
+
+        <div class="dd" ref="staffDd">
+          <button type="button" class="dd-btn" @click.stop="showStaffDropdown = !showStaffDropdown">Mitarbeiter <span v-if="filterStaffs.value.length">({{ filterStaffs.value.length }})</span></button>
+          <div v-if="showStaffDropdown" class="dd-menu" @click.stop>
+            <label v-for="staff in staffUsers" :key="staff.id" class="dd-item">
+              <input type="checkbox" :value="String(staff.id)" @change="toggleArray(filterStaffs, String(staff.id))" :checked="filterStaffs.value.includes(String(staff.id))"> {{ staff.firstname }} {{ staff.lastname }}
+            </label>
+            <div class="dd-actions"><button @click.stop="clearArray(filterStaffs)">Alle</button></div>
+          </div>
+        </div>
       </div>
       <div class="date-nav">
         <button @click="navigateDate(-1)">◀</button>
@@ -149,7 +160,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="apt in paginatedAppointments" :key="apt.id" :class="`priority-row-${apt.priority}`">
+          <tr v-for="apt in paginatedAppointments" :key="apt.id" :class="`priority-row-${apt.priority}`" @click="openEditModal(apt)">
             <td>{{ formatDate(apt.appointment_date) }}</td>
             <td>{{ formatTime(apt.appointment_time) }} - {{ apt.end_time ? formatTime(apt.end_time) : '' }}</td>
             <td>
@@ -161,7 +172,7 @@
             <td>{{ apt.patient_name || '-' }}</td>
             <td>{{ apt.assigned_firstname ? `${apt.assigned_firstname} ${apt.assigned_lastname}` : '-' }}</td>
             <td>
-              <select v-model="apt.status" @change="updateStatus(apt)" class="status-select">
+              <select v-model="apt.status" @change="updateStatus(apt)" class="status-select" @click.stop>
                 <option value="geplant">Geplant</option>
                 <option value="in_bearbeitung">In Bearbeitung</option>
                 <option value="erledigt">Erledigt</option>
@@ -368,6 +379,20 @@ const filterStatuses = ref([]);
 const filterStaffs = ref([]);
 const filterDate = ref(''); // ISO date string or empty
 const filterHour = ref(null);
+// dropdown states for filters
+const showCategoryDropdown = ref(false);
+const showStatusDropdown = ref(false);
+const showStaffDropdown = ref(false);
+
+function toggleArray(arrRef, value) {
+  const idx = arrRef.value.indexOf(value);
+  if (idx === -1) arrRef.value.push(value);
+  else arrRef.value.splice(idx, 1);
+}
+
+function clearArray(arrRef) {
+  arrRef.value = [];
+}
 
 // Modal State
 const showAddModal = ref(false);
@@ -787,6 +812,9 @@ async function fetchAppointments() {
       const year = currentDate.value.getFullYear();
       const month = currentDate.value.getMonth() + 1;
       url += `?month=${month}&year=${year}`;
+    } else if (viewMode.value === 'list') {
+      // fetch all for client-side pagination (server default limit is 100)
+      url += `?limit=10000`;
     }
     
     // Debug log the request URL and token presence
@@ -935,9 +963,27 @@ async function deleteAppointment(id) {
 
 function exportCSV() {
   const token = authStore.token || localStorage.getItem('token');
+  if (!token) { alert('Bitte anmelden um CSV-Export auszuführen.'); return; }
   const startDate = weekDays.value[0].date;
   const endDate = weekDays.value[6].date;
-  window.open(`${API_BASE}/appointments/export/csv?start_date=${startDate}&end_date=${endDate}&token=${token}`, '_blank');
+  fetch(`${API_BASE}/appointments/export/csv?start_date=${startDate}&end_date=${endDate}`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  }).then(async res => {
+    if (!res.ok) {
+      const text = await res.text();
+      alert('Export fehlgeschlagen: ' + text);
+      return;
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `termine_${startDate}_to_${endDate}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }).catch(err => { console.error('Export Fehler', err); alert('Export fehlgeschlagen'); });
 }
 
 // Watchers
@@ -949,11 +995,20 @@ onMounted(() => {
   fetchStats();
   fetchPatients();
   fetchStaffUsers();
+  // close filter dropdowns when clicking elsewhere
+  document.addEventListener('click', handleDocClick);
 });
 
 onBeforeUnmount(() => {
   if (bubbleSaveTimer) clearTimeout(bubbleSaveTimer);
+  document.removeEventListener('click', handleDocClick);
 });
+
+function handleDocClick() {
+  showCategoryDropdown.value = false;
+  showStatusDropdown.value = false;
+  showStaffDropdown.value = false;
+}
 </script>
 
 <style scoped>
@@ -1104,6 +1159,15 @@ onBeforeUnmount(() => {
   color: #1976d2;
 }
 
+/* Simple dropdown checkbox menus for filters */
+.filters { display:flex; gap:0.75rem; align-items:center; }
+.dd { position: relative; }
+.dd-btn { padding:0.5rem 0.75rem; border:1px solid #ddd; background:white; border-radius:6px; cursor:pointer; }
+.dd-menu { position: absolute; right: 0; top: calc(100% + 6px); background: white; border:1px solid #ddd; box-shadow: 0 6px 18px rgba(0,0,0,0.08); padding:0.5rem; z-index:30; width:220px; max-height:220px; overflow:auto; }
+.dd-item { display:block; padding:0.25rem 0.5rem; font-size:0.95rem; }
+.dd-actions { display:flex; justify-content:flex-end; margin-top:0.5rem; }
+.dd-actions button { padding:0.25rem 0.5rem; border:1px solid #eee; background:#fafafa; border-radius:4px; cursor:pointer; }
+
 /* Week View */
 .week-view {
   background: transparent; /* removed gray card */
@@ -1111,11 +1175,6 @@ onBeforeUnmount(() => {
   overflow: hidden;
   box-shadow: none;
   width: 100%;
-.time-row {
-  display: flex;
-  min-height: 56px; /* consistent row height */
-  height: 56px;
-}
   max-width: 1600px; /* allow wider calendar on desktop */
   margin: 0 auto;
 }
@@ -1154,6 +1213,7 @@ onBeforeUnmount(() => {
 .week-body {
   max-height: 700px; /* taller so content doesn't look cut */
   overflow-y: auto;
+  scrollbar-gutter: stable both-edges;
 }
 
 .time-row {
