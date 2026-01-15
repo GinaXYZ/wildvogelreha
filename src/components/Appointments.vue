@@ -65,7 +65,7 @@
     <!-- Kalender Wochenansicht -->
     <div v-if="viewMode === 'week'" class="week-view">
       <div class="week-header" ref="weekHeaderRef">
-        <div class="time-col-header"></div>
+        <div class="time-col-header">Zeit</div>
         <div v-for="day in weekDays" :key="day.date" class="day-col" :class="{ today: isToday(day.date) }">
           <span class="day-name">{{ day.name }}</span>
           <span class="day-date">{{ formatDayDate(day.date) }}</span>
@@ -440,8 +440,9 @@ function updateTodayOverlay() {
     const width = thRect.width;
     overlay.style.left = `${left}px`;
     overlay.style.width = `${width}px`;
-    overlay.style.top = 0;
-    overlay.style.height = `${headerRect.height}px`;
+    overlay.style.top = '0';
+    overlay.style.bottom = '0';
+    overlay.style.height = 'auto';
   });
 }
 
@@ -1246,20 +1247,26 @@ function handleDocClick() {
   padding-right: 0;
   position: relative;
   align-items: stretch;
+  box-sizing: border-box;
 }
 
 .time-col-header {
   padding: 0.8rem;
   background: #0c4b47;
-  color: #0c4b47;
+  color: white;
   text-align: center;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  box-sizing: border-box;
 }
 
 .week-header .day-col {
   padding: 0.8rem;
   text-align: center;
   border-left: 1px solid rgba(255,255,255,0.2);
+  box-sizing: border-box;
 }
 
 .week-header .day-col.today {
@@ -1289,6 +1296,7 @@ function handleDocClick() {
   min-height: calc( (26px * 3) + 12px );
   border-bottom: 1px solid #eee;
   align-items: stretch;
+  box-sizing: border-box;
 }
 
 .time-col {
@@ -1301,6 +1309,7 @@ function handleDocClick() {
   display: flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
 }
 
 .day-cell {
@@ -1308,6 +1317,9 @@ function handleDocClick() {
   padding: 0.3rem;
   cursor: pointer;
   min-height: 60px;
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
 }
 
 .day-cell:hover {
@@ -1318,24 +1330,6 @@ function handleDocClick() {
   background: #e6f7f2;
 }
 
-.day-cell {
-    flex: 1 1 0;
-    min-height: 56px;
-    padding: 0.25rem 0.4rem;
-    border-right: 1px solid #f0f0f0;
-    position: relative;
-    overflow: hidden; /* prevent shifting by long entries */
-}
-.appointment-block {
-  background: #e8f5e9;
-  border-left: 3px solid #4caf50;
-  padding: 0.3rem 0.5rem;
-  margin-bottom: 0.2rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  cursor: pointer;
-  overflow: hidden;
-}
 .appointment-block {
   background: #e3f2fd;
   border-radius: 6px;
@@ -1655,6 +1649,8 @@ function handleDocClick() {
   z-index: 1;
   top: 0;
   bottom: 0;
+  left: 0;
+  right: 0;
   transition: left 0.1s, width 0.1s;
 }
 
