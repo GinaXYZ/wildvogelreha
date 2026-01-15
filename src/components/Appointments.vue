@@ -64,12 +64,13 @@
 
     <!-- Kalender Wochenansicht -->
     <div v-if="viewMode === 'week'" class="week-view">
-      <div class="week-header">
-        <div class="time-col"></div>
+      <div class="week-header" ref="weekHeaderRef">
+        <div class="time-col-header"></div>
         <div v-for="day in weekDays" :key="day.date" class="day-col" :class="{ today: isToday(day.date) }">
           <span class="day-name">{{ day.name }}</span>
           <span class="day-date">{{ formatDayDate(day.date) }}</span>
         </div>
+        <div class="today-overlay" ref="todayOverlay"></div>
       </div>
       <div class="week-body" ref="weekBodyRef">
         <div v-for="hour in hours" :key="hour" class="time-row">
@@ -408,40 +409,39 @@ const allStatuses = ['geplant','in_bearbeitung','erledigt','abgesagt'];
 
 // week body ref for scrollbar sync
 const weekBodyRef = ref(null);
-const weekViewRef = ref(null);
+const weekHeaderRef = ref(null);
 const todayOverlay = ref(null);
 const resizeHandler = () => { updateWeekScrollbar(); updateTodayOverlay(); };
 function updateWeekScrollbar() {
   nextTick(() => {
     const el = weekBodyRef.value;
-    const vw = weekViewRef.value;
-    if (!el || !vw) return;
+    const wh = weekHeaderRef.value;
+    if (!el || !wh) return;
     const scrollbar = el.offsetWidth - el.clientWidth;
-    vw.style.setProperty('--week-scrollbar', `${scrollbar}px`);
+    wh.style.setProperty('--week-scrollbar', `${scrollbar}px`);
     updateTodayOverlay();
   });
 }
 
 function updateTodayOverlay() {
   nextTick(() => {
-    const vw = weekViewRef.value;
-    const overlay = vw && vw.querySelector('.today-overlay');
-    const header = vw && vw.querySelector('.week-header');
-    if (!vw || !overlay || !header) return;
+    const header = weekHeaderRef.value;
+    const overlay = todayOverlay.value || (header && header.querySelector('.today-overlay'));
+    if (!header || !overlay) return;
     const todayHeader = header.querySelector('.day-col.today');
     if (!todayHeader) {
       overlay.style.display = 'none';
       return;
     }
     overlay.style.display = 'block';
-    const vwRect = vw.getBoundingClientRect();
+    const headerRect = header.getBoundingClientRect();
     const thRect = todayHeader.getBoundingClientRect();
-    const left = thRect.left - vwRect.left;
+    const left = thRect.left - headerRect.left;
     const width = thRect.width;
-    const headerHeight = header.getBoundingClientRect().height;
     overlay.style.left = `${left}px`;
     overlay.style.width = `${width}px`;
-    overlay.style.top = `${headerHeight}px`;
+    overlay.style.top = 0;
+    overlay.style.height = `${headerRect.height}px`;
   });
 }
 
@@ -1237,17 +1237,19 @@ function handleDocClick() {
   margin: 0 auto;
 }
 
+
 .week-header {
   display: grid;
-  /* fixed time column + 7 flexible day columns with a reasonable minimum so the calendar looks regular */
   grid-template-columns: 90px repeat(7, minmax(140px, 1fr));
   background: #0c4b47;
   color: white;
   padding-right: var(--week-scrollbar, 0px);
+  position: relative;
 }
 
-.week-header .time-col {
+.time-col-header {
   padding: 0.8rem;
+  background: transparent;
 }
 
 .week-header .day-col {
