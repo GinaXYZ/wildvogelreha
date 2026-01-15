@@ -1258,6 +1258,54 @@ function handleDocClick() {
   cursor: pointer;
 }
 
+/* Export controls (dropdown + button) */
+.export-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.export-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding: 0.55rem 0.6rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: white;
+  color: #0c4b47;
+  min-width: 130px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(12,75,71,0.03);
+}
+
+.export-select:focus {
+  outline: none;
+  border-color: rgba(12,75,71,0.6);
+  box-shadow: 0 4px 12px rgba(12,75,71,0.08);
+}
+
+.btn-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.btn-export:hover {
+  background: #eef6f4;
+}
+
+/* small responsive tweaks */
+@media (max-width: 768px) {
+  .export-controls { width: 100%; }
+  .export-select { flex: 1; }
+  .btn-export { flex-shrink: 0; }
+}
+
 /* Filter Bar */
 .filter-bar {
   display: flex;
