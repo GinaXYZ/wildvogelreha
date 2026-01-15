@@ -13,10 +13,11 @@ import Register from '../components/Register.vue';
 import Checkout from '../components/Checkout.vue';
 import Contact from '../components/Contact.vue';
 import Appointments from '../components/Appointments.vue';
+import Project from '../components/Project.vue';
 
 const routes = [
   // Isolated project route: serves only the appointments UI at /projekt
-  { path: '/projekt', name: 'ProjektAppointments', component: Appointments },
+  { path: '/projekt', name: 'ProjektAppointments', component: Project },
   {
     path: '/',
     component: AppLayout,
