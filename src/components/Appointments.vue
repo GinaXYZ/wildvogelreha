@@ -169,7 +169,7 @@
           </tr>
         </tbody>
       </table>
-      <div class="list-pagination" v-if="filteredAppointments.length > perPage">
+      <div class="list-pagination" v-if="totalPages > 1">
         <button @click="page = Math.max(1, page - 1)" :disabled="page === 1">Zurück</button>
         <span>Seite {{ page }} / {{ totalPages }}</span>
         <button @click="page = Math.min(totalPages, page + 1)" :disabled="page >= totalPages">Weiter</button>
@@ -1523,6 +1523,29 @@ onBeforeUnmount(() => {
   .appointments-table td {
     padding: 0.5rem 0.3rem;
     white-space: nowrap;
+
+  /* Pagination styles */
+  .list-pagination {
+    display: flex;
+    gap: 0.6rem;
+    justify-content: center;
+    align-items: center;
+    margin: 0.8rem 0 1.6rem 0;
+  }
+  .list-pagination button {
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background: #fff;
+    cursor: pointer;
+  }
+  .list-pagination button:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+  .list-pagination span {
+    font-weight: 600;
+  }
   }
   
   .stats-cards {
