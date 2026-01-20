@@ -389,7 +389,6 @@ import { ref, computed, onMounted, watch, nextTick, onBeforeUnmount } from 'vue'
 import { useAuthStore } from './auth.js';
 
 // Mock data for local dev testing
-import mockAppointments from '../data/mockAppointments.js';
 
 const authStore = useAuthStore();
 const API_BASE = '/api';
