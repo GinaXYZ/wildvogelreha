@@ -30,38 +30,59 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME || 'shop',
 });
 
-// Datenbank-Initialisierung
+// Datenbank-Initialisierung mit Retry (wartet, bis DB bereit ist und wendet init.sql an)
 async function initializeDatabase() {
+  const maxAttempts = 12; // retry for ~60s (12 * 5s)
+  const delayMs = 5000;
+
+  async function waitForConnection() {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const conn = await pool.getConnection();
+        conn.release();
+        return true;
+      } catch (err) {
+        console.log(`DB not ready (attempt ${attempt}/${maxAttempts}), retrying in ${delayMs}ms...`);
+        await new Promise(r => setTimeout(r, delayMs));
+      }
+    }
+    return false;
+  }
+
   try {
     console.log('Initializing database schema...');
+    const ready = await waitForConnection();
+    if (!ready) {
+      console.error('Database did not become ready in time, skipping initialization');
+      return;
+    }
+
     const connection = await pool.getConnection();
-    
-    // Read init.sql
     const initSqlPath = path.join(__dirname, 'init.sql');
     const sqlStatements = fs.readFileSync(initSqlPath, 'utf8');
-    
-    // Split and execute SQL statements
+
     const statements = sqlStatements
       .split(';')
       .map(stmt => stmt.trim())
       .filter(stmt => stmt.length > 0 && !stmt.startsWith('--'));
-    
+
     for (const statement of statements) {
       try {
         await connection.query(statement);
       } catch (err) {
-        // Ignore "table already exists" errors (1050) and view exists errors (1050)
-        if (err.code !== 'ER_TABLE_EXISTS_ERROR' && err.code !== 1050) {
-          console.warn('SQL Warning:', err.message);
+        // Ignore table already exists errors (ER_TABLE_EXISTS_ERROR / code 1050)
+        if (err && err.code && (err.code === 'ER_TABLE_EXISTS_ERROR' || err.code === 1050)) {
+          // expected on subsequent runs
+        } else {
+          console.warn('SQL Warning:', err && err.message ? err.message : err);
         }
       }
     }
-    
+
     connection.release();
     console.log('Database initialization completed successfully');
   } catch (err) {
-    console.error('Database initialization error:', err.message);
-    // Don't exit, let the app try to run anyway
+    console.error('Database initialization error:', err && err.message ? err.message : err);
   }
 }
 
