@@ -1,5 +1,11 @@
 -- Create tables for Wildvogel Rehastation
+-- Create database and ensure proper engine/charset for reproducible imports
+CREATE DATABASE IF NOT EXISTS `wildvogelreha` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE `wildvogelreha`;
+SET default_storage_engine=InnoDB;
+SET FOREIGN_KEY_CHECKS=0;
 
+-- Create tables for Wildvogel Rehastation
 CREATE TABLE IF NOT EXISTS users (
   id VARCHAR(36) PRIMARY KEY,
   username VARCHAR(100) UNIQUE NOT NULL,
@@ -192,6 +198,9 @@ INSERT IGNORE INTO donations (id, donor_name, amount, created_at) VALUES
 ('don-18', 'Kindergarten Sonnenschein', 89.00, '2025-11-28 10:30:00'),
 ('don-19', 'Rotary Club Kiel', 1500.00, '2025-11-20 09:00:00'),
 ('don-20', 'Familie Petersen', 200.00, '2025-11-15 13:45:00');
+
+-- Re-enable foreign key checks after import
+SET FOREIGN_KEY_CHECKS=1;
 
 -- Orders
 INSERT IGNORE INTO orders (id, user_id, firstname, lastname, email, address, city, country, payment, status, created_at) VALUES
