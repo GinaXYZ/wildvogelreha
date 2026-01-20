@@ -2,6 +2,59 @@
   box-sizing: border-box;
 }
 
+/* ===== Appointments: slightly smaller sizing (reduce ~10-15%) ===== */
+/* Targets tables, week/month views, pills and modals specific to appointments */
+.appointments-container {
+  /* scale down relative to site's base size */
+  font-size: 0.92em; /* ~8% smaller; combined with other tweaks gives ~10-15% */
+}
+
+.appointments-container .appointments-header .stat-number {
+  font-size: 1.05rem; /* slightly smaller numbers */
+}
+
+.week-table th, .week-table td,
+.appointments-table th, .appointments-table td {
+  font-size: 0.92rem;
+  padding: 0.35rem 0.5rem; /* reduce vertical padding */
+}
+
+.appointment-block {
+  padding: 0.28rem 0.4rem;
+  font-size: 0.92rem;
+  line-height: 1.15;
+}
+
+.mini-appointment {
+  font-size: 0.85rem;
+  padding: 0.18rem 0.32rem;
+}
+
+.cell-appointments .more-appointments,
+.more-count {
+  font-size: 0.85rem;
+}
+
+.speech-bubble, .modal {
+  font-size: 0.95rem; /* modal/bubble slightly smaller to reduce footprint */
+}
+
+.appointments-container .filter-bar .dd-btn,
+.appointments-container .date-nav button,
+.appointments-container .btn-add,
+.appointments-container .btn-export {
+  padding: 0.38rem 0.6rem; /* slightly reduced button padding */
+}
+
+/* Keep touch targets usable on mobile: do not go below 38-40px height */
+@media (max-width: 768px) {
+  .appointments-container { font-size: 0.97em; }
+  .week-table th, .week-table td, .appointments-table th, .appointments-table td {
+    padding: 0.45rem 0.6rem;
+  }
+}
+
+
 html {
   font-size: 18px; /* Increased base font size */
   scroll-behavior: smooth;

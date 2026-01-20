@@ -1,0 +1,48 @@
+Date : 2026-01-15 16:10:58
+Directory : c:\Users\Georg\source\repos\Wildvogelreha\src\components
+Total : 23 files,  10171 codes, 14 comments, 1142 blanks, all 11327 lines
+
+Languages
++------------+------------+------------+------------+------------+------------+
+| language   | files      | code       | comment    | blank      | total      |
++------------+------------+------------+------------+------------+------------+
+| vue        |         21 |     10,006 |         14 |      1,105 |     11,125 |
+| JavaScript |          2 |        165 |          0 |         37 |        202 |
++------------+------------+------------+------------+------------+------------+
+
+Directories
++---------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                      | files      | code       | comment    | blank      | total      |
++---------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                         |         23 |     10,171 |         14 |      1,142 |     11,327 |
++---------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++---------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| filename                                                                  | language   | code       | comment    | blank      | total      |
++---------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| c:\Users\Georg\source\repos\Wildvogelreha\src\components\AboutUs.vue      | vue        |        427 |          0 |         35 |        462 |
+| c:\Users\Georg\source\repos\Wildvogelreha\src\components\AppLayout.vue    | vue        |         99 |          0 |         20 |        119 |
+| c:\Users\Georg\source\repos\Wildvogelreha\src\components\Appointments.vue | vue        |      2,081 |          8 |        234 |      2,323 |
+| c:\Users\Georg\source\repos\Wildvogelreha\src\components\Blog.vue         | vue        |        398 |          0 |         43 |        441 |
+| c:\Users\Georg\source\repos\Wildvogelreha\src\components\Checkout.vue     | vue        |        201 |          0 |         17 |        218 |
+| c:\Users\Georg\source\repos\Wildvogelreha\src\components\Contact.vue      | vue        |        344 |          0 |         48 |        392 |
+| c:\Users\Georg\source\repos\Wildvogelreha\src\components\Footer.vue       | vue        |        103 |          0 |         19 |        122 |
+| c:\Users\Georg\source\repos\Wildvogelreha\src\components\Header.vue       | vue        |        463 |          3 |         74 |        540 |
+| c:\Users\Georg\source\repos\Wildvogelreha\src\components\Home.vue         | vue        |        521 |          0 |         73 |        594 |
+| c:\Users\Georg\source\repos\Wildvogelreha\src\components\Login.vue        | vue        |        104 |          0 |         11 |        115 |
+| c:\Users\Georg\source\repos\Wildvogelreha\src\components\PasswordGate.vue | vue        |         87 |          0 |         10 |         97 |
+| c:\Users\Georg\source\repos\Wildvogelreha\src\components\Profile.vue      | vue        |        306 |          0 |         19 |        325 |
+| c:\Users\Georg\source\repos\Wildvogelreha\src\components\Project.vue      | vue        |         42 |          1 |          8 |         51 |
+| c:\Users\Georg\source\repos\Wildvogelreha\src\components\Register.vue     | vue        |        195 |          0 |         27 |        222 |
+| c:\Users\Georg\source\repos\Wildvogelreha\src\components\Shop.vue         | vue        |        900 |          0 |        107 |      1,007 |
+| c:\Users\Georg\source\repos\Wildvogelreha\src\components\ShopEmbed.vue    | vue        |        220 |          0 |         15 |        235 |
+| c:\Users\Georg\source\repos\Wildvogelreha\src\components\Slideshow.vue    | vue        |        189 |          0 |         34 |        223 |
+| c:\Users\Georg\source\repos\Wildvogelreha\src\components\Spenden.vue      | vue        |        117 |          0 |         22 |        139 |
+| c:\Users\Georg\source\repos\Wildvogelreha\src\components\Staff.vue        | vue        |      1,999 |          2 |        143 |      2,144 |
+| c:\Users\Georg\source\repos\Wildvogelreha\src\components\Voegel.vue       | vue        |        925 |          0 |        114 |      1,039 |
+| c:\Users\Georg\source\repos\Wildvogelreha\src\components\auth.js          | JavaScript |         47 |          0 |         11 |         58 |
+| c:\Users\Georg\source\repos\Wildvogelreha\src\components\cart.vue         | vue        |        285 |          0 |         32 |        317 |
+| c:\Users\Georg\source\repos\Wildvogelreha\src\components\cartState.js     | JavaScript |        118 |          0 |         26 |        144 |
+| Total                                                                     |            |     10,171 |         14 |      1,142 |     11,327 |
++---------------------------------------------------------------------------+------------+------------+------------+------------+------------+

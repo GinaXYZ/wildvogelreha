@@ -1,5 +1,9 @@
 <template>
   <div class="appointments-container">
+    <div v-if="isDev" class="dev-banner">
+      DEV: {{ appointments.length }} Termine geladen. 
+      <button @click="seedMockData" class="dev-btn">Seed / Reset</button>
+    </div>
     <!-- Header mit Statistiken -->
     <div class="appointments-header">
       <div class="stats-cards">
@@ -57,8 +61,8 @@
         <div class="dd" ref="staffDd">
           <button type="button" class="dd-btn" @click.stop="toggleDropdown('staff')">{{ filterStaff ? (staffUsers.find(s=>String(s.id)===String(filterStaff)) ? staffUsers.find(s=>String(s.id)===String(filterStaff)).firstname + ' ' + staffUsers.find(s=>String(s.id)===String(filterStaff)).lastname : 'Ausgewählt') : 'Alle Mitarbeiter' }}</button>
           <div v-if="showStaffDropdown" class="dd-menu" @click.stop>
-            <div class="dd-item" :class="{selected: filterStaff === ''}" @click="selectStaff('')">Alle Mitarbeiter</div>
-            <div v-for="staff in staffUsers" :key="staff.id" class="dd-item" :class="{selected: String(filterStaff) === String(staff.id)}" @click="selectStaff(String(staff.id))">{{ staff.firstname }} {{ staff.lastname }}</div>
+            <div class="dd-item" :class="{selected: selectedStaffId === ''}" @click="selectStaff('')">Alle Mitarbeiter</div>
+            <div v-for="staff in staffUsers" :key="staff.id" class="dd-item" :class="{selected: selectedStaffId === String(staff.id)}" @click="selectStaff(String(staff.id))">{{ staff.firstname }} {{ staff.lastname }}</div>
           </div>
         </div>
       </div>
@@ -91,6 +95,7 @@
                  <div v-for="apt in getAppointmentsForSlot(day.date, hour).slice(0, maxVisibleSlot)" :key="apt.id"
                    class="appointment-block"
                    :class="[`priority-${apt.priority}`, `status-${apt.status}`]"
+                   :title="apt.title + (apt.patient_name ? ' — ' + apt.patient_name : '')"
                    @click.stop="showAppointmentBubble($event, apt)">
                 <span class="apt-time">{{ formatTime(apt.appointment_time) }}</span>
                 <span class="apt-title">{{ apt.title }}</span>
@@ -139,6 +144,7 @@
 
     <!-- Listenansicht -->
     <div v-if="viewMode === 'list'" class="list-view">
+      <div class="list-inner">
       <div v-if="loading" class="loading">Lade Termine...</div>
       <div v-else-if="filteredAppointments.length === 0" class="no-appointments">
         Keine Termine gefunden.
@@ -191,9 +197,10 @@
         </tbody>
       </table>
       <div class="list-pagination" v-if="totalPages >= 1">
-        <button @click="page = Math.max(1, page - 1)" :disabled="page === 1">Zurück</button>
-        <span>Seite {{ page }} / {{ totalPages }}</span>
-        <button @click="page = Math.min(totalPages, page + 1)" :disabled="page >= totalPages">Weiter</button>
+        <button class="page-btn prev" @click="page = Math.max(1, page - 1)" :disabled="page === 1">◀ Zurück</button>
+        <span class="page-indicator">Seite {{ page }} / {{ totalPages }}</span>
+        <button class="page-btn next" @click="page = Math.min(totalPages, page + 1)" :disabled="page >= totalPages">Weiter ▶</button>
+      </div>
       </div>
     </div>
 
@@ -342,8 +349,13 @@
 import { ref, computed, onMounted, watch, nextTick, onBeforeUnmount } from 'vue';
 import { useAuthStore } from './auth.js';
 
+// Mock data for local dev testing
+import mockAppointments from '../data/mockAppointments.js';
+
 const authStore = useAuthStore();
 const API_BASE = '/api';
+const isDev = typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV;
+const DEV_STORAGE_KEY = 'dev:appointments';
 
 // State
 const appointments = ref([]);
@@ -368,7 +380,6 @@ const slotModal = ref({ visible: false, date: '', hour: null, appointments: [] }
 function openSlotModal(date, hour, appts = []) {
   slotModal.value = { visible: true, date, hour, appointments: appts };
 }
-
 function closeSlotModal() {
   slotModal.value.visible = false;
   slotModal.value.appointments = [];
@@ -381,6 +392,7 @@ const currentDate = ref(new Date());
 const filterCategory = ref('');
 const filterStatus = ref('');
 const filterStaff = ref('');
+const selectedStaffId = computed(() => String(filterStaff.value || ''));
 const filterDate = ref(''); // ISO date string or empty
 const filterHour = ref(null);
 // dropdown states for filters
@@ -486,8 +498,8 @@ function getEmptyFormData() {
 
 // Computed
 // full day hours 0:00 - 23:00 so we can add entries at any hour
-// show times 6:00 - 20:00
-const hours = computed(() => Array.from({ length: 15 }, (_, i) => i + 6)); // 6 - 20
+// show times 8:00 - 18:00 (reduced range)
+const hours = computed(() => Array.from({ length: 11 }, (_, i) => i + 8)); // 8 - 18
 
 const weekDays = computed(() => {
   const days = [];
@@ -550,7 +562,19 @@ const filteredAppointments = computed(() => {
     // single category
     if (filterCategory.value && apt.category !== filterCategory.value) return false;
     if (filterStatus.value && apt.status !== filterStatus.value) return false;
-    if (filterStaff.value && String(apt.assigned_to || '') !== String(filterStaff.value)) return false;
+    if (filterStaff.value) {
+      const f = String(filterStaff.value);
+      // match by assigned_to id when available
+      if (String(apt.assigned_to || '') === f) {
+        // ok
+      } else {
+        // fallback: match by assigned_firstname/assigned_lastname to support mock data
+        const assignedName = ((apt.assigned_firstname || '').trim() + ' ' + (apt.assigned_lastname || '').trim()).trim();
+        const staffObj = staffUsers.value.find(s => String(s.id) === f);
+        const staffName = staffObj ? (staffObj.firstname + ' ' + (staffObj.lastname || '')).trim() : '';
+        if (!staffName || assignedName !== staffName) return false;
+      }
+    }
     // date filter (exact match)
     if (filterDate.value && String(apt.appointment_date || '').split('T')[0] !== filterDate.value) return false;
     // hour filter (number)
@@ -649,7 +673,7 @@ const paginatedAppointments = computed(() => {
 });
 
 // Quick slot overflow handling for week view
-const maxVisibleSlot = 2; // show up to 2 pills per time-slot
+const maxVisibleSlot = 3; // show up to 3 pills per time-slot
 
 function openSlotList(date, hour) {
   // switch to list view and apply filters for this slot
@@ -890,11 +914,24 @@ async function saveAppointmentBubbleContent() {
       payload.description = appointmentBubble.value.content;
       payload.title = payload.title ?? apt.title ?? 'Unbenannter Termin';
       payload.appointment_date = normalizeToDate(payload.appointment_date);
-      await fetch(`${API_BASE}/appointments/${apt.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify(payload)
-      });
+      if (isDev) {
+        // update in localStorage
+        try {
+          const raw = localStorage.getItem(DEV_STORAGE_KEY);
+          const arr = raw ? JSON.parse(raw) : [];
+          const idx = arr.findIndex(x => String(x.id) === String(apt.id));
+          if (idx !== -1) {
+            arr[idx] = Object.assign({}, arr[idx], payload);
+            localStorage.setItem(DEV_STORAGE_KEY, JSON.stringify(arr));
+          }
+        } catch (e) { console.error('DEV save bubble error', e); }
+      } else {
+        await fetch(`${API_BASE}/appointments/${apt.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify(payload)
+        });
+      }
     }
   } catch (err) {
     console.error('Fehler beim Speichern der Termin-Details:', err);
@@ -910,11 +947,23 @@ async function deleteAppointmentFromBubble(id) {
   if (!confirm('Termin wirklich löschen?')) return;
   try {
     const token = authStore.token || localStorage.getItem('token');
-    const res = await fetch(`${API_BASE}/appointments/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
-    if (res.ok) {
-      appointmentBubble.value.visible = false;
-      await fetchAppointments();
-      await fetchStats();
+    if (isDev) {
+      try {
+        const raw = localStorage.getItem(DEV_STORAGE_KEY);
+        const arr = raw ? JSON.parse(raw) : [];
+        const newArr = arr.filter(a => String(a.id) !== String(id));
+        localStorage.setItem(DEV_STORAGE_KEY, JSON.stringify(newArr));
+        appointmentBubble.value.visible = false;
+        await fetchAppointments();
+        await fetchStats();
+      } catch (e) { console.error('DEV delete error', e); }
+    } else {
+      const res = await fetch(`${API_BASE}/appointments/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+      if (res.ok) {
+        appointmentBubble.value.visible = false;
+        await fetchAppointments();
+        await fetchStats();
+      }
     }
   } catch (err) { console.error(err); }
 }
@@ -932,6 +981,47 @@ function openEditFromBubble() {
 async function fetchAppointments() {
   loading.value = true;
   try {
+    if (isDev) {
+      // Load from localStorage (seed from mockAppointments if necessary)
+      try {
+        let data = [];
+        const raw = localStorage.getItem(DEV_STORAGE_KEY);
+        if (raw) data = JSON.parse(raw);
+        else {
+          data = Array.isArray(appointments.value) && appointments.value.length ? appointments.value.slice() : (typeof mockAppointments !== 'undefined' ? mockAppointments.slice() : []);
+          localStorage.setItem(DEV_STORAGE_KEY, JSON.stringify(data));
+        }
+
+        // filter by view
+        let result = data;
+        if (viewMode.value === 'week') {
+          const start = new Date(weekDays.value[0].date);
+          const end = new Date(weekDays.value[6].date);
+          result = data.filter(a => {
+            const d = new Date((a.appointment_date || '').split('T')[0] + 'T00:00');
+            return d >= start && d <= end;
+          });
+        } else if (viewMode.value === 'month') {
+          const y = currentDate.value.getFullYear();
+          const m = currentDate.value.getMonth();
+          result = data.filter(a => {
+            const d = new Date((a.appointment_date || '').split('T')[0] + 'T00:00');
+            return d.getFullYear() === y && d.getMonth() === m;
+          });
+        } else if (viewMode.value === 'list') {
+          result = data.slice();
+        }
+        appointments.value = result;
+        updateWeekScrollbar();
+        loading.value = false;
+        return;
+      } catch (e) {
+        console.error('DEV fetchAppointments error', e);
+        appointments.value = [];
+        loading.value = false;
+        return;
+      }
+    }
     const token = authStore.token || localStorage.getItem('token');
     let url = `${API_BASE}/appointments`;
     
@@ -975,6 +1065,19 @@ async function fetchAppointments() {
 
 async function fetchStats() {
   try {
+    if (isDev) {
+      try {
+        const raw = localStorage.getItem(DEV_STORAGE_KEY) || '[]';
+        const data = JSON.parse(raw);
+        const today = new Date().toISOString().split('T')[0];
+        stats.value = {
+          today: data.filter(a => (a.appointment_date||'').split('T')[0] === today).length,
+          pending: data.filter(a => a.status === 'geplant' || a.status === '').length,
+          urgent: data.filter(a => a.priority === 'dringend').length
+        };
+      } catch (e) { console.error('DEV fetchStats error', e); }
+      return;
+    }
     const token = authStore.token || localStorage.getItem('token');
     const res = await fetch(`${API_BASE}/appointments/stats/overview`, {
       headers: { 'Authorization': `Bearer ${token}` }
@@ -989,6 +1092,18 @@ async function fetchStats() {
 
 async function fetchPatients() {
   try {
+    if (isDev) {
+      try {
+        const raw = localStorage.getItem(DEV_STORAGE_KEY) || '[]';
+        const data = JSON.parse(raw);
+        const map = {};
+        data.forEach(a => {
+          if (a.patient_name) map[a.patient_name] = a.patient_name;
+        });
+        patients.value = Object.keys(map).map((name, idx) => ({ id: idx+1, name }));
+      } catch (e) { console.error('DEV fetchPatients error', e); }
+      return;
+    }
     const token = authStore.token || localStorage.getItem('token');
     const res = await fetch(`${API_BASE}/patients?limit=100`, {
       headers: { 'Authorization': `Bearer ${token}` }
@@ -1004,6 +1119,18 @@ async function fetchPatients() {
 
 async function fetchStaffUsers() {
   try {
+    if (isDev) {
+      // In dev mode, show only the fixed set of staff accounts to avoid long lists
+      try {
+        staffUsers.value = [
+          { id: 1, firstname: 'Admin', lastname: 'User' },
+          { id: 2, firstname: 'Marie', lastname: 'Schmidt' },
+          { id: 3, firstname: 'Tobias', lastname: 'Müller' },
+          { id: 4, firstname: 'Lisa', lastname: 'Wagner' }
+        ];
+      } catch (e) { console.error('DEV fetchStaffUsers error', e); }
+      return;
+    }
     const token = authStore.token || localStorage.getItem('token');
     const res = await fetch(`${API_BASE}/staff-users`, {
       headers: { 'Authorization': `Bearer ${token}` }
@@ -1022,18 +1149,32 @@ async function createAppointment() {
     const payload = Object.assign({}, formData.value);
     payload.appointment_date = normalizeToDate(payload.appointment_date);
     payload.title = payload.title ?? 'Unbenannter Termin';
-    const res = await fetch(`${API_BASE}/appointments`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(payload)
-    });
-    if (res.ok) {
-      closeModals();
-      fetchAppointments();
-      fetchStats();
+    if (isDev) {
+      try {
+        const raw = localStorage.getItem(DEV_STORAGE_KEY) || '[]';
+        const arr = JSON.parse(raw);
+        const id = Date.now();
+        const toSave = Object.assign({ id }, payload);
+        arr.push(toSave);
+        localStorage.setItem(DEV_STORAGE_KEY, JSON.stringify(arr));
+        closeModals();
+        await fetchAppointments();
+        await fetchStats();
+      } catch (e) { console.error('DEV createAppointment error', e); }
+    } else {
+      const res = await fetch(`${API_BASE}/appointments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        closeModals();
+        fetchAppointments();
+        fetchStats();
+      }
     }
   } catch (err) {
     console.error('Fehler beim Erstellen:', err);
@@ -1046,18 +1187,33 @@ async function updateAppointment() {
     const payload = Object.assign({}, formData.value);
     payload.appointment_date = normalizeToDate(payload.appointment_date);
     payload.title = payload.title ?? (formData.value.title || 'Unbenannter Termin');
-    const res = await fetch(`${API_BASE}/appointments/${formData.value.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(payload)
-    });
-    if (res.ok) {
-      closeModals();
-      fetchAppointments();
-      fetchStats();
+    if (isDev) {
+      try {
+        const raw = localStorage.getItem(DEV_STORAGE_KEY) || '[]';
+        const arr = JSON.parse(raw);
+        const idx = arr.findIndex(a => String(a.id) === String(formData.value.id));
+        if (idx !== -1) {
+          arr[idx] = Object.assign({}, arr[idx], payload);
+          localStorage.setItem(DEV_STORAGE_KEY, JSON.stringify(arr));
+        }
+        closeModals();
+        await fetchAppointments();
+        await fetchStats();
+      } catch (e) { console.error('DEV updateAppointment error', e); }
+    } else {
+      const res = await fetch(`${API_BASE}/appointments/${formData.value.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        closeModals();
+        fetchAppointments();
+        fetchStats();
+      }
     }
   } catch (err) {
     console.error('Fehler beim Aktualisieren:', err);
@@ -1070,15 +1226,28 @@ async function updateStatus(apt) {
     const payload = Object.assign({}, apt);
     payload.appointment_date = normalizeToDate(payload.appointment_date);
     payload.title = payload.title ?? (apt.title || 'Unbenannter Termin');
-    await fetch(`${API_BASE}/appointments/${apt.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(payload)
-    });
-    fetchStats();
+    if (isDev) {
+      try {
+        const raw = localStorage.getItem(DEV_STORAGE_KEY) || '[]';
+        const arr = JSON.parse(raw);
+        const idx = arr.findIndex(a => String(a.id) === String(apt.id));
+        if (idx !== -1) {
+          arr[idx] = Object.assign({}, arr[idx], payload);
+          localStorage.setItem(DEV_STORAGE_KEY, JSON.stringify(arr));
+        }
+      } catch (e) { console.error('DEV updateStatus error', e); }
+      fetchStats();
+    } else {
+      await fetch(`${API_BASE}/appointments/${apt.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+      fetchStats();
+    }
   } catch (err) {
     console.error('Fehler beim Status-Update:', err);
   }
@@ -1088,13 +1257,24 @@ async function deleteAppointment(id) {
   if (!confirm('Termin wirklich löschen?')) return;
   try {
     const token = authStore.token || localStorage.getItem('token');
-    const res = await fetch(`${API_BASE}/appointments/${id}`, {
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    if (res.ok) {
-      fetchAppointments();
-      fetchStats();
+    if (isDev) {
+      try {
+        const raw = localStorage.getItem(DEV_STORAGE_KEY) || '[]';
+        const arr = JSON.parse(raw);
+        const newArr = arr.filter(a => String(a.id) !== String(id));
+        localStorage.setItem(DEV_STORAGE_KEY, JSON.stringify(newArr));
+        await fetchAppointments();
+        await fetchStats();
+      } catch (e) { console.error('DEV deleteAppointment error', e); }
+    } else {
+      const res = await fetch(`${API_BASE}/appointments/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        fetchAppointments();
+        fetchStats();
+      }
     }
   } catch (err) {
     console.error('Fehler beim Löschen:', err);
@@ -1177,6 +1357,13 @@ function handleDocClick() {
   showStatusDropdown.value = false;
   showStaffDropdown.value = false;
 }
+
+function seedMockData() {
+  try {
+    localStorage.setItem(DEV_STORAGE_KEY, JSON.stringify(typeof mockAppointments !== 'undefined' ? mockAppointments.slice() : []));
+    fetchAppointments();
+  } catch (e) { console.error('seedMockData error', e); }
+}
 </script>
 
 <style scoped>
@@ -1187,7 +1374,19 @@ function handleDocClick() {
   flex-direction: column;
   width: 100%;
   max-width: 100%;
+  overflow: visible; /* ensure children can show above surrounding elements */
 }
+
+.dev-banner {
+  background: #fff7e6;
+  border: 1px dashed #f0a500;
+  padding: 0.45rem 0.6rem;
+  margin-bottom: 0.6rem;
+  border-radius: 6px;
+  color: #664400;
+  font-weight: 600;
+}
+.dev-banner .dev-btn { margin-left: 0.6rem; padding: 0.25rem 0.5rem; border-radius:4px; border:1px solid #f0a500; background:white; cursor:pointer; }
 
 /* Header & Stats */
 .appointments-header {
@@ -1206,7 +1405,7 @@ function handleDocClick() {
 
 .stat-card {
   background: white;
-  padding: 1rem 1.5rem;
+  padding: 0.85rem 1.2rem;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   text-align: center;
@@ -1220,7 +1419,7 @@ function handleDocClick() {
 
 .stat-number {
   display: block;
-  font-size: 1.8rem;
+  font-size: 1.55rem;
   font-weight: bold;
   color: #0c4b47;
 }
@@ -1239,7 +1438,7 @@ function handleDocClick() {
   background: #0c4b47;
   color: white;
   border: none;
-  padding: 0.7rem 1.2rem;
+  padding: 0.55rem 0.9rem;
   border-radius: 8px;
   cursor: pointer;
   font-weight: bold;
@@ -1269,12 +1468,12 @@ function handleDocClick() {
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
-  padding: 0.55rem 0.6rem;
+  padding: 0.45rem 0.5rem;
   border: 1px solid #ddd;
   border-radius: 8px;
   background: white;
   color: #0c4b47;
-  min-width: 130px;
+  min-width: 110px;
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 2px 6px rgba(12,75,71,0.03);
@@ -1290,8 +1489,8 @@ function handleDocClick() {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.55rem 0.9rem;
-  border-radius: 8px;
+  padding: 0.45rem 0.7rem;
+  border-radius: 6px;
   font-weight: 600;
 }
 
@@ -1312,11 +1511,11 @@ function handleDocClick() {
   justify-content: space-between;
   align-items: center;
   background: white;
-  padding: 1rem;
+  padding: 0.85rem;
   border-radius: 8px;
-  margin-bottom: 1rem;
+  margin-bottom: 0.9rem;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .view-toggle {
@@ -1325,11 +1524,11 @@ function handleDocClick() {
 }
 
 .view-toggle button {
-  padding: 0.5rem 1rem;
+  padding: 0.42rem 0.8rem;
   border: 1px solid #ddd;
   background: white;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 .view-toggle button.active {
@@ -1357,7 +1556,7 @@ function handleDocClick() {
 }
 
 .date-nav button {
-  padding: 0.5rem 1rem;
+  padding: 0.42rem 0.8rem;
   border: 1px solid #ddd;
   background: white;
   cursor: pointer;
@@ -1366,7 +1565,7 @@ function handleDocClick() {
 
 .current-date {
   font-weight: bold;
-  min-width: 180px;
+  min-width: 150px;
   text-align: center;
 }
 
@@ -1414,8 +1613,8 @@ function handleDocClick() {
 }
 
 .time-col-header {
-  width: 100px;
-  padding: 1rem;
+  width: 88px;
+  padding: 0.75rem;
   background: #0c4b47;
   color: white;
   text-align: center;
@@ -1427,7 +1626,7 @@ function handleDocClick() {
 }
 
 .week-header .day-col {
-  padding: 1rem;
+  padding: 0.75rem;
   text-align: center;
   border-right: 1px solid rgba(255,255,255,0.15);
   font-weight: 600;
@@ -1444,13 +1643,13 @@ function handleDocClick() {
 .day-name {
   display: block;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   margin-bottom: 0.3rem;
 }
 
 .day-date {
   display: block;
-  font-size: 1.3rem;
+  font-size: 1.05rem;
   font-weight: 600;
 }
 
@@ -1467,9 +1666,9 @@ function handleDocClick() {
 }
 
 .time-col {
-  width: 100px;
-  padding: 0.8rem 0.5rem;
-  font-size: 0.85rem;
+  width: 88px;
+  padding: 0.6rem 0.45rem;
+  font-size: 0.78rem;
   color: #666;
   background: #f9f9f9;
   text-align: center;
@@ -1479,14 +1678,14 @@ function handleDocClick() {
 }
 
 .day-cell {
-  padding: 0.5rem;
+  padding: 0.42rem;
   cursor: pointer;
   border-right: 1px solid #e0e0e0;
   background: white;
   transition: background 0.15s;
   vertical-align: top;
-  min-height: 80px;
-  height: 80px;
+  min-height: 68px;
+  height: 68px;
 }
 
 .day-cell:last-child {
@@ -1504,21 +1703,23 @@ function handleDocClick() {
 .appointment-block {
   background: #e3f2fd;
   border-radius: 6px;
-  padding: 0.15rem 0.4rem;
-  margin-bottom: 0.12rem;
-  font-size: 0.85rem;
-  display: inline-flex;
-  gap: 0.35rem;
+  padding: 0.14rem 0.5rem;
+  margin-bottom: 0.18rem;
+  font-size: 0.82rem;
+  display: flex;
+  gap: 0.4rem;
   align-items: center;
-  max-width: 100%;
+  width: 100%; /* make pill span full cell width so more text is visible */
   box-sizing: border-box;
-  height: 26px; /* compact pill height to allow stacking */
-  line-height: 1;
+  height: 26px; /* compact but slightly taller for readability */
+  line-height: 1.05;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-  .appointment-block .apt-title { overflow: hidden; text-overflow: ellipsis; }
+  .appointment-block .apt-title { overflow: hidden; text-overflow: ellipsis; display: inline-block; flex: 1 1 auto; min-width: 0; }
+  .appointment-block .apt-time { font-weight: 700; margin-right: 0.3rem; flex: 0 0 auto; display: inline-block; }
+  .appointment-block .apt-patient { flex: 0 0 auto; margin-left: 0.4rem; color: #2e7d74; font-size: 0.85rem; }
 
 .appointment-block:hover {
   transform: scale(1.02);
@@ -1565,13 +1766,13 @@ function handleDocClick() {
   box-shadow: none;
 }
 
+/* Month header (week day labels) */
 .month-header {
   display: grid;
   grid-template-columns: repeat(7, minmax(120px, 1fr));
   background: #0c4b47;
   color: white;
 }
-
 .month-day-name {
   padding: 0.8rem;
   text-align: center;
@@ -1583,6 +1784,15 @@ function handleDocClick() {
   grid-template-columns: repeat(7, minmax(120px, 1fr));
   gap: 6px;
   align-items: stretch;
+}
+.month-cell {
+  height: 120px; /* slightly reduced */
+  padding: 0.45rem;
+  border: 1px solid #eee;
+  cursor: pointer;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 
 .month-cell {
@@ -1642,9 +1852,9 @@ function handleDocClick() {
 }
 
 .mini-appointment {
-  font-size: 0.7rem;
-  padding: 0.2rem 0.4rem;
-  margin-bottom: 0.2rem;
+  font-size: 0.62rem;
+  padding: 0.16rem 0.32rem;
+  margin-bottom: 0.16rem;
   border-radius: 3px;
   background: #e8f5e9;
   white-space: nowrap;
@@ -1668,37 +1878,86 @@ function handleDocClick() {
 /* List View */
 .list-view {
   width: 100%;
-  overflow-x: hidden; /* no side-scrolling */
+  /* allow the list to expand if needed but prefer fitting into parent width */
+  overflow-x: visible;
   overflow-y: visible;
   padding-bottom: 1rem;
+  position: relative;
+}
+
+.list-view .list-inner {
+  /* keep ~100px margins on both sides and center the inner content */
+  max-width: calc(100% - 200px);
+  width: 100%;
+  padding: 0; /* remove extra inner padding to avoid shifting */
+  box-sizing: border-box;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* center table and pagination */
+  justify-content: flex-start;
+}
+
+@media (max-width: 1200px) {
+  .list-view .list-inner {
+    width: 100%;
+    padding: 0 24px; /* smaller side gutters for narrower screens */
+  }
 }
 
 .appointments-table {
-  width: 100%;
-  table-layout: fixed; /* ensure columns align and fit container */
+  width: auto;
+  table-layout: auto; /* let browser size columns so content remains visible */
   margin: 1rem 0;
   border-collapse: collapse;
   background: white;
   box-shadow: 0 4px 16px rgba(0,0,0,0.08);
   border-radius: 8px;
   overflow: visible;
+  position: relative;
+  z-index: 2;
 }
 
 /* Make header/body cells truncate content instead of forcing scroll */
 .appointments-table th,
 .appointments-table td {
-  padding: 0.9rem 1rem;
+  padding: 0.6rem 0.7rem;
   vertical-align: middle;
-  white-space: nowrap;
+}
+
+/* Headers: show full text, no ellipsis, allow visible overflow */
+.appointments-table thead th {
+  /* Allow header text to wrap so the table can shrink to viewport */
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+/* Data cells: keep truncation to avoid breaking layout */
+.appointments-table tbody td {
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Allow the title and category columns to wrap so the table can shrink to viewport
+   instead of pushing overflow off-screen. Keep other columns nowrap for readability. */
+.appointments-table tbody td:nth-child(3),
+.appointments-table tbody td:nth-child(4) {
+  white-space: normal;
+}
+
+/* Keep first columns (date/time) and actions compact */
+.appointments-table tbody td:nth-child(1),
+.appointments-table tbody td:nth-child(2),
+.appointments-table td.actions {
+  white-space: nowrap;
 }
 
 /* Force Aktionen column to a fixed width so buttons remain visible */
 .appointments-table th.actions-col,
 .appointments-table td.actions {
-  width: 140px;
-  min-width: 140px;
+  width: 110px;
+  min-width: 90px;
   max-width: 140px;
   text-align: center;
 }
@@ -1713,12 +1972,12 @@ function handleDocClick() {
 .appointments-table th {
   background: #0c4b47;
   color: white;
-  padding: 0.9rem 1rem;
+  padding: 0.7rem 0.8rem;
   text-align: left;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.86rem;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
+  letter-spacing: 0.5px;
   white-space: nowrap; /* keep header labels on one line */
   vertical-align: middle;
 }
@@ -1752,10 +2011,22 @@ function handleDocClick() {
 }
 
 .appointments-table td {
-  padding: 0.9rem 0.8rem;
+  padding: 0.5rem 0.5rem;
   border-bottom: 1px solid #eee;
   vertical-align: middle;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
+}
+
+/* Ensure status select has enough room and its dropdown is not clipped */
+.status-select {
+  min-width: 140px;
+  z-index: 5000;
+  position: relative;
+}
+
+/* Reduce overall table font slightly to help fit */
+.appointments-table, .appointments-table th, .appointments-table td {
+  font-size: 0.92rem;
 }
 
 .appointments-table tbody tr:last-child td {
@@ -1859,14 +2130,14 @@ function handleDocClick() {
 
 .modal {
   background: white;
-  padding: 2rem;
-  border-radius: 12px;
-  max-width: 600px;
+  padding: 1.5rem;
+  border-radius: 10px;
+  max-width: 560px;
   width: 90%;
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
-  margin: 2rem auto;
+  margin: 1.5rem auto;
 }
 
 .modal h3 {
@@ -2046,13 +2317,30 @@ function handleDocClick() {
     justify-content: center;
     align-items: center;
     margin: 0.8rem 0 1.6rem 0;
+    width: 100%;
   }
   .list-pagination button {
-    padding: 0.4rem 0.8rem;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    background: #fff;
+    padding: 0.5rem 0.9rem;
+    border-radius: 8px;
+    background: #0c4b47;
+    color: #ffffff;
     cursor: pointer;
+    font-weight: 600;
+  }
+  .list-pagination button:hover:not(:disabled) {
+    background: #0c4b47;
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(12,75,71,0.18);
+  }
+  .list-pagination button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #f5f5f5;
+    border-color: #ddd;
+    color: #999;
+    transform: none;
+    box-shadow: none;
   }
   .list-pagination button:disabled {
     opacity: 0.5;
@@ -2136,8 +2424,8 @@ function handleDocClick() {
   }
   
   .appointment-block {
-    font-size: 0.6rem;
-    padding: 0.2rem;
+    font-size: 0.68rem;
+    padding: 0.18rem 0.4rem;
   }
   
   .month-day-name {
@@ -2169,50 +2457,66 @@ function handleDocClick() {
    - generous bottom spacing so it doesn't hug the browser bottom
    - inherits font-family, uses same font-size/color as table rows
 */
-.list-pagination {
-  display: flex;
-  gap: 0.8rem;
-  justify-content: center;
-  align-items: center;
-  margin: 1.25rem auto 3.5rem auto;
-  font-family: inherit;
-  font-size: 0.95rem;
-  color: #0c4b47;
-  max-width: none;
-}
+  .list-pagination {
+    display: flex;
+    gap: 1rem; /* larger gap so buttons aren't jammed to text */
+    justify-content: center;
+    align-items: center;
+    margin: 1.25rem auto 3.5rem auto;
+    font-family: inherit;
+    font-size: 0.95rem;
+    color: #0c4b47;
+    width: auto; /* size to content so it sits exactly under the table */
+    box-sizing: border-box;
+    padding: 0; /* remove page-level gutters so pagination centers to table */
+  }
 
-.list-pagination button {
-  padding: 0.6rem 1.2rem;
-  border-radius: 8px;
-  border: 1px solid #0c4b47;
-  background: #ffffff;
-  color: #0c4b47;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(12,75,71,0.1);
-  font-weight: 600;
-  transition: all 0.2s;
-}
+  .list-pagination .page-btn {
+    padding: 0.65rem 1.25rem; /* good spacing around text */
+    border-radius: 9999px; /* fully pill-shaped */
+    border: none;
+    background: #0c6b64; /* primary green */
+    color: #ffffff; /* white text */
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(12,75,71,0.12);
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    transition: transform 0.14s ease, box-shadow 0.14s ease, background 0.14s ease;
+    margin: 0 0.35rem; /* ensure they don't sit tight against other elements */
+  }
 
-.list-pagination button:hover:not(:disabled) {
-  background: #0c4b47;
-  color: white;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(12,75,71,0.2);
-}
+  .list-pagination .page-btn:hover:not(:disabled) {
+    background: #0e7f76; /* slightly lighter green */
+    color: #ffffff;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 26px rgba(12,75,71,0.16);
+  }
 
-.list-pagination button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  background: #f5f5f5;
-  border-color: #ddd;
-  color: #999;
-}
+  .list-pagination .page-btn:disabled {
+    opacity: 0.48;
+    cursor: not-allowed;
+    background: #f5f5f5;
+    border-color: #e6e6e6;
+    color: #9e9e9e;
+    transform: none;
+    box-shadow: none;
+  }
 
-.list-pagination span {
-  padding: 0 0.5rem;
-  color: #0c4b47;
-  font-weight: 600;
-}
+  .list-pagination .page-indicator {
+    padding: 0.35rem 0.8rem;
+    color: #0c4b47;
+    font-weight: 700;
+    background: rgba(12,75,71,0.04);
+    border-radius: 8px;
+  }
+
+  .list-pagination .page-btn:focus {
+    outline: 3px solid rgba(14,127,118,0.14);
+    outline-offset: 3px;
+  }
+
+  /* slightly larger spacing between table and pagination */
+  .list-inner > .list-pagination { margin-top: 0.9rem; margin-bottom: 2.2rem; }
 }
 </style>
 <style scoped>
@@ -2227,13 +2531,13 @@ function handleDocClick() {
 }
 .speech-bubble {
   position: absolute;
-  width: 360px;
+  width: 320px;
   max-width: calc(100vw - 24px);
   background: white;
   border: 2px solid #0c4b47;
-  border-radius: 8px;
-  padding: 1rem;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  border-radius: 6px;
+  padding: 0.8rem;
+  box-shadow: 0 8px 22px rgba(0,0,0,0.22);
   z-index: 20001;
 }
 .speech-bubble.arrow-top::before,
@@ -2292,31 +2596,77 @@ function handleDocClick() {
   border: 2px solid #0c4b47;
   background: white;
   color: #0c4b47;
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 0.95rem;
   z-index: 20003;
 }
 .speech-bubble .bubble-textarea {
   width: 100%;
-  min-height: 120px;
+  min-height: 100px;
   box-sizing: border-box;
   padding: 0.6rem;
   border: 1px solid #ddd;
   border-radius: 8px;
   margin-top: 0.4rem;
   resize: vertical;
-  font-size: 0.98rem;
+  font-size: 0.9rem;
 }
 .speech-bubble .bubble-actions {
   display: flex;
   gap: 0.5rem;
   justify-content: flex-end;
   margin-top: 0.8rem;
+}
+</style>
+
+<style scoped>
+/* High-specificity overrides for pagination buttons to ensure they render as intended */
+.list-view .list-inner .list-pagination .page-btn,
+.list-view .list-inner .list-pagination button.page-btn {
+  padding: 0.85rem 1.4rem !important;
+  border-radius: 9999px !important;
+  border: none !important;
+  background: #0c4b47 !important; /* primary green */
+  color: #ffffff !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.4rem !important;
+  font-weight: 700 !important;
+  margin: 0 0.6rem !important;
+  box-shadow: 0 8px 22px rgba(12,75,71,0.14) !important;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease !important;
+}
+
+.list-view .list-inner .list-pagination .page-btn:hover:not(:disabled) {
+  background: #0e7f76 !important; /* slightly lighter */
+  transform: translateY(-2px) !important;
+  box-shadow: 0 12px 30px rgba(12,75,71,0.18) !important;
+}
+
+.list-view .list-inner .list-pagination .page-btn:disabled {
+  background: #f6f6f6 !important;
+  color: #9e9e9e !important;
+  box-shadow: none !important;
+  opacity: 0.6 !important;
+}
+
+.list-view .list-inner .list-pagination .page-indicator {
+  padding: 0.4rem 0.9rem !important;
+  margin: 0 0.5rem !important;
+  border-radius: 8px !important;
+  background: rgba(12,75,71,0.04) !important;
+  font-weight: 700 !important;
+}
+
+.list-view .list-inner .list-pagination .page-btn:focus {
+  outline: 3px solid rgba(14,127,118,0.14) !important;
+  outline-offset: 3px !important;
 }
 </style>

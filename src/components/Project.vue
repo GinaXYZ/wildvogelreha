@@ -19,8 +19,9 @@ import Appointments from './Appointments.vue';
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
-  padding-bottom: 4rem; /* give pagination space from browser bottom */
+  padding-bottom: 3rem; /* give pagination space from browser bottom */
   background: var(--bg-color, #fff);
+  overflow: visible; /* allow children to render outside wrapper */
 }
 
 /* Reset some global layout spacing to avoid the shifted look */
@@ -31,13 +32,19 @@ import Appointments from './Appointments.vue';
 /* Ensure Appointments uses full width and no extra top padding */
 .project-wrapper .appointments-container {
   width: 100% !important;
-  max-width: 1000px !important; /* match typical staff content width */
+  max-width: 1000px !important; /* center content for most views */
+  padding: 0 1rem !important; /* small side padding */
   padding-top: 0 !important;
   padding-bottom: 2.5rem !important; /* ensure inner bottom spacing so pagination doesn't sit flush */
   margin: 0 auto !important;
   box-sizing: border-box;
   align-items: stretch; /* allow content to use full inner width */
-}
+  position: relative;
+  z-index: 1100;
+ }
+
+/* Slightly reduce scale within project wrapper to shrink appointment UI (~8%) */
+.project-wrapper { font-size: 0.92em; }
 
 .project-wrapper .appointments-header {
   padding: 0 16px;
