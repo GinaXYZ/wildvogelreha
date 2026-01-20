@@ -201,7 +201,7 @@
             </th>
             <th>Kategorie</th>
             <th>Priorität</th>
-            <th>Patient</th>
+            <th>Project / Team</th>
             <th>Zugewiesen</th>
             <th>Status</th>
             <th class="actions-col">Aktionen</th>
@@ -273,13 +273,14 @@
             <div class="form-row">
               <label>Kategorie</label>
               <select v-model="formData.category">
-                <option value="behandlung">Behandlung</option>
-                <option value="fuetterung">Fütterung</option>
-                <option value="medikation">Medikation</option>
-                <option value="reinigung">Reinigung</option>
-                <option value="auswilderung">Auswilderung</option>
-                <option value="kontrolle">Kontrolle</option>
-                <option value="sonstiges">Sonstiges</option>
+                <option value="sprint-planung">Sprint Planning</option>
+                <option value="team-meeting">Team Meeting</option>
+                <option value="code-review">Code Review</option>
+                <option value="deployment">Deployment</option>
+                <option value="testing">Testing</option>
+                <option value="dokumentation">Documentation</option>
+                <option value="planning">Planning</option>
+                <option value="sonstiges">Other</option>
               </select>
             </div>
             <div class="form-row">
@@ -294,7 +295,7 @@
           </div>
           <div class="form-row-group">
             <div class="form-row">
-              <label>Patient (Vogel)</label>
+              <label>Project / Team</label>
               <select v-model="formData.patient_id">
                 <option value="">Kein Patient</option>
                 <option v-for="patient in patients" :key="patient.id" :value="patient.id">
@@ -434,7 +435,7 @@ const selectedStaffId = computed(() => String(filterStaff.value || ''));
 const filterDate = ref(''); // ISO date string or empty
 const filterHour = ref(null);
 
-const allCategories = ['behandlung','fuetterung','medikation','reinigung','auswilderung','kontrolle','sonstiges'];
+const allCategories = ['sprint-planung','team-meeting','code-review','deployment','testing','dokumentation','planning','sonstiges'];
 const allStatuses = ['geplant','in_bearbeitung','erledigt','abgesagt'];
 
 // week body ref for scrollbar sync
@@ -799,13 +800,14 @@ function getAppointmentsForDay(date) {
 
 function getCategoryLabel(cat) {
   const labels = {
-    behandlung: 'Behandlung',
-    fuetterung: 'Fütterung',
-    medikation: 'Medikation',
-    reinigung: 'Reinigung',
-    auswilderung: 'Auswilderung',
-    kontrolle: 'Kontrolle',
-    sonstiges: 'Sonstiges'
+    'sprint-planung': 'Sprint Planung',
+    'team-meeting': 'Team Meeting',
+    'code-review': 'Code Review',
+    'deployment': 'Deployment',
+    'testing': 'Testing',
+    'dokumentation': 'Dokumentation',
+    'planning': 'Planning',
+    'sonstiges': 'Sonstiges'
   };
   return labels[cat] || cat;
 }

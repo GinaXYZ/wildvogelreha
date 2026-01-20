@@ -123,8 +123,9 @@ async function sendAppointmentEmail(appointment, recipients = []) {
     
     // Category labels
     const categoryLabels = {
-      behandlung: '💊 Behandlung', fuetterung: '🍽️ Fütterung', medikation: '💉 Medikation',
-      reinigung: '🧹 Reinigung', auswilderung: '🦅 Auswilderung', kontrolle: '🔍 Kontrolle', sonstiges: '📋 Sonstiges'
+      'sprint-planung': '📋 Sprint Planning', 'team-meeting': '👥 Team Meeting', 'code-review': '🔍 Code Review',
+      'deployment': '🚀 Deployment', 'testing': '✅ Testing', 'dokumentation': '📚 Documentation', 
+      'planning': '🎯 Planning', 'sonstiges': '📌 Other'
     };
     const categoryLabel = categoryLabels[appointment.category] || appointment.category;
 
@@ -133,7 +134,7 @@ async function sendAppointmentEmail(appointment, recipients = []) {
     // Plain text version
     const textBody = `
 ═══════════════════════════════════════════════════════
-   NEUER TERMIN - Wildvogel Rehastation Waabs
+   APPOINTMENT NOTIFICATION - Project Management
 ═══════════════════════════════════════════════════════
 
 📌 ${appointment.title}
@@ -143,7 +144,7 @@ async function sendAppointmentEmail(appointment, recipients = []) {
 📂 Kategorie:  ${categoryLabel}
 ⚡ Priorität:  ${priorityLabel}
 
-🐦 Patient:    ${appointment.patient_name || '–'}
+👥 Team/Project: ${appointment.patient_name || '–'}
 👤 Zugewiesen: ${appointment.assigned_firstname ? appointment.assigned_firstname + ' ' + (appointment.assigned_lastname || '') : '–'}
 📊 Status:     ${appointment.status || 'geplant'}
 
@@ -154,7 +155,7 @@ ${appointment.description || appointment.notes || 'Keine Beschreibung vorhanden.
 
 ═══════════════════════════════════════════════════════
 Diese E-Mail wurde automatisch generiert.
-Wildvogel Rehastation Waabs
+Project Management System
 ═══════════════════════════════════════════════════════
 `;
 
