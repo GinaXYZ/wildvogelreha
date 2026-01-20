@@ -65,6 +65,24 @@
       </div>
     </div>
 
+    <!-- Legend für Wochenansicht -->
+    <div v-if="viewMode === 'week'" class="legend">
+      <div class="legend-title">Legende</div>
+      <div class="legend-content">
+        <div class="legend-group">
+          <div class="legend-label">Priorität:</div>
+          <div class="legend-item"><span class="legend-box" style="background:#e3f2fd;"></span>Niedrig/Mittel</div>
+          <div class="legend-item"><span class="legend-box" style="background:#fff3e0;"></span>Hoch</div>
+          <div class="legend-item"><span class="legend-box" style="background:#ffebee;"></span>Dringend</div>
+        </div>
+        <div class="legend-group">
+          <div class="legend-label">Status:</div>
+          <div class="legend-item"><span class="legend-box" style="opacity:1;"></span>Geplant/In Bearbeitung</div>
+          <div class="legend-item"><span class="legend-box" style="opacity:0.6; text-decoration:line-through;"></span>Erledigt</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Kalender Wochenansicht -->
     <div v-if="viewMode === 'week'" class="week-view">
       <table class="week-table">
@@ -99,6 +117,19 @@
       </table>
     </div>
 
+    <!-- Legend für Monatsansicht -->
+    <div v-if="viewMode === 'month'" class="legend">
+      <div class="legend-title">Legende</div>
+      <div class="legend-content">
+        <div class="legend-group">
+          <div class="legend-label">Priorität:</div>
+          <div class="legend-item"><span class="legend-box" style="background:#e3f2fd;"></span>Niedrig/Mittel</div>
+          <div class="legend-item"><span class="legend-box" style="background:#fff3e0;"></span>Hoch</div>
+          <div class="legend-item"><span class="legend-box" style="background:#ffebee;"></span>Dringend</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Kalender Monatsansicht -->
     <div v-if="viewMode === 'month'" class="month-view">
       <div class="month-header">
@@ -128,6 +159,23 @@
               +{{ getAppointmentsForDay(day.date).length - 3 }} weitere
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Legend für Listenansicht -->
+    <div v-if="viewMode === 'list'" class="legend">
+      <div class="legend-title">Legende</div>
+      <div class="legend-content">
+        <div class="legend-group">
+          <div class="legend-label">Priorität:</div>
+          <div class="legend-item"><span class="legend-box" style="background:#e8f5e9;"></span>Niedrig</div>
+          <div class="legend-item"><span class="legend-box" style="background:#fff3e0;"></span>Mittel/Hoch</div>
+          <div class="legend-item"><span class="legend-box" style="background:#ffebee;"></span>Dringend</div>
+        </div>
+        <div class="legend-group">
+          <div class="legend-label">Status:</div>
+          <div class="legend-item">Geplant / In Bearbeitung / Erledigt / Abgesagt</div>
         </div>
       </div>
     </div>
@@ -1547,6 +1595,58 @@ function seedMockData() {
 .filters .status-select:hover {
   border-color: #0c4b47;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Legend */
+.legend {
+  background: #f9fffe;
+  border: 1px solid #e0f0ed;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+  box-shadow: 0 2px 6px rgba(12,75,71,0.04);
+}
+
+.legend-title {
+  font-weight: 700;
+  color: #0c4b47;
+  margin-bottom: 0.6rem;
+  font-size: 0.95rem;
+}
+
+.legend-content {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.legend-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.legend-label {
+  font-weight: 600;
+  color: #0c4b47;
+  font-size: 0.85rem;
+  margin-bottom: 0.2rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  color: #333;
+}
+
+.legend-box {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  border: 1px solid rgba(12,75,71,0.15);
 }
 
 /* Week View */
