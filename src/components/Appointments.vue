@@ -97,7 +97,7 @@
                    :class="[`priority-${apt.priority}`, `status-${apt.status}`]"
                    :title="apt.title + (apt.patient_name ? ' — ' + apt.patient_name : '')"
                    @click.stop="showAppointmentBubble($event, apt)">
-                {{ formatTime(apt.appointment_time) }} | {{ apt.title }}<span v-if="apt.patient_name" class="apt-patient"> ({{ apt.patient_name }})</span>
+                {{ formatTime(apt.appointment_time) }}<span v-if="apt.patient_name"> ({{ apt.patient_name }})</span>
               </div>
               <div v-if="getAppointmentsForSlot(day.date, hour).length > maxVisibleSlot" class="more-count" @click.stop="openSlotList(day.date, hour)">
                 +{{ getAppointmentsForSlot(day.date, hour).length - maxVisibleSlot }} weitere
