@@ -295,15 +295,6 @@
           </div>
           <div class="form-row-group">
             <div class="form-row">
-              <label>Project / Team</label>
-              <select v-model="formData.patient_id">
-                <option value="">Kein Patient</option>
-                <option v-for="patient in patients" :key="patient.id" :value="patient.id">
-                  {{ patient.name }} ({{ patient.species }})
-                </option>
-              </select>
-            </div>
-            <div class="form-row">
               <label>Zugewiesen an</label>
               <select v-model="formData.assigned_to">
                 <option value="">Nicht zugewiesen</option>
@@ -495,7 +486,6 @@ function getEmptyFormData() {
     category: 'sonstiges',
     priority: 'mittel',
     status: 'geplant',
-    patient_id: '',
     assigned_to: '',
     recurring: false,
     recurring_interval: 'woechentlich',
@@ -860,7 +850,6 @@ function openEditModal(apt) {
     category: apt.category,
     priority: apt.priority,
     status: apt.status,
-    patient_id: apt.patient_id || '',
     assigned_to: apt.assigned_to || '',
     recurring: apt.recurring,
     recurring_interval: apt.recurring_interval || 'woechentlich',
@@ -1342,6 +1331,15 @@ watch(viewMode, () => fetchAppointments());
 
 // Init
 onMounted(() => {
+  // Clear old dev cache to ensure fresh data from API
+  if (!isDev) {
+    try {
+      localStorage.removeItem(DEV_STORAGE_KEY);
+    } catch (e) {
+      // ignore
+    }
+  }
+  
   fetchAppointments();
   fetchStats();
   fetchPatients();
@@ -1361,9 +1359,8 @@ onBeforeUnmount(() => {
 });
 
 function handleDocClick() {
-  showCategoryDropdown.value = false;
-  showStatusDropdown.value = false;
-  showStaffDropdown.value = false;
+  // Close any open modals when clicking outside
+  closeAppointmentBubble();
 }
 
 function seedMockData() {
