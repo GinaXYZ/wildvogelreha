@@ -2109,14 +2109,6 @@ function seedMockData() {
   font-weight: 500;
 }
 
-.cat-behandlung { background: #e3f2fd; color: #1976d2; }
-.cat-fuetterung { background: #fff3e0; color: #f57c00; }
-.cat-medikation { background: #fce4ec; color: #c2185b; }
-.cat-reinigung { background: #e8f5e9; color: #388e3c; }
-.cat-auswilderung { background: #f3e5f5; color: #7b1fa2; }
-.cat-kontrolle { background: #e0f7fa; color: #0097a7; }
-.cat-sonstiges { background: #f5f5f5; color: #616161; }
-
 /* Priority badge */
 .priority-badge {
   display: inline-block;
