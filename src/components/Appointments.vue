@@ -97,9 +97,7 @@
                    :class="[`priority-${apt.priority}`, `status-${apt.status}`]"
                    :title="apt.title + (apt.patient_name ? ' — ' + apt.patient_name : '')"
                    @click.stop="showAppointmentBubble($event, apt)">
-                <span class="apt-time">{{ formatTime(apt.appointment_time) }}</span>
-                <span class="apt-title">{{ apt.title }}</span>
-                <span v-if="apt.patient_name" class="apt-patient">{{ apt.patient_name }}</span>
+                {{ formatTime(apt.appointment_time) }} | {{ apt.title }}<span v-if="apt.patient_name" class="apt-patient"> ({{ apt.patient_name }})</span>
               </div>
               <div v-if="getAppointmentsForSlot(day.date, hour).length > maxVisibleSlot" class="more-count" @click.stop="openSlotList(day.date, hour)">
                 +{{ getAppointmentsForSlot(day.date, hour).length - maxVisibleSlot }} weitere
@@ -1703,23 +1701,20 @@ function seedMockData() {
 .appointment-block {
   background: #e3f2fd;
   border-radius: 6px;
-  padding: 0.14rem 0.5rem;
+  padding: 0.2rem 0.45rem;
   margin-bottom: 0.18rem;
   font-size: 0.82rem;
-  display: flex;
-  gap: 0.4rem;
-  align-items: center;
+  display: block;
   width: 100%; /* make pill span full cell width so more text is visible */
   box-sizing: border-box;
-  height: 26px; /* compact but slightly taller for readability */
+  height: auto;
+  min-height: 22px;
   line-height: 1.05;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-  .appointment-block .apt-title { overflow: hidden; text-overflow: ellipsis; display: inline-block; flex: 1 1 auto; min-width: 0; }
-  .appointment-block .apt-time { font-weight: 700; margin-right: 0.3rem; flex: 0 0 auto; display: inline-block; }
-  .appointment-block .apt-patient { flex: 0 0 auto; margin-left: 0.4rem; color: #2e7d74; font-size: 0.85rem; }
+  .appointment-block .apt-patient { margin-left: 0; color: #2e7d74; font-size: 0.85rem; }
 
 .appointment-block:hover {
   transform: scale(1.02);
