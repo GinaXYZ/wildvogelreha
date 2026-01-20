@@ -42,29 +42,20 @@
         <button :class="{ active: viewMode === 'list' }" @click="viewMode = 'list'">Liste</button>
       </div>
       <div class="filters">
-        <div class="dd" ref="catDd">
-          <button type="button" class="dd-btn" @click.stop="toggleDropdown('category')">{{ filterCategory ? getCategoryLabel(filterCategory) : 'Alle Kategorien' }}</button>
-          <div v-if="showCategoryDropdown" class="dd-menu" @click.stop>
-            <div class="dd-item" :class="{selected: filterCategory === ''}" @click="selectCategory('')">Alle Kategorien</div>
-            <div v-for="opt in allCategories" :key="opt" class="dd-item" :class="{selected: filterCategory === opt}" @click="selectCategory(opt)">{{ getCategoryLabel(opt) }}</div>
-          </div>
-        </div>
+        <select v-model="filterCategory" class="status-select">
+          <option value="">Alle Kategorien</option>
+          <option v-for="opt in allCategories" :key="opt" :value="opt">{{ getCategoryLabel(opt) }}</option>
+        </select>
 
-        <div class="dd" ref="statusDd">
-          <button type="button" class="dd-btn" @click.stop="toggleDropdown('status')">{{ filterStatus ? filterStatus.replace('_',' ') : 'Alle Status' }}</button>
-          <div v-if="showStatusDropdown" class="dd-menu" @click.stop>
-            <div class="dd-item" :class="{selected: filterStatus === ''}" @click="selectStatus('')">Alle Status</div>
-            <div v-for="opt in allStatuses" :key="opt" class="dd-item" :class="{selected: filterStatus === opt}" @click="selectStatus(opt)">{{ opt.replace('_',' ') }}</div>
-          </div>
-        </div>
+        <select v-model="filterStatus" class="status-select">
+          <option value="">Alle Status</option>
+          <option v-for="opt in allStatuses" :key="opt" :value="opt">{{ opt.replace('_',' ') }}</option>
+        </select>
 
-        <div class="dd" ref="staffDd">
-          <button type="button" class="dd-btn" @click.stop="toggleDropdown('staff')">{{ filterStaff ? (staffUsers.find(s=>String(s.id)===String(filterStaff)) ? staffUsers.find(s=>String(s.id)===String(filterStaff)).firstname + ' ' + staffUsers.find(s=>String(s.id)===String(filterStaff)).lastname : 'Ausgewählt') : 'Alle Mitarbeiter' }}</button>
-          <div v-if="showStaffDropdown" class="dd-menu" @click.stop>
-            <div class="dd-item" :class="{selected: selectedStaffId === ''}" @click="selectStaff('')">Alle Mitarbeiter</div>
-            <div v-for="staff in staffUsers" :key="staff.id" class="dd-item" :class="{selected: selectedStaffId === String(staff.id)}" @click="selectStaff(String(staff.id))">{{ staff.firstname }} {{ staff.lastname }}</div>
-          </div>
-        </div>
+        <select v-model="filterStaff" class="status-select">
+          <option value="">Alle Mitarbeiter</option>
+          <option v-for="staff in staffUsers" :key="staff.id" :value="String(staff.id)">{{ staff.firstname }} {{ staff.lastname }}</option>
+        </select>
       </div>
       <div class="date-nav">
         <button @click="navigateDate(-1)">◀</button>
@@ -129,8 +120,9 @@
             <div v-for="apt in getAppointmentsForDay(day.date).slice(0, 3)" :key="apt.id"
                  class="mini-appointment"
                  :class="`priority-${apt.priority}`"
+                 :title="apt.title + (apt.patient_name ? ' — ' + apt.patient_name : '')"
                  @click.stop="openEditModal(apt)">
-              {{ formatTime(apt.appointment_time) }} {{ apt.title.substring(0, 15) }}...
+              {{ formatTime(apt.appointment_time) }}<span v-if="apt.patient_name"> ({{ apt.patient_name.substring(0, 12) }})</span>
             </div>
             <div v-if="getAppointmentsForDay(day.date).length > 3" class="more-appointments">
               +{{ getAppointmentsForDay(day.date).length - 3 }} weitere
@@ -393,37 +385,6 @@ const filterStaff = ref('');
 const selectedStaffId = computed(() => String(filterStaff.value || ''));
 const filterDate = ref(''); // ISO date string or empty
 const filterHour = ref(null);
-// dropdown states for filters
-const showCategoryDropdown = ref(false);
-const showStatusDropdown = ref(false);
-const showStaffDropdown = ref(false);
-
-function closeAllDropdowns() {
-  showCategoryDropdown.value = false;
-  showStatusDropdown.value = false;
-  showStaffDropdown.value = false;
-}
-
-function toggleDropdown(which) {
-  // ensure only one open at a time
-  if (which === 'category') {
-    showCategoryDropdown.value = !showCategoryDropdown.value;
-    showStatusDropdown.value = false; showStaffDropdown.value = false;
-  } else if (which === 'status') {
-    showStatusDropdown.value = !showStatusDropdown.value;
-    showCategoryDropdown.value = false; showStaffDropdown.value = false;
-  } else if (which === 'staff') {
-    showStaffDropdown.value = !showStaffDropdown.value;
-    showCategoryDropdown.value = false; showStatusDropdown.value = false;
-  }
-}
-
-function selectCategory(val) { filterCategory.value = val; closeAllDropdowns(); }
-function clearCategory() { filterCategory.value = ''; }
-function selectStatus(val) { filterStatus.value = val; closeAllDropdowns(); }
-function clearStatus() { filterStatus.value = ''; }
-function selectStaff(val) { filterStaff.value = val; closeAllDropdowns(); }
-function clearStaff() { filterStaff.value = ''; }
 
 const allCategories = ['behandlung','fuetterung','medikation','reinigung','auswilderung','kontrolle','sonstiges'];
 const allStatuses = ['geplant','in_bearbeitung','erledigt','abgesagt'];
@@ -1573,15 +1534,20 @@ function seedMockData() {
   color: #1976d2;
 }
 
-/* Simple dropdown checkbox menus for filters */
-.filters { display:flex; gap:0.75rem; align-items:center; }
-.dd { position: relative; }
-.dd-btn { padding:0.5rem 0.75rem; border:1px solid #ddd; background:white; border-radius:6px; cursor:pointer; }
-.dd-menu { position: absolute; right: 0; top: calc(100% + 6px); background: white; border:1px solid #ddd; box-shadow: 0 6px 18px rgba(0,0,0,0.08); padding:0.5rem; z-index:30; width:220px; max-height:220px; overflow:auto; }
-.dd-item { display:block; padding:0.25rem 0.5rem; font-size:0.95rem; cursor:pointer; }
-.dd-item.selected { background: #e6f7f2; }
-.dd-actions { display:flex; justify-content:flex-end; margin-top:0.5rem; }
-.dd-actions button { padding:0.25rem 0.5rem; border:1px solid #eee; background:#fafafa; border-radius:4px; cursor:pointer; }
+/* Filter dropdowns — now using standard select elements */
+.filters { display:flex; gap:0.75rem; align-items:center; flex-wrap: wrap; }
+.filters .status-select { 
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  background: white;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+.filters .status-select:hover {
+  border-color: #0c4b47;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
 
 /* Week View */
 .week-view {
