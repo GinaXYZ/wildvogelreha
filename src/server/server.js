@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
@@ -28,6 +29,41 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'shop',
 });
+
+// Datenbank-Initialisierung
+async function initializeDatabase() {
+  try {
+    console.log('Initializing database schema...');
+    const connection = await pool.getConnection();
+    
+    // Read init.sql
+    const initSqlPath = path.join(__dirname, 'init.sql');
+    const sqlStatements = fs.readFileSync(initSqlPath, 'utf8');
+    
+    // Split and execute SQL statements
+    const statements = sqlStatements
+      .split(';')
+      .map(stmt => stmt.trim())
+      .filter(stmt => stmt.length > 0 && !stmt.startsWith('--'));
+    
+    for (const statement of statements) {
+      try {
+        await connection.query(statement);
+      } catch (err) {
+        // Ignore "table already exists" errors (1050) and view exists errors (1050)
+        if (err.code !== 'ER_TABLE_EXISTS_ERROR' && err.code !== 1050) {
+          console.warn('SQL Warning:', err.message);
+        }
+      }
+    }
+    
+    connection.release();
+    console.log('Database initialization completed successfully');
+  } catch (err) {
+    console.error('Database initialization error:', err.message);
+    // Don't exit, let the app try to run anyway
+  }
+}
 
 // Passwort-Validierung
 function validatePassword(password) {
@@ -335,10 +371,18 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' })); // Limit request body size
 app.use(generalLimiter); // Allgemeines Rate Limiting
 
-app.listen(3000, '0.0.0.0', () => {
-  console.log('API läuft auf http://0.0.0.0:3000');
-  console.log('DB Host:', process.env.DB_HOST);
-  console.log('Security: Helmet, Rate Limiting aktiv');
+// Initialize database and then start server
+initializeDatabase().then(() => {
+  app.listen(3000, '0.0.0.0', () => {
+    console.log('API läuft auf http://0.0.0.0:3000');
+    console.log('DB Host:', process.env.DB_HOST);
+    console.log('Security: Helmet, Rate Limiting aktiv');
+  });
+}).catch(err => {
+  console.error('Failed to initialize database, starting anyway:', err);
+  app.listen(3000, '0.0.0.0', () => {
+    console.log('API läuft auf http://0.0.0.0:3000 (ohne DB-Init)');
+  });
 });
 
 app.get('/api/blog', async (req, res) => {
