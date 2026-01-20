@@ -104,9 +104,9 @@
                  <div v-for="apt in getAppointmentsForSlot(day.date, hour).slice(0, maxVisibleSlot)" :key="apt.id"
                    class="appointment-block"
                    :class="[`priority-${apt.priority}`, `status-${apt.status}`]"
-                   :title="apt.title + (apt.patient_name ? ' — ' + apt.patient_name : '')"
+                   :title="apt.title + (apt.room ? ' — ' + apt.room : '')"
                    @click.stop="showAppointmentBubble($event, apt)">
-                {{ formatTime(apt.appointment_time) }}<span v-if="apt.patient_name"> ({{ apt.patient_name }})</span>
+                {{ formatTime(apt.appointment_time) }}<span v-if="apt.room"> | {{ apt.room }}</span>
               </div>
               <div v-if="getAppointmentsForSlot(day.date, hour).length > maxVisibleSlot" class="more-count" @click.stop="openSlotList(day.date, hour)">
                 +{{ getAppointmentsForSlot(day.date, hour).length - maxVisibleSlot }} weitere
@@ -151,9 +151,9 @@
             <div v-for="apt in getAppointmentsForDay(day.date).slice(0, 3)" :key="apt.id"
                  class="mini-appointment"
                  :class="`priority-${apt.priority}`"
-                 :title="apt.title + (apt.patient_name ? ' — ' + apt.patient_name : '')"
+                 :title="apt.title + (apt.room ? ' — ' + apt.room : '')"
                  @click.stop="openEditModal(apt)">
-              {{ formatTime(apt.appointment_time) }}<span v-if="apt.patient_name"> ({{ apt.patient_name.substring(0, 12) }})</span>
+              {{ formatTime(apt.appointment_time) }}<span v-if="apt.room"> | {{ apt.room.substring(0, 12) }}</span>
             </div>
             <div v-if="getAppointmentsForDay(day.date).length > 3" class="more-appointments">
               +{{ getAppointmentsForDay(day.date).length - 3 }} weitere
