@@ -1062,6 +1062,25 @@ async function fetchAppointments() {
 
 async function fetchStats() {
   try {
+    // Prefer the API when we have an auth token (real data).
+    const token = authStore.token || localStorage.getItem('token');
+    if (token) {
+      try {
+        const res = await fetch(`${API_BASE}/appointments/stats/overview`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          stats.value = await res.json();
+          return;
+        } else {
+          console.warn('[Appointments] stats endpoint returned', res.status);
+        }
+      } catch (e) {
+        console.warn('[Appointments] stats API failed, falling back to dev storage', e);
+      }
+    }
+
+    // Fallback: when running in dev without a token, use the local dev storage mock
     if (isDev) {
       try {
         const raw = localStorage.getItem(DEV_STORAGE_KEY) || '[]';
@@ -1073,14 +1092,6 @@ async function fetchStats() {
           urgent: data.filter(a => a.priority === 'dringend').length
         };
       } catch (e) { console.error('DEV fetchStats error', e); }
-      return;
-    }
-    const token = authStore.token || localStorage.getItem('token');
-    const res = await fetch(`${API_BASE}/appointments/stats/overview`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    if (res.ok) {
-      stats.value = await res.json();
     }
   } catch (err) {
     console.error('Fehler beim Laden der Statistiken:', err);
