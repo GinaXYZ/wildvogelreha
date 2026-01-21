@@ -36,65 +36,13 @@
           <button @click="exportCSV" class="btn-export">📥 Export</button>
         </div>
         <div class="import-controls">
-          <input ref="csvInput" type="file" accept=".csv" style="display:none" @change="handleCSVImport" />
-          <button @click="$refs.csvInput.click()" class="btn-import">📤 Importieren (CSV)</button>
+          <input ref="csvInput" type="file" accept=".csv" style="display:none" @change="onFileChange" />
+          <button @click="importCSV" :disabled="!csvFile || isImporting" class="btn-import">Import</button>
+          <button @click="openFilePicker" class="btn-choose">Choose File</button>
+          <span v-if="csvFileName" class="import-filename">{{ csvFileName }}</span>
         </div>
       </div>
-    <script>
-    // ...existing code...
-    import Papa from 'papaparse';
-    // ...existing code...
-
-    async function handleCSVImport(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
-        complete: async function(results) {
-          try {
-            // Hier: Sende die Daten an das Backend (API-Endpoint folgt)
-            const token = authStore.token || localStorage.getItem('token');
-            const res = await fetch(`${API_BASE}/appointments/import-csv`, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ appointments: results.data })
-            });
-            if (res.ok) {
-              alert('Import erfolgreich!');
-              fetchAppointments();
-            } else {
-              const text = await res.text();
-              alert('Import fehlgeschlagen: ' + text);
-            }
-          } catch (e) {
-            alert('Fehler beim Import: ' + e.message);
-          }
-        }
-      });
-    }
-    // ...existing code...
-    </script>
-    <style scoped>
-    .btn-import {
-      margin-left: 1rem;
-      background: #e3f2fd;
-      color: #0c4b47;
-      border: 1px solid #b3e5fc;
-      border-radius: 6px;
-      padding: 0.45rem 0.7rem;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .btn-import:hover {
-      background: #bbdefb;
-    }
-    </style>
     </div>
-
     <!-- Filter & Ansichtswechsel -->
     <div class="filter-bar">
       <div class="view-toggle">
@@ -453,6 +401,78 @@ const patients = ref([]);
 const staffUsers = ref([]);
 const loading = ref(false);
 const stats = ref({ today: 0, pending: 0, urgent: 0 });
+
+// CSV import state
+const csvInput = ref(null);
+const csvFile = ref(null);
+const csvFileName = ref('');
+const isImporting = ref(false);
+
+function openFilePicker() {
+  if (csvInput.value && csvInput.value.click) {
+    try { csvInput.value.click(); } catch (e) { /* ignore */ }
+  }
+}
+
+function onFileChange(event) {
+  const f = event && event.target && event.target.files ? event.target.files[0] : null;
+  if (!f) { csvFile.value = null; csvFileName.value = ''; return; }
+  csvFile.value = f;
+  csvFileName.value = f.name;
+}
+
+async function importCSV() {
+  if (!csvFile.value) { alert('Bitte zuerst eine CSV-Datei auswählen.'); return; }
+  isImporting.value = true;
+  try {
+    if (isDev) {
+      // Simple CSV -> JSON parser for dev mode (no external deps)
+      const text = await csvFile.value.text();
+      const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+      if (lines.length === 0) throw new Error('Leere Datei');
+      const headers = lines.shift().split(',').map(h => h.trim());
+      const rows = lines.map(line => {
+        const parts = line.split(',');
+        const obj = {};
+        headers.forEach((h, i) => { obj[h] = parts[i] ? parts[i].trim() : ''; });
+        return obj;
+      });
+      // merge into dev storage
+      const raw = localStorage.getItem(DEV_STORAGE_KEY) || '[]';
+      const arr = JSON.parse(raw);
+      let nextId = arr.reduce((m, a) => Math.max(m, Number(a.id) || 0), 0) + 1;
+      rows.forEach(r => { r.id = nextId++; arr.push(r); });
+      localStorage.setItem(DEV_STORAGE_KEY, JSON.stringify(arr));
+      alert('Import erfolgreich (dev).');
+      await fetchAppointments();
+      await fetchStats();
+    } else {
+      const token = authStore.token || localStorage.getItem('token');
+      const fd = new FormData();
+      fd.append('file', csvFile.value);
+      const res = await fetch(`${API_BASE}/appointments/import-csv`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: fd
+      });
+      if (res.ok) {
+        alert('Import erfolgreich!');
+        await fetchAppointments();
+        await fetchStats();
+      } else {
+        const txt = await res.text();
+        alert('Import fehlgeschlagen: ' + txt);
+      }
+    }
+  } catch (e) {
+    alert('Fehler beim Import: ' + (e && e.message ? e.message : e));
+  } finally {
+    isImporting.value = false;
+    csvFile.value = null;
+    csvFileName.value = '';
+    try { if (csvInput.value) csvInput.value.value = ''; } catch (e) {}
+  }
+}
 
 // Speech-bubble for appointment details in week view
 const appointmentBubble = ref({ visible: false, x: 0, y: 0, content: '', id: null });
@@ -1452,6 +1472,34 @@ function seedMockData() {
   width: 100%;
   max-width: 100%;
   overflow: visible; /* ensure children can show above surrounding elements */
+}
+
+.import-controls .btn-import {
+  margin-right: 0.5rem;
+  background: #e3f2fd;
+  color: #0c4b47;
+  border: 1px solid #b3e5fc;
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.import-controls .btn-import[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.import-controls .btn-choose {
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  margin-left: 0.4rem;
+  cursor: pointer;
+}
+.import-filename {
+  margin-left: 0.6rem;
+  font-size: 0.9rem;
+  color: #333;
 }
 
 .dev-banner {
