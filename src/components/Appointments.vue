@@ -1376,6 +1376,15 @@ onMounted(() => {
   updateWeekScrollbar();
   updateTodayOverlay();
   window.addEventListener('resize', resizeHandler);
+
+  // mark table cells that contain a .status-select so we can allow dropdowns to overflow
+  nextTick(() => {
+    try {
+      document.querySelectorAll('.appointments-table tbody td').forEach(td => {
+        if (td.querySelector && td.querySelector('.status-select')) td.classList.add('has-status-select');
+      });
+    } catch (e) { /* ignore */ }
+  });
 });
 
 onBeforeUnmount(() => {
@@ -1415,13 +1424,13 @@ function seedMockData() {
    Adjust width so the scaled element occupies the viewport width (125% * 0.8 = 1.0)
    This is intentionally a layout-scale tweak and kept non-invasive. */
 .appointments-container--scaled {
-  transform: scale(0.8);
+  /* Use `zoom` to scale layout and reduce the element footprint (affects flow). */
+  zoom: 0.8;
+  -moz-transform: scale(0.8); /* fallback visual only for older Firefox */
   transform-origin: top center;
   width: 125%;
   margin-left: auto;
   margin-right: auto;
-  /* reduce extra blank space caused by scaling */
-  margin-bottom: -120px;
 }
 
 .import-controls .btn-import {
@@ -2093,8 +2102,12 @@ function seedMockData() {
 
 /* Data cells: keep truncation to avoid breaking layout */
 .appointments-table tbody td {
+  /* Keep default truncation behavior for most cells */
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.appointments-table tbody td.has-status-select {
+  overflow: visible !important;
 }
 
 /* Allow the title and category columns to wrap so the table can shrink to viewport
