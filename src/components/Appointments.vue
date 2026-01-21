@@ -26,20 +26,15 @@
       </div>
       <div class="header-actions">
         <button @click="showAddModal = true" class="btn-add">+ Neuer Termin</button>
-        <div class="export-controls">
-          <select v-model="exportRange" class="export-select">
-            <option value="week">Woche</option>
-            <option value="month">Monat</option>
-            <option value="year">Jahr</option>
-            <option value="all">Alle</option>
-          </select>
-          <button @click="exportCSV" class="btn-export">📥 Export</button>
-        </div>
-        <div class="import-controls">
-          <input ref="csvInput" type="file" accept=".csv" style="display:none" @change="onFileChange" />
-          <button @click="importCSV" :disabled="!csvFile || isImporting" class="btn-import">Import</button>
-          <button @click="openFilePicker" class="btn-choose">Choose File</button>
-          <span v-if="csvFileName" class="import-filename">{{ csvFileName }}</span>
+        <div class="right-actions">
+          <div class="export-controls">
+            <button @click="exportCSV" class="btn-export">📥 Export CSV</button>
+          </div>
+          <div class="import-controls">
+            <input ref="csvInput" type="file" accept=".csv" style="display:none" @change="onFileChange" />
+            <button @click="openFilePicker" class="btn-import">📤 Import CSV</button>
+            <span v-if="csvFileName" class="import-filename">{{ csvFileName }}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -419,6 +414,9 @@ function onFileChange(event) {
   if (!f) { csvFile.value = null; csvFileName.value = ''; return; }
   csvFile.value = f;
   csvFileName.value = f.name;
+  // Automatically import immediately after selection
+  // allow UI to update filename before import starts
+  setTimeout(() => { importCSV().catch(e => console.error(e)); }, 100);
 }
 
 async function importCSV() {
@@ -447,13 +445,40 @@ async function importCSV() {
       await fetchAppointments();
       await fetchStats();
     } else {
+      // Parse CSV client-side and send JSON to server (server expects { appointments: [...] })
       const token = authStore.token || localStorage.getItem('token');
-      const fd = new FormData();
-      fd.append('file', csvFile.value);
+      const text = await csvFile.value.text();
+      const parseLine = (line) => {
+        const res = [];
+        let cur = '';
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i];
+          if (ch === '"') {
+            if (inQuotes && line[i+1] === '"') { cur += '"'; i++; }
+            else { inQuotes = !inQuotes; }
+          } else if (ch === ',' && !inQuotes) {
+            res.push(cur);
+            cur = '';
+          } else { cur += ch; }
+        }
+        res.push(cur);
+        return res.map(s => s.trim());
+      };
+      const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+      if (lines.length === 0) throw new Error('Leere Datei');
+      const headers = parseLine(lines.shift()).map(h => h.replace(/^\uFEFF/, '').trim());
+      const rows = lines.map(line => {
+        const cols = parseLine(line);
+        const obj = {};
+        headers.forEach((h, i) => { obj[h] = cols[i] !== undefined ? cols[i] : ''; });
+        return obj;
+      });
+
       const res = await fetch(`${API_BASE}/appointments/import-csv`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: fd
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ appointments: rows })
       });
       if (res.ok) {
         alert('Import erfolgreich!');
@@ -1373,30 +1398,25 @@ async function deleteAppointment(id) {
 function exportCSV() {
   const token = authStore.token || localStorage.getItem('token');
   if (!token) { alert('Bitte anmelden um CSV-Export auszuführen.'); return; }
-  const range = exportRange.value || 'week';
+  const mode = viewMode.value || 'week';
   let url = `${API_BASE}/appointments/export/csv`;
   let filename = 'termine';
 
-  if (range === 'week') {
+  if (mode === 'week') {
     const startDate = (weekDays.value && weekDays.value[0] && weekDays.value[0].date) ? weekDays.value[0].date : currentDate.value.toISOString().split('T')[0];
     const endDate = (weekDays.value && weekDays.value[6] && weekDays.value[6].date) ? weekDays.value[6].date : currentDate.value.toISOString().split('T')[0];
     url += `?start_date=${startDate}&end_date=${endDate}`;
     filename += `_${startDate}_to_${endDate}`;
-  } else if (range === 'month') {
+  } else if (mode === 'month') {
     const y = currentDate.value.getFullYear();
     const m = currentDate.value.getMonth();
     const first = new Date(y, m, 1).toISOString().split('T')[0];
     const last = new Date(y, m + 1, 0).toISOString().split('T')[0];
     url += `?start_date=${first}&end_date=${last}`;
     filename += `_${first}_to_${last}`;
-  } else if (range === 'year') {
-    const y = currentDate.value.getFullYear();
-    const first = `${y}-01-01`;
-    const last = `${y}-12-31`;
-    url += `?start_date=${first}&end_date=${last}`;
-    filename += `_${first}_to_${last}`;
+  } else if (mode === 'list') {
+    filename += `_list`;
   } else {
-    // all
     filename += `_all`;
   }
 
@@ -1476,11 +1496,11 @@ function seedMockData() {
 
 .import-controls .btn-import {
   margin-right: 0.5rem;
-  background: #e3f2fd;
+  background: #f5f5f5;
   color: #0c4b47;
-  border: 1px solid #b3e5fc;
-  border-radius: 6px;
-  padding: 0.35rem 0.6rem;
+  border: 1px solid #ddd;
+  padding: 0.7rem 1.2rem;
+  border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
 }
@@ -1559,6 +1579,13 @@ function seedMockData() {
   gap: 0.5rem;
 }
 
+.header-actions .right-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
 .btn-add {
   background: #0c4b47;
   color: white;
@@ -1571,15 +1598,6 @@ function seedMockData() {
 
 .btn-add:hover {
   background: #0a3a36;
-}
-
-.btn-export {
-  background: #f5f5f5;
-  color: #0c4b47;
-  border: 1px solid #ddd;
-  padding: 0.7rem 1.2rem;
-  border-radius: 8px;
-  cursor: pointer;
 }
 
 /* Export controls (dropdown + button) */
@@ -1614,14 +1632,34 @@ function seedMockData() {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.45rem 0.7rem;
-  border-radius: 6px;
+  padding: 0.7rem 1.2rem;
+  border-radius: 8px;
   font-weight: 600;
+  background: #f5f5f5;
+  color: #0c4b47;
+  border: 1px solid #ddd;
+  cursor: pointer;
 }
 
 .btn-export:hover {
   background: #eef6f4;
 }
+
+/* Import button should match export exactly */
+.btn-import {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  background: #f5f5f5;
+  color: #0c4b47;
+  border: 1px solid #ddd;
+  cursor: pointer;
+}
+.btn-import:hover { background: #eef6f4; }
+.import-filename { margin-left: 0.5rem; font-size: 0.95rem; color: #333; }
 
 /* small responsive tweaks */
 @media (max-width: 768px) {
