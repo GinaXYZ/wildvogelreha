@@ -1,17 +1,18 @@
 <template>
   <div class="project-wrapper">
-    <!-- Standalone project view: only Appointments, no header/footer -->
+    <!-- Einzelansicht des Projekts: nur `Appointments`, kein Header/Footer -->
     <Appointments />
   </div>
 </template>
 
 <script setup>
+// Importiere die `Appointments`-Komponente (Einzelansicht des Projekts)
 import Appointments from './Appointments.vue';
 </script>
 
 <style scoped>
-.project-wrapper {
-  /* occupy full viewport without site chrome */
+  .project-wrapper {
+  /* Belegt das gesamte Viewport ohne Seiten-Chrome */
   min-height: 100vh;
   margin: 0;
   padding: 0;
@@ -24,12 +25,12 @@ import Appointments from './Appointments.vue';
   overflow: visible; /* allow children to render outside wrapper */
 }
 
-/* Reset some global layout spacing to avoid the shifted look */
+/* Reset einiger globaler Layout-Abstände, um das verschobene Erscheinungsbild zu vermeiden */
 :root {
   --app-padding-top: 0px;
 }
   
-/* Ensure Appointments uses full width and no extra top padding */
+/* Stellt sicher, dass `Appointments` volle Breite nutzt und kein zusätzliches Top-Padding hat */
 .project-wrapper .appointments-container {
   width: 100% !important;
   max-width: 1000px !important; /* center content for most views */
@@ -43,7 +44,7 @@ import Appointments from './Appointments.vue';
   z-index: 1100;
  }
 
-/* Slightly reduce scale within project wrapper to shrink appointment UI (~8%) */
+/* Leichte Skalierung innerhalb des Wrappers, um die Termin-UI etwas zu verkleinern (~8%) */
 .project-wrapper { font-size: 0.92em; }
 
 .project-wrapper .appointments-header {
@@ -53,5 +54,5 @@ import Appointments from './Appointments.vue';
 }
 
 
-/* Additional styling adjustments can be added here as needed */
+/* Zusätzliche Style-Anpassungen können hier bei Bedarf ergänzt werden */
 </style>

@@ -69,7 +69,7 @@
       </div>
     </div>
 
-    <!-- Legend removed -->
+    <!-- Legende entfernt -->
 
     <!-- Kalender Wochenansicht -->
     <div v-if="viewMode === 'week'" class="week-view">
@@ -105,7 +105,7 @@
       </table>
     </div>
 
-    <!-- Legend removed -->
+    <!-- Legende entfernt -->
 
     <!-- Kalender Monatsansicht -->
     <div v-if="viewMode === 'month'" class="month-view">
@@ -140,7 +140,7 @@
       </div>
     </div>
 
-    <!-- Legend removed -->
+    <!-- Legende entfernt -->
 
     <!-- Listenansicht -->
     <div v-if="viewMode === 'list'" class="list-view">
@@ -289,7 +289,7 @@
       </div>
     </div>
 
-    <!-- Appointment speech-bubble (week view) -->
+    <!-- Sprechblase für Termine (Wochenansicht) -->
     <div v-if="appointmentBubble.visible" class="speech-bubble-overlay" @click.self="closeAppointmentBubble">
       <div class="speech-bubble" ref="bubbleRef" :class="{ 'arrow-bottom': appointmentBubble.placement === 'above', 'arrow-top': appointmentBubble.placement === 'below' }" :style="{ top: appointmentBubble.y + 'px', left: appointmentBubble.x + 'px' }">
         <button class="bubble-close" @click="closeAppointmentBubble">✖</button>
@@ -300,11 +300,11 @@
             <div><strong>Titel:</strong> {{ bubbleApt ? bubbleApt.title : '-' }}</div>
             <div><strong>Kategorie:</strong> {{ bubbleApt ? getCategoryLabel(bubbleApt.category) : '-' }}</div>
             <div><strong>Priorität:</strong> {{ bubbleApt ? getPriorityLabel(bubbleApt.priority) : '-' }}</div>
-            <!-- Patient removed per UX request -->
+            <!-- Patient entfernt per UX-Anforderung -->
             <div><strong>Zugewiesen:</strong> {{ bubbleApt ? (bubbleApt.assigned_firstname ? bubbleApt.assigned_firstname + ' ' + (bubbleApt.assigned_lastname||'') : '-') : '-' }}</div>
             <div><strong>Status:</strong> {{ bubbleApt ? bubbleApt.status : '-' }}</div>
           </div>
-          <!-- Inline description box removed (not used) -->
+          <!-- Inline-Beschreibungsfeld entfernt (nicht verwendet) -->
           <div class="bubble-actions">
             <button @click="openEditFromBubble">Bearbeiten</button>
             <button @click="() => deleteAppointmentFromBubble(appointmentBubble.id)">Löschen</button>
@@ -312,7 +312,7 @@
         </div>
       </div>
     </div>
-    <!-- Slot modal for overflowing events in a time slot -->
+    <!-- Slot-Modal für überlaufende Termine in einem Zeitfenster -->
     <div v-if="slotModal.visible" class="modal-overlay" @click.self="closeSlotModal">
       <div class="modal">
         <h3>Termine: {{ slotModal.date }} {{ String(slotModal.hour).padStart(2,'0') }}:00</h3>
@@ -340,42 +340,43 @@
 import { ref, computed, onMounted, watch, nextTick, onBeforeUnmount } from 'vue';
 import { useAuthStore } from './auth.js';
 
-// Mock data for local dev testing
+// Mock-Daten für lokale Entwicklung (nur Dev-Umgebung)
 
 const authStore = useAuthStore();
 const API_BASE = '/api';
 const isDev = typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV;
 const DEV_STORAGE_KEY = 'dev:appointments';
 
-// State
+// Zustand (reactive state für die Komponente)
 const appointments = ref([]);
 const patients = ref([]);
 const staffUsers = ref([]);
 const loading = ref(false);
 const stats = ref({ today: 0, pending: 0, urgent: 0 });
 
-// CSV import state
+// CSV-Import Zustand
 const csvInput = ref(null);
 const csvFile = ref(null);
 const csvFileName = ref('');
 const isImporting = ref(false);
 
+// Öffnet die Dateiauswahl (CSV-Import)
 function openFilePicker() {
   if (csvInput.value && csvInput.value.click) {
     try { csvInput.value.click(); } catch (e) { /* ignore */ }
   }
 
-// Fix mojibake where UTF-8 bytes were stored as Latin-1 (e.g. "MÃ¼ller" -> "Müller").
+// Korrigiere Mojibake: UTF-8-Bytes wurden fälschlich als Latin-1 gespeichert (z.B. "MÃ¼ller" -> "Müller").
 function tryDecodeLatin1Utf8(s) {
   if (!s || typeof s !== 'string') return s;
-  // quick heuristic: only try when common mojibake markers present
+  // Schnelle Heuristik: nur versuchen, wenn typische Mojibake-Marker vorhanden sind
   if (!/Ã/.test(s)) return s;
-  try {
-    const bytes = new Uint8Array(Array.from(s).map(ch => ch.charCodeAt(0) & 0xff));
-    return new TextDecoder('utf-8').decode(bytes);
-  } catch (e) {
     try {
-      // fallback for older environments
+      const bytes = new Uint8Array(Array.from(s).map(ch => ch.charCodeAt(0) & 0xff));
+      return new TextDecoder('utf-8').decode(bytes);
+    } catch (e) {
+    try {
+      // Fallback für ältere Umgebungen
       // eslint-disable-next-line no-undef
       return decodeURIComponent(escape(s));
     } catch (e2) {
@@ -385,6 +386,7 @@ function tryDecodeLatin1Utf8(s) {
 }
 
 function displayPerson(first, last) {
+  // Formatiert Vor- und Nachname; korrigiert ggf. Mojibake
   const f = tryDecodeLatin1Utf8(first) || '';
   const l = tryDecodeLatin1Utf8(last) || '';
   const res = (f + ' ' + l).trim();
@@ -397,8 +399,8 @@ function onFileChange(event) {
   if (!f) { csvFile.value = null; csvFileName.value = ''; return; }
   csvFile.value = f;
   csvFileName.value = f.name;
-  // Automatically import immediately after selection
-  // allow UI to update filename before import starts
+  // Nach Auswahl automatisch importieren
+  // UI kurz Zeit geben, Dateiname anzuzeigen bevor der Import startet
   setTimeout(() => { importCSV().catch(e => console.error(e)); }, 100);
 }
 
@@ -407,7 +409,7 @@ async function importCSV() {
   isImporting.value = true;
   try {
     if (isDev) {
-      // Simple CSV -> JSON parser for dev mode (no external deps)
+      // Einfacher CSV -> JSON Parser für den Dev-Modus (keine externen Abhängigkeiten)
       const text = await csvFile.value.text();
       const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
       if (lines.length === 0) throw new Error('Leere Datei');
@@ -418,7 +420,7 @@ async function importCSV() {
         headers.forEach((h, i) => { obj[h] = parts[i] ? parts[i].trim() : ''; });
         return obj;
       });
-      // merge into dev storage
+      // In Dev-Storage zusammenführen
       const raw = localStorage.getItem(DEV_STORAGE_KEY) || '[]';
       const arr = JSON.parse(raw);
       let nextId = arr.reduce((m, a) => Math.max(m, Number(a.id) || 0), 0) + 1;
@@ -428,7 +430,7 @@ async function importCSV() {
       await fetchAppointments();
       await fetchStats();
     } else {
-      // Parse CSV client-side and send JSON to server (server expects { appointments: [...] })
+      // CSV clientseitig parsen und JSON an den Server senden (Server erwartet { appointments: [...] })
       const token = authStore.token || localStorage.getItem('token');
       const text = await csvFile.value.text();
       const parseLine = (line) => {
@@ -482,7 +484,7 @@ async function importCSV() {
   }
 }
 
-// Speech-bubble for appointment details in week view
+// Sprechblase für Termindetails in Wochenansicht
 const appointmentBubble = ref({ visible: false, x: 0, y: 0, id: null });
 const bubbleRef = ref(null);
 const bubbleApt = computed(() => {
@@ -490,7 +492,7 @@ const bubbleApt = computed(() => {
   return appointments.value.find(a => String(a.id) === String(appointmentBubble.value.id)) || null;
 });
 
-// Slot modal (kept for compatibility with modal that lists overflowed slot appointments)
+// Slot-Modal (für Kompatibilität mit Modal, das überlaufende Slot-Termine listet)
 const slotModal = ref({ visible: false, date: '', hour: null, appointments: [] });
 
 function openSlotModal(date, hour, appts = []) {
@@ -501,21 +503,21 @@ function closeSlotModal() {
   slotModal.value.appointments = [];
 }
 
-// View & Filter
+// Ansicht & Filter
 const viewMode = ref('week');
 const currentDate = ref(new Date());
-// single-select filters. empty = all
+// Single-Select-Filter. leer = alle
 const filterCategory = ref('');
 const filterStatus = ref('');
 const filterStaff = ref('');
 const selectedStaffId = computed(() => String(filterStaff.value || ''));
-const filterDate = ref(''); // ISO date string or empty
+const filterDate = ref(''); // ISO-Datumstring oder leer
 const filterHour = ref(null);
 
 const allCategories = ['sprint-planung','team-meeting','code-review','deployment','testing','dokumentation','planning','sonstiges'];
 const allStatuses = ['geplant','in_bearbeitung','erledigt','abgesagt'];
 
-// week body ref for scrollbar sync
+// Referenzen der Wochenansicht für Scrollbar-Synchronisation
 const weekBodyRef = ref(null);
 const weekHeaderRef = ref(null);
 const todayOverlay = ref(null);
@@ -554,12 +556,12 @@ function updateTodayOverlay() {
   });
 }
 
-// Modal State
+// Modal-Zustand
 const showAddModal = ref(false);
 const showEditModal = ref(false);
 const formData = ref(getEmptyFormData());
 
-// Export range: 'all' | 'week' | 'month' | 'year'
+// Export-Bereich: 'all' | 'week' | 'month' | 'year'
 const exportRange = ref('week');
 
 function getEmptyFormData() {
@@ -580,9 +582,9 @@ function getEmptyFormData() {
   };
 }
 
-// Computed
-// full day hours 0:00 - 23:00 so we can add entries at any hour
-// show times 8:00 - 18:00 (reduced range)
+// Computed (berechnete Werte)
+// Volle Tagesstunden 0:00 - 23:00, damit Einträge zu jeder Stunde möglich sind
+// Anzeigezeiten 8:00 - 18:00 (reduzierter Bereich)
 const hours = computed(() => Array.from({ length: 11 }, (_, i) => i + 8)); // 8 - 18
 
 const weekDays = computed(() => {
@@ -643,25 +645,25 @@ const currentDateLabel = computed(() => {
 
 const filteredAppointments = computed(() => {
   return appointments.value.filter(apt => {
-    // single category
+    // einzelne Kategorie
     if (filterCategory.value && apt.category !== filterCategory.value) return false;
     if (filterStatus.value && apt.status !== filterStatus.value) return false;
     if (filterStaff.value) {
       const f = String(filterStaff.value);
-      // match by assigned_to id when available
+      // nach `assigned_to`-ID abgleichen, wenn verfügbar
       if (String(apt.assigned_to || '') === f) {
         // ok
       } else {
-        // fallback: match by assigned_firstname/assigned_lastname to support mock data
+        // Fallback: Abgleich per `assigned_firstname`/`assigned_lastname` zur Unterstützung von Mock-Daten
         const assignedName = ((apt.assigned_firstname || '').trim() + ' ' + (apt.assigned_lastname || '').trim()).trim();
         const staffObj = staffUsers.value.find(s => String(s.id) === f);
         const staffName = staffObj ? (staffObj.firstname + ' ' + (staffObj.lastname || '')).trim() : '';
         if (!staffName || assignedName !== staffName) return false;
       }
     }
-    // date filter (exact match)
+    // Datumsfilter (exakte Übereinstimmung)
     if (filterDate.value && String(apt.appointment_date || '').split('T')[0] !== filterDate.value) return false;
-    // hour filter (number)
+    // Stundenfilter (Zahl)
     if (filterHour.value !== null && filterHour.value !== undefined && filterHour.value !== '') {
       const aptHour = parseInt((apt.appointment_time || '00:00').split(':')[0], 10);
       if (aptHour !== Number(filterHour.value)) return false;
@@ -670,16 +672,16 @@ const filteredAppointments = computed(() => {
   });
 });
 
-// Sorting & Pagination for list view
+// Sortierung & Paginierung für Listenansicht
 const sortField = ref('appointment_date');
-const sortDir = ref('desc'); // 'asc' or 'desc' — default newest first
+const sortDir = ref('desc'); // 'asc' oder 'desc' — standardmäßig neueste zuerst
 
 function toggleSort(field) {
   if (sortField.value === field) {
     sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
   } else {
     sortField.value = field;
-    // default direction: date desc, others asc
+    // Standardrichtung: Datum absteigend, andere aufsteigend
     sortDir.value = field === 'appointment_date' ? 'desc' : 'asc';
   }
 }
@@ -697,12 +699,12 @@ const sortedAppointments = computed(() => {
   function parseDateValue(item) {
     const dateRaw = item.appointment_date || '';
     const timeRaw = item.appointment_time || '00:00';
-    // ISO-like (YYYY-MM-DD)
+    // ISO-ähnlich (YYYY-MM-DD)
     if (dateRaw.includes('-')) {
       const d = new Date(`${dateRaw}T${timeRaw}`);
       if (!isNaN(d)) return d.getTime();
     }
-    // European format D.M.YYYY or DD.MM.YYYY
+    // Europäisches Format D.M.YYYY oder DD.MM.YYYY
     if (dateRaw.includes('.')) {
       const parts = dateRaw.split('.').map(p => p.trim());
       if (parts.length >= 3) {
@@ -714,7 +716,7 @@ const sortedAppointments = computed(() => {
         if (!isNaN(dt)) return dt.getTime();
       }
     }
-    // fallback
+    // Fallback
     const fallback = new Date(dateRaw);
     return isNaN(fallback) ? 0 : fallback.getTime();
   }
@@ -747,7 +749,7 @@ const sortedAppointments = computed(() => {
   return arr;
 });
 
-// Pagination for list view
+// Paginierung für Listenansicht
 const page = ref(1);
 const perPage = 10;
 const totalPages = computed(() => Math.max(1, Math.ceil(filteredAppointments.value.length / perPage)));
@@ -756,25 +758,25 @@ const paginatedAppointments = computed(() => {
   return sortedAppointments.value.slice(start, start + perPage);
 });
 
-// Quick slot overflow handling for week view
-const maxVisibleSlot = 3; // show up to 3 pills per time-slot
+// Schnelle Behandlung von Slot-Überläufen in der Wochenansicht
+const maxVisibleSlot = 3; // bis zu 3 Einträge pro Zeitfenster anzeigen
 
 function openSlotList(date, hour) {
-  // switch to list view and apply filters for this slot
+  // Wechsel zur Listenansicht und Filter für diesen Slot anwenden
   viewMode.value = 'list';
   filterDate.value = date;
   filterHour.value = hour;
   page.value = 1;
 }
 
-// Reset to first page when filters change
+// Auf erste Seite zurücksetzen, wenn Filter sich ändern
 watch(filteredAppointments, () => { page.value = 1; });
 
-// Helper Functions
+// Hilfsfunktionen
 function getStartOfWeek(date) {
   const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
   const day = d.getDay();
-  const diff = day === 0 ? -6 : 1 - day; // Monday is start of week
+  const diff = day === 0 ? -6 : 1 - day; // Montag ist Wochenanfang
   d.setDate(d.getDate() + diff);
   return d;
 }
@@ -797,15 +799,15 @@ function formatTime(timeStr) {
   return timeStr.substring(0, 5);
 }
 
-// Normalize various date representations to `YYYY-MM-DD`
+// Verschiedene Datumsrepräsentationen nach `YYYY-MM-DD` normalisieren
 function normalizeToDate(val) {
   if (!val && val !== 0) return '';
   if (typeof val === 'string') {
-    // already yyyy-mm-dd
+    // bereits yyyy-mm-dd
     if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
-    // ISO datetime -> take date part
+    // ISO-Datetime -> Datumsanteil verwenden
     if (val.indexOf('T') !== -1) return val.split('T')[0];
-    // try Date parse fallback
+    // Fallback: Date-Parsing versuchen
     const d = new Date(val);
     if (!isNaN(d)) {
       const y = d.getFullYear();
@@ -821,7 +823,7 @@ function normalizeToDate(val) {
     const day = String(val.getDate()).padStart(2, '0');
     return `${y}-${m}-${day}`;
   }
-  // numbers or other
+  // Zahlen oder andere Typen
   try {
     const d = new Date(val);
     if (!isNaN(d)) {
@@ -836,7 +838,7 @@ function normalizeToDate(val) {
 
 function getAppointmentsForSlot(date, hour) {
   return filteredAppointments.value.filter(apt => {
-    // Normalize appointment_date to YYYY-MM-DD in local time
+    // `appointment_date` in lokale Zeit nach YYYY-MM-DD normalisieren
     let aptDate;
     if (typeof apt.appointment_date === 'string') {
       aptDate = apt.appointment_date.split('T')[0];
@@ -857,7 +859,7 @@ function getAppointmentsForSlot(date, hour) {
 
 function getAppointmentsForDay(date) {
   return filteredAppointments.value.filter(apt => {
-    // Normalize appointment_date to YYYY-MM-DD in local time
+    // `appointment_date` in lokale Zeit nach YYYY-MM-DD normalisieren
     let aptDate;
     if (typeof apt.appointment_date === 'string') {
       aptDate = apt.appointment_date.split('T')[0];
@@ -912,13 +914,13 @@ function goToToday() {
 }
 
 function selectDayForDetails(date) {
-  // Parse date string as local time to avoid timezone shifting
+  // Datumsstring als lokale Zeit parsen, um Zeitverschiebungen zu vermeiden
   const [year, month, day] = date.split('-').map(Number);
   currentDate.value = new Date(year, month - 1, day);
   viewMode.value = 'week';
 }
 
-// Modal Functions
+// Modal-Funktionen
 function openAddModalForSlot(date, hour) {
   formData.value = getEmptyFormData();
   formData.value.appointment_date = date;
@@ -978,7 +980,7 @@ function closeAppointmentBubble() {
   appointmentBubble.value.visible = false;
 }
 
-// Inline bubble editing removed: kept bubble read-only to avoid unreliable textarea behavior.
+// Inline-Bubble-Bearbeitung entfernt: Blase nur lesbar belassen, um unzuverlässiges Textarea-Verhalten zu vermeiden.
 
 async function deleteAppointmentFromBubble(id) {
   if (!confirm('Termin wirklich löschen?')) return;
@@ -1014,12 +1016,12 @@ function openEditFromBubble() {
   appointmentBubble.value.visible = false;
 }
 
-// API Calls
+// API-Aufrufe
 async function fetchAppointments() {
   loading.value = true;
   try {
     if (isDev) {
-      // Load from localStorage (seed from mockAppointments if necessary)
+      // Aus localStorage laden (bei Bedarf aus `mockAppointments` seeden)
       try {
         let data = [];
         const raw = localStorage.getItem(DEV_STORAGE_KEY);
@@ -1029,10 +1031,10 @@ async function fetchAppointments() {
           localStorage.setItem(DEV_STORAGE_KEY, JSON.stringify(data));
         }
 
-        // filter by view
+        // Nach Ansicht filtern
         let result = data;
         if (viewMode.value === 'week') {
-          const start = new Date(weekDays.value[0].date);
+          const start = new Date(weekDays.value[0].date );
           const end = new Date(weekDays.value[6].date);
           result = data.filter(a => {
             const d = new Date((a.appointment_date || '').split('T')[0] + 'T00:00');
@@ -1069,11 +1071,11 @@ async function fetchAppointments() {
       const month = currentDate.value.getMonth() + 1;
       url += `?month=${month}&year=${year}`;
     } else if (viewMode.value === 'list') {
-      // fetch all for client-side pagination (server default limit is 100)
+      // Alle abrufen für clientseitige Paginierung (Server-Standardlimit ist 100)
       url += `?limit=10000`;
     }
     
-    // Debug log the request URL and token presence
+    // Debug: Anfrage-URL und Token-Präsenz protokollieren
     console.debug('[Appointments] fetching', url, 'token?', !!token);
     const res = await fetch(url, {
       headers: { 'Authorization': `Bearer ${token}` }
@@ -1088,7 +1090,7 @@ async function fetchAppointments() {
     } else {
       const text = await res.text();
       console.error('[Appointments] fetch failed:', res.status, text);
-      // clear appointments so UI shows empty state explicitly
+      // Termine leeren, damit die UI explizit den leeren Zustand zeigt
       appointments.value = [];
       updateWeekScrollbar();
     }
@@ -1102,7 +1104,7 @@ async function fetchAppointments() {
 
 async function fetchStats() {
   try {
-    // Prefer the API when we have an auth token (real data).
+    // Bevorzuge die API, wenn ein Auth-Token vorhanden ist (echte Daten).
     const token = authStore.token || localStorage.getItem('token');
     if (token) {
       try {
@@ -1120,7 +1122,7 @@ async function fetchStats() {
       }
     }
 
-    // Fallback: when running in dev without a token, use the local dev storage mock
+    // Fallback: Im Dev-Modus ohne Token das lokale Dev-Storage-Mock verwenden
     if (isDev) {
       try {
         const raw = localStorage.getItem(DEV_STORAGE_KEY) || '[]';
@@ -1168,7 +1170,7 @@ async function fetchPatients() {
 async function fetchStaffUsers() {
   try {
     if (isDev) {
-      // In dev mode, show only the fixed set of staff accounts to avoid long lists
+      // Im Dev-Modus nur feste Mitarbeiterkonten anzeigen, um lange Listen zu vermeiden
       try {
         staffUsers.value = [
           { id: 1, firstname: 'Admin', lastname: 'User' },
@@ -1349,12 +1351,12 @@ function exportCSV() {
     url += `?start_date=${first}&end_date=${last}`;
     filename += `_${first}_to_${last}`;
   } else if (mode === 'list') {
-    // Request a large limit so the server returns all appointments for list mode
+    // Großes Limit anfordern, damit der Server alle Termine für den Listenmodus zurückgibt
     const sep = url.includes('?') ? '&' : '?';
     url += `${sep}limit=10000`;
     filename += `_list`;
   } else {
-    // Default to exporting all appointments by requesting a large limit
+    // Standardmäßig alle Termine exportieren, indem ein großes Limit angefragt wird
     const sep = url.includes('?') ? '&' : '?';
     url += `${sep}limit=10000`;
     filename += `_all`;
@@ -1378,17 +1380,17 @@ function exportCSV() {
   }).catch(err => { console.error('Export Fehler', err); alert('Export fehlgeschlagen'); });
 }
 
-// Watchers
+// Watcher
 watch(viewMode, () => fetchAppointments());
 
-// Init
+// Initialisierung
 onMounted(() => {
-  // Clear old dev cache to ensure fresh data from API
+  // Alten Dev-Cache löschen, um frische Daten von der API sicherzustellen
   if (!isDev) {
     try {
       localStorage.removeItem(DEV_STORAGE_KEY);
     } catch (e) {
-      // ignore
+      // ignorieren
     }
   }
   
@@ -1396,14 +1398,14 @@ onMounted(() => {
   fetchStats();
   fetchPatients();
   fetchStaffUsers();
-  // close filter dropdowns when clicking elsewhere
+  // Filter-Dropdowns schließen, wenn außerhalb geklickt wird
   document.addEventListener('click', handleDocClick);
-  // update scrollbar sync and listen for resize
+  // Scrollbar-Sync aktualisieren und auf Resize-Ereignisse hören
   updateWeekScrollbar();
   updateTodayOverlay();
   window.addEventListener('resize', resizeHandler);
 
-  // mark table cells that contain a .status-select so we can allow dropdowns to overflow
+  // Tabellenzellen markieren, die ein `.status-select` enthalten, damit Dropdowns überlaufen dürfen
   nextTick(() => {
     try {
       document.querySelectorAll('.appointments-table tbody td').forEach(td => {
@@ -1420,7 +1422,7 @@ onBeforeUnmount(() => {
 });
 
 function handleDocClick() {
-  // Close any open modals when clicking outside
+  // Offene Modals beim Klick außerhalb schließen
   closeAppointmentBubble();
 }
 
@@ -2709,7 +2711,7 @@ function seedMockData() {
 }
 </style>
 <style scoped>
-/* Appointment speech-bubble styles (overlay + bubble) */
+/* Sprechblasen-Stile für Termine (Overlay + Blase) */
 .speech-bubble-overlay {
   position: fixed;
   top: 0;
