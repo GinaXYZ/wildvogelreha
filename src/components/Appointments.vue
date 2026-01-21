@@ -1426,11 +1426,11 @@ function seedMockData() {
 .appointments-container--scaled {
   /* Use `zoom` to scale layout and reduce the element footprint (affects flow). */
   zoom: 0.8;
-  -moz-transform: scale(0.8); /* fallback visual only for older Firefox */
   transform-origin: top center;
-  width: 125%;
+  width: 100%;
   margin-left: auto;
   margin-right: auto;
+  margin-bottom: 0;
 }
 
 .import-controls .btn-import {
