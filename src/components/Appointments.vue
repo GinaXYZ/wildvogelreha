@@ -723,7 +723,7 @@ const sortedAppointments = computed(() => {
 
 // Pagination for list view
 const page = ref(1);
-const perPage = 25;
+const perPage = 10;
 const totalPages = computed(() => Math.max(1, Math.ceil(filteredAppointments.value.length / perPage)));
 const paginatedAppointments = computed(() => {
   const start = (page.value - 1) * perPage;
@@ -1406,6 +1406,9 @@ function seedMockData() {
   width: 100%;
   max-width: 100%;
   overflow: visible; /* ensure children can show above surrounding elements */
+  /* Slight upward shift to reduce top whitespace and tighter bottom padding */
+  margin-top: -1.5rem;
+  padding-bottom: 0.5rem;
 }
 
 /* Scale entire appointments UI down to 80% so the full calendar fits on one page
@@ -1987,6 +1990,11 @@ function seedMockData() {
   background: #e3f2fd;
 }
 
+/* Reduce extra bottom whitespace and tighten week view spacing */
+.week-view { margin-bottom: 0.5rem; }
+.appointments-container .list-pagination { margin-bottom: 1rem !important; }
+.appointments-container { padding-bottom: 0.5rem !important; }
+
 .cell-date {
   font-weight: bold;
   display: block;
@@ -1994,7 +2002,7 @@ function seedMockData() {
 }
 
 .mini-appointment {
-  font-size: 0.62rem;
+  font-size: 0.75rem;
   padding: 0.16rem 0.32rem;
   margin-bottom: 0.16rem;
   border-radius: 3px;
@@ -2519,7 +2527,7 @@ function seedMockData() {
   }
   
   .mini-appointment {
-    font-size: 0.6rem;
+    font-size: 0.72rem;
     padding: 0.1rem 0.2rem;
   }
   
