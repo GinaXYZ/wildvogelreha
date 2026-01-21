@@ -163,7 +163,7 @@
             </th>
             <th>Kategorie</th>
             <th>Priorität</th>
-            <th>Project / Team</th>
+            <th>Raum</th>
             <th>Zugewiesen</th>
             <th>Status</th>
             <th class="actions-col">Aktionen</th>
@@ -179,7 +179,7 @@
             </td>
             <td><span class="category-badge" :class="`cat-${apt.category}`">{{ getCategoryLabel(apt.category) }}</span></td>
             <td><span class="priority-badge" :class="`prio-${apt.priority}`">{{ getPriorityLabel(apt.priority) }}</span></td>
-            <td>{{ apt.patient_name || '-' }}</td>
+            <td>{{ apt.room || '-' }}</td>
             <td>{{ apt.assigned_firstname ? `${apt.assigned_firstname} ${apt.assigned_lastname}` : '-' }}</td>
             <td>
               <select v-model="apt.status" @change="updateStatus(apt)" class="status-select" @click.stop>
