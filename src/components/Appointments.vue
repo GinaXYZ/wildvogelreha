@@ -365,6 +365,7 @@ function openFilePicker() {
   if (csvInput.value && csvInput.value.click) {
     try { csvInput.value.click(); } catch (e) { /* ignore */ }
   }
+}
 
 // Korrigiere Mojibake: UTF-8-Bytes wurden fälschlich als Latin-1 gespeichert (z.B. "MÃ¼ller" -> "Müller").
 function tryDecodeLatin1Utf8(s) {
@@ -391,7 +392,6 @@ function displayPerson(first, last) {
   const l = tryDecodeLatin1Utf8(last) || '';
   const res = (f + ' ' + l).trim();
   return res || '-';
-}
 }
 
 function onFileChange(event) {
@@ -2684,21 +2684,18 @@ function seedMockData() {
   }
 
   .list-pagination .page-btn:disabled {
-    opacity: 0.48;
-    cursor: not-allowed;
-    background: #f5f5f5;
-    border-color: #e6e6e6;
+    background: #f6f6f6;
     color: #9e9e9e;
-    transform: none;
     box-shadow: none;
+    opacity: 0.6;
   }
 
   .list-pagination .page-indicator {
-    padding: 0.35rem 0.8rem;
-    color: #0c4b47;
-    font-weight: 700;
-    background: rgba(12,75,71,0.04);
+    padding: 0.4rem 0.9rem;
+    margin: 0 0.5rem;
     border-radius: 8px;
+    background: rgba(12,75,71,0.04);
+    font-weight: 700;
   }
 
   .list-pagination .page-btn:focus {
