@@ -988,10 +988,6 @@ async function showAppointmentBubble(event, apt) {
     appointmentBubble.value.placement = placement;
   }
   await nextTick();
-  if (bubbleTextarea.value && bubbleTextarea.value.focus) {
-    bubbleTextarea.value.focus();
-    try { const len = bubbleTextarea.value.value.length; bubbleTextarea.value.setSelectionRange(len, len); } catch(e) {}
-  }
 }
 
 function closeAppointmentBubble() {
