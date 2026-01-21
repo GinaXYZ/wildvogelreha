@@ -35,7 +35,64 @@
           </select>
           <button @click="exportCSV" class="btn-export">📥 Export</button>
         </div>
+        <div class="import-controls">
+          <input ref="csvInput" type="file" accept=".csv" style="display:none" @change="handleCSVImport" />
+          <button @click="$refs.csvInput.click()" class="btn-import">📤 Importieren (CSV)</button>
+        </div>
       </div>
+    <script>
+    // ...existing code...
+    import Papa from 'papaparse';
+    // ...existing code...
+
+    async function handleCSVImport(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: async function(results) {
+          try {
+            // Hier: Sende die Daten an das Backend (API-Endpoint folgt)
+            const token = authStore.token || localStorage.getItem('token');
+            const res = await fetch(`${API_BASE}/appointments/import-csv`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ appointments: results.data })
+            });
+            if (res.ok) {
+              alert('Import erfolgreich!');
+              fetchAppointments();
+            } else {
+              const text = await res.text();
+              alert('Import fehlgeschlagen: ' + text);
+            }
+          } catch (e) {
+            alert('Fehler beim Import: ' + e.message);
+          }
+        }
+      });
+    }
+    // ...existing code...
+    </script>
+    <style scoped>
+    .btn-import {
+      margin-left: 1rem;
+      background: #e3f2fd;
+      color: #0c4b47;
+      border: 1px solid #b3e5fc;
+      border-radius: 6px;
+      padding: 0.45rem 0.7rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-import:hover {
+      background: #bbdefb;
+    }
+    </style>
     </div>
 
     <!-- Filter & Ansichtswechsel -->
