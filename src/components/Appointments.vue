@@ -1,5 +1,5 @@
 <template>
-  <div class="appointments-container">
+  <div class="appointments-container appointments-container--scaled">
     <div v-if="isDev" class="dev-banner">
       DEV: {{ appointments.length }} Termine geladen. 
       <button @click="seedMockData" class="dev-btn">Seed / Reset</button>
@@ -1147,7 +1147,7 @@ async function fetchStaffUsers() {
         staffUsers.value = [
           { id: 1, firstname: 'Admin', lastname: 'User' },
           { id: 2, firstname: 'Marie', lastname: 'Schmidt' },
-          { id: 3, firstname: 'Tobias', lastname: 'Müller' },
+          { id: 3, firstname: 'Tobias', lastname: 'Mueller' },
           { id: 4, firstname: 'Lisa', lastname: 'Wagner' }
         ];
       } catch (e) { console.error('DEV fetchStaffUsers error', e); }
