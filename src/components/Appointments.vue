@@ -19,6 +19,10 @@
           <span class="stat-number">{{ stats.urgent }}</span>
           <span class="stat-label">Dringend</span>
         </div>
+        <div class="stat-card total">
+          <span class="stat-number">{{ appointments.length }}</span>
+          <span class="stat-label">Alle Termine</span>
+        </div>
       </div>
       <div class="header-actions">
         <button @click="showAddModal = true" class="btn-add">+ Neuer Termin</button>
