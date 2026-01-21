@@ -1640,9 +1640,11 @@ app.post('/api/appointments/import-csv', authenticateToken, requireStaff, async 
 
         // Patient und assigned_to werden optional als Name übernommen (keine Zuordnung zu IDs)
         // Erweiterbar: Suche nach existierenden Patienten/Mitarbeitern
-        const query = `INSERT INTO appointments (title, description, appointment_date, appointment_time, end_time, category, priority, status, recurring, notes, created_by)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-        const values = [title, description, appointment_date, appointment_time, end_time, category, priority, status, recurring, notes, req.user && req.user.id ? req.user.id : null];
+        // include room if provided (CSV may use 'room' or 'Raum')
+        const query = `INSERT INTO appointments (title, description, appointment_date, appointment_time, end_time, category, priority, status, room, recurring, notes, created_by)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        const room = (apt.room || apt.Raum) ? (apt.room || apt.Raum) : null;
+        const values = [title, description, appointment_date, appointment_time, end_time, category, priority, status, room, recurring, notes, req.user && req.user.id ? req.user.id : null];
         await pool.query(query, values);
         inserted++;
       } catch (e) {

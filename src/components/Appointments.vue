@@ -342,12 +342,11 @@
             <div><strong>Titel:</strong> {{ bubbleApt ? bubbleApt.title : '-' }}</div>
             <div><strong>Kategorie:</strong> {{ bubbleApt ? getCategoryLabel(bubbleApt.category) : '-' }}</div>
             <div><strong>Priorität:</strong> {{ bubbleApt ? getPriorityLabel(bubbleApt.priority) : '-' }}</div>
-            <div><strong>Patient:</strong> {{ bubbleApt ? (bubbleApt.patient_name || '-') : '-' }}</div>
+            <!-- Patient removed per UX request -->
             <div><strong>Zugewiesen:</strong> {{ bubbleApt ? (bubbleApt.assigned_firstname ? bubbleApt.assigned_firstname + ' ' + (bubbleApt.assigned_lastname||'') : '-') : '-' }}</div>
             <div><strong>Status:</strong> {{ bubbleApt ? bubbleApt.status : '-' }}</div>
           </div>
-          <label style="margin-top:0.6rem"><strong>Beschreibung / Notizen</strong></label>
-          <textarea ref="bubbleTextarea" v-model="appointmentBubble.content" class="bubble-textarea" @input="scheduleSaveAppointmentBubble"></textarea>
+          <!-- Inline description box removed (not used) -->
           <div class="bubble-actions">
             <button @click="openEditFromBubble">Bearbeiten</button>
             <button @click="() => deleteAppointmentFromBubble(appointmentBubble.id)">Löschen</button>
@@ -500,10 +499,8 @@ async function importCSV() {
 }
 
 // Speech-bubble for appointment details in week view
-const appointmentBubble = ref({ visible: false, x: 0, y: 0, content: '', id: null });
+const appointmentBubble = ref({ visible: false, x: 0, y: 0, id: null });
 const bubbleRef = ref(null);
-const bubbleTextarea = ref(null);
-let bubbleSaveTimer = null;
 const bubbleApt = computed(() => {
   if (!appointmentBubble.value || !appointmentBubble.value.id) return null;
   return appointments.value.find(a => String(a.id) === String(appointmentBubble.value.id)) || null;
@@ -998,53 +995,10 @@ async function showAppointmentBubble(event, apt) {
 }
 
 function closeAppointmentBubble() {
-  // save pending edits
-  if (bubbleSaveTimer) { clearTimeout(bubbleSaveTimer); bubbleSaveTimer = null; }
-  saveAppointmentBubbleContent().catch(err => console.error(err));
   appointmentBubble.value.visible = false;
 }
 
-async function saveAppointmentBubbleContent() {
-  if (!appointmentBubble.value.id) return;
-  try {
-    const apt = appointments.value.find(a => a.id === appointmentBubble.value.id);
-    if (apt) {
-      apt.description = appointmentBubble.value.content;
-      // send full appointment payload to server (server expects full object;
-      // avoid overwriting fields with NULL by ensuring title and date)
-      const token = authStore.token || localStorage.getItem('token');
-      const payload = Object.assign({}, apt);
-      payload.description = appointmentBubble.value.content;
-      payload.title = payload.title ?? apt.title ?? 'Unbenannter Termin';
-      payload.appointment_date = normalizeToDate(payload.appointment_date);
-      if (isDev) {
-        // update in localStorage
-        try {
-          const raw = localStorage.getItem(DEV_STORAGE_KEY);
-          const arr = raw ? JSON.parse(raw) : [];
-          const idx = arr.findIndex(x => String(x.id) === String(apt.id));
-          if (idx !== -1) {
-            arr[idx] = Object.assign({}, arr[idx], payload);
-            localStorage.setItem(DEV_STORAGE_KEY, JSON.stringify(arr));
-          }
-        } catch (e) { console.error('DEV save bubble error', e); }
-      } else {
-        await fetch(`${API_BASE}/appointments/${apt.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          body: JSON.stringify(payload)
-        });
-      }
-    }
-  } catch (err) {
-    console.error('Fehler beim Speichern der Termin-Details:', err);
-  }
-}
-
-function scheduleSaveAppointmentBubble() {
-  if (bubbleSaveTimer) clearTimeout(bubbleSaveTimer);
-  bubbleSaveTimer = setTimeout(() => { saveAppointmentBubbleContent().catch(e => console.error(e)); }, 700);
-}
+// Inline bubble editing removed: kept bubble read-only to avoid unreliable textarea behavior.
 
 async function deleteAppointmentFromBubble(id) {
   if (!confirm('Termin wirklich löschen?')) return;
