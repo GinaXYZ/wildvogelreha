@@ -1629,7 +1629,37 @@ app.post('/api/appointments/import-csv', authenticateToken, requireStaff, async 
           errors.push({ row: apt, error: 'Pflichtfelder fehlen' });
           continue;
         }
-        const id = uuidv4();
+        const incomingId = apt.id || apt.ID || null;
+        // If CSV provides an id and it already exists, skip to avoid duplicates
+        if (incomingId) {
+          const [[{ count }]] = await pool.query('SELECT COUNT(*) as count FROM appointments WHERE id = ?', [incomingId]);
+          if (count > 0) {
+            failed++;
+            errors.push({ row: apt, error: 'Duplicate id - skipped' });
+            continue;
+          }
+        }
+
+        // If no id provided, try to detect duplicates by title+date+time (+room if present)
+        else {
+          try {
+            let checkQuery = 'SELECT COUNT(*) as count FROM appointments WHERE title = ? AND appointment_date = ? AND appointment_time = ?';
+            const checkParams = [title, appointment_date, appointment_time];
+            const incomingRoom = apt.room || apt.Raum || null;
+            if (incomingRoom) {
+              checkQuery += ' AND room = ?';
+              checkParams.push(incomingRoom);
+            }
+            const [[{ count }]] = await pool.query(checkQuery, checkParams);
+            if (count > 0) {
+              failed++;
+              errors.push({ row: apt, error: 'Duplicate appointment (title+date+time(+room)) - skipped' });
+              continue;
+            }
+          } catch (e) {
+            // non-fatal, continue to insert
+          }
+        }
         const description = apt.description || apt.Beschreibung || '';
         const end_time = apt.end_time || apt.Endzeit || null;
         const category = apt.category || apt.Kategorie || null;
