@@ -1408,6 +1408,17 @@ function seedMockData() {
   overflow: visible; /* ensure children can show above surrounding elements */
 }
 
+/* Scale entire appointments UI down to 80% so the full calendar fits on one page
+   Adjust width so the scaled element occupies the viewport width (125% * 0.8 = 1.0)
+   This is intentionally a layout-scale tweak and kept non-invasive. */
+.appointments-container--scaled {
+  transform: scale(0.8);
+  transform-origin: top center;
+  width: 125%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .import-controls .btn-import {
   margin-right: 0.5rem;
   background: #f5f5f5;
