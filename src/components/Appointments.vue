@@ -1420,6 +1420,8 @@ function seedMockData() {
   width: 125%;
   margin-left: auto;
   margin-right: auto;
+  /* reduce extra blank space caused by scaling */
+  margin-bottom: -120px;
 }
 
 .import-controls .btn-import {
@@ -1991,9 +1993,15 @@ function seedMockData() {
 }
 
 /* Reduce extra bottom whitespace and tighten week view spacing */
-.week-view { margin-bottom: 0.5rem; }
-.appointments-container .list-pagination { margin-bottom: 1rem !important; }
-.appointments-container { padding-bottom: 0.5rem !important; }
+.week-view { margin-bottom: 0 !important; }
+.appointments-container .list-pagination { margin-bottom: 0.4rem !important; }
+.appointments-container { padding-bottom: 0 !important; }
+
+/* Ensure dropdowns inside table cells are not clipped by cell overflow (modern browsers) */
+.appointments-table tbody td:has(.status-select) {
+  overflow: visible !important;
+}
+.status-select { z-index: 12000; position: relative; }
 
 .cell-date {
   font-weight: bold;
