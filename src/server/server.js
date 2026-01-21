@@ -1,50 +1,4 @@
-// CSV Import
-app.post('/api/appointments/import-csv', authenticateToken, requireStaff, async (req, res) => {
-  try {
-    const appointments = req.body.appointments;
-    if (!Array.isArray(appointments) || appointments.length === 0) {
-      return res.status(400).json({ error: 'Keine Termine übergeben.' });
-    }
 
-    let inserted = 0, failed = 0, errors = [];
-    for (const apt of appointments) {
-      try {
-        // Minimal-Validierung
-        const title = (apt.title || apt.Titel || '').toString().trim();
-        const appointment_date = apt.appointment_date || apt.Datum || '';
-        const appointment_time = apt.appointment_time || apt.Startzeit || '';
-        if (!title || !appointment_date || !appointment_time) {
-          failed++;
-          errors.push({ row: apt, error: 'Pflichtfelder fehlen' });
-          continue;
-        }
-        const id = uuidv4();
-        const description = apt.description || apt.Beschreibung || '';
-        const end_time = apt.end_time || apt.Endzeit || null;
-        const category = apt.category || apt.Kategorie || null;
-        const priority = apt.priority || apt.Priorität || null;
-        const status = apt.status || apt.Status || 'geplant';
-        const recurring = apt.recurring === 'Ja' || apt.recurring === true ? 1 : 0;
-        const notes = apt.notes || apt.Notizen || '';
-
-        // Patient und assigned_to werden optional als Name übernommen (keine Zuordnung zu IDs)
-        // Erweiterbar: Suche nach existierenden Patienten/Mitarbeitern
-        const query = `INSERT INTO appointments (id, title, description, appointment_date, appointment_time, end_time, category, priority, status, recurring, notes)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-        const values = [id, title, description, appointment_date, appointment_time, end_time, category, priority, status, recurring, notes];
-        await pool.query(query, values);
-        inserted++;
-      } catch (e) {
-        failed++;
-        errors.push({ row: apt, error: e.message });
-      }
-    }
-    res.json({ inserted, failed, errors });
-  } catch (err) {
-    console.error('Fehler beim CSV-Import:', err);
-    res.status(500).json({ error: 'Fehler beim CSV-Import' });
-  }
-});
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
@@ -1647,6 +1601,54 @@ app.get('/api/appointments/export/csv', authenticateToken, async (req, res) => {
   } catch (err) {
     console.error('Fehler beim CSV-Export:', err);
     res.status(500).json({ error: 'Fehler beim CSV-Export' });
+  }
+});
+
+// CSV Import
+app.post('/api/appointments/import-csv', authenticateToken, requireStaff, async (req, res) => {
+  try {
+    const appointments = req.body.appointments;
+    if (!Array.isArray(appointments) || appointments.length === 0) {
+      return res.status(400).json({ error: 'Keine Termine übergeben.' });
+    }
+
+    let inserted = 0, failed = 0, errors = [];
+    for (const apt of appointments) {
+      try {
+        // Minimal-Validierung
+        const title = (apt.title || apt.Titel || '').toString().trim();
+        const appointment_date = apt.appointment_date || apt.Datum || '';
+        const appointment_time = apt.appointment_time || apt.Startzeit || '';
+        if (!title || !appointment_date || !appointment_time) {
+          failed++;
+          errors.push({ row: apt, error: 'Pflichtfelder fehlen' });
+          continue;
+        }
+        const id = uuidv4();
+        const description = apt.description || apt.Beschreibung || '';
+        const end_time = apt.end_time || apt.Endzeit || null;
+        const category = apt.category || apt.Kategorie || null;
+        const priority = apt.priority || apt.Priorität || null;
+        const status = apt.status || apt.Status || 'geplant';
+        const recurring = apt.recurring === 'Ja' || apt.recurring === true ? 1 : 0;
+        const notes = apt.notes || apt.Notizen || '';
+
+        // Patient und assigned_to werden optional als Name übernommen (keine Zuordnung zu IDs)
+        // Erweiterbar: Suche nach existierenden Patienten/Mitarbeitern
+        const query = `INSERT INTO appointments (title, description, appointment_date, appointment_time, end_time, category, priority, status, recurring, notes, created_by)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        const values = [title, description, appointment_date, appointment_time, end_time, category, priority, status, recurring, notes, req.user && req.user.id ? req.user.id : null];
+        await pool.query(query, values);
+        inserted++;
+      } catch (e) {
+        failed++;
+        errors.push({ row: apt, error: e.message });
+      }
+    }
+    res.json({ inserted, failed, errors });
+  } catch (err) {
+    console.error('Fehler beim CSV-Import:', err);
+    res.status(500).json({ error: 'Fehler beim CSV-Import' });
   }
 });
 
