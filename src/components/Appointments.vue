@@ -58,7 +58,7 @@
 
         <select v-model="filterStaff" class="status-select">
           <option value="">Alle Mitarbeiter</option>
-          <option v-for="staff in staffUsers" :key="staff.id" :value="String(staff.id)">{{ staff.firstname }} {{ staff.lastname }}</option>
+          <option v-for="staff in staffUsers" :key="staff.id" :value="String(staff.id)">{{ displayPerson(staff.firstname, staff.lastname) }}</option>
         </select>
       </div>
       <div class="date-nav">
@@ -180,7 +180,7 @@
             <td><span class="category-badge" :class="`cat-${apt.category}`">{{ getCategoryLabel(apt.category) }}</span></td>
             <td><span class="priority-badge" :class="`prio-${apt.priority}`">{{ getPriorityLabel(apt.priority) }}</span></td>
             <td>{{ apt.room || '-' }}</td>
-            <td>{{ apt.assigned_firstname ? `${apt.assigned_firstname} ${apt.assigned_lastname}` : '-' }}</td>
+            <td>{{ displayPerson(apt.assigned_firstname, apt.assigned_lastname) }}</td>
             <td>
               <select v-model="apt.status" @change="updateStatus(apt)" class="status-select" @click.stop>
                 <option value="geplant">Geplant</option>
@@ -261,7 +261,7 @@
               <select v-model="formData.assigned_to">
                 <option value="">Nicht zugewiesen</option>
                 <option v-for="staff in staffUsers" :key="staff.id" :value="staff.id">
-                  {{ staff.firstname }} {{ staff.lastname }}
+                  {{ displayPerson(staff.firstname, staff.lastname) }}
                 </option>
               </select>
             </div>
@@ -364,6 +364,32 @@ function openFilePicker() {
   if (csvInput.value && csvInput.value.click) {
     try { csvInput.value.click(); } catch (e) { /* ignore */ }
   }
+
+// Fix mojibake where UTF-8 bytes were stored as Latin-1 (e.g. "MÃ¼ller" -> "Müller").
+function tryDecodeLatin1Utf8(s) {
+  if (!s || typeof s !== 'string') return s;
+  // quick heuristic: only try when common mojibake markers present
+  if (!/Ã/.test(s)) return s;
+  try {
+    const bytes = new Uint8Array(Array.from(s).map(ch => ch.charCodeAt(0) & 0xff));
+    return new TextDecoder('utf-8').decode(bytes);
+  } catch (e) {
+    try {
+      // fallback for older environments
+      // eslint-disable-next-line no-undef
+      return decodeURIComponent(escape(s));
+    } catch (e2) {
+      return s;
+    }
+  }
+}
+
+function displayPerson(first, last) {
+  const f = tryDecodeLatin1Utf8(first) || '';
+  const l = tryDecodeLatin1Utf8(last) || '';
+  const res = (f + ' ' + l).trim();
+  return res || '-';
+}
 }
 
 function onFileChange(event) {
