@@ -393,6 +393,11 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' })); // Limit request body size
 app.use(generalLimiter); // Allgemeines Rate Limiting
 
+// Lightweight API root / health endpoint to avoid HTML 404 responses
+app.get('/api/', (req, res) => {
+  res.json({ ok: true, api: 'wildvogelreha', version: '2026-01-21', message: 'API root - see /api/blog, /api/products, /api/appointments' });
+});
+
 // Initialize database and then start server
 initializeDatabase().then(() => {
   app.listen(3000, '0.0.0.0', () => {
