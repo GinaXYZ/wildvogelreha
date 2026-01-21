@@ -69,23 +69,7 @@
       </div>
     </div>
 
-    <!-- Legend für Wochenansicht -->
-    <div v-if="viewMode === 'week'" class="legend">
-      <div class="legend-title">Legende</div>
-      <div class="legend-content">
-        <div class="legend-group">
-          <div class="legend-label">Priorität:</div>
-          <div class="legend-item"><span class="legend-box" style="background:#e3f2fd;"></span>Niedrig/Mittel</div>
-          <div class="legend-item"><span class="legend-box" style="background:#fff3e0;"></span>Hoch</div>
-          <div class="legend-item"><span class="legend-box" style="background:#ffebee;"></span>Dringend</div>
-        </div>
-        <div class="legend-group">
-          <div class="legend-label">Status:</div>
-          <div class="legend-item"><span class="legend-box" style="opacity:1;"></span>Geplant/In Bearbeitung</div>
-          <div class="legend-item"><span class="legend-box" style="opacity:0.6; text-decoration:line-through;"></span>Erledigt</div>
-        </div>
-      </div>
-    </div>
+    <!-- Legend removed -->
 
     <!-- Kalender Wochenansicht -->
     <div v-if="viewMode === 'week'" class="week-view">
@@ -121,18 +105,7 @@
       </table>
     </div>
 
-    <!-- Legend für Monatsansicht -->
-    <div v-if="viewMode === 'month'" class="legend">
-      <div class="legend-title">Legende</div>
-      <div class="legend-content">
-        <div class="legend-group">
-          <div class="legend-label">Priorität:</div>
-          <div class="legend-item"><span class="legend-box" style="background:#e3f2fd;"></span>Niedrig/Mittel</div>
-          <div class="legend-item"><span class="legend-box" style="background:#fff3e0;"></span>Hoch</div>
-          <div class="legend-item"><span class="legend-box" style="background:#ffebee;"></span>Dringend</div>
-        </div>
-      </div>
-    </div>
+    <!-- Legend removed -->
 
     <!-- Kalender Monatsansicht -->
     <div v-if="viewMode === 'month'" class="month-view">
@@ -167,22 +140,7 @@
       </div>
     </div>
 
-    <!-- Legend für Listenansicht -->
-    <div v-if="viewMode === 'list'" class="legend">
-      <div class="legend-title">Legende</div>
-      <div class="legend-content">
-        <div class="legend-group">
-          <div class="legend-label">Priorität:</div>
-          <div class="legend-item"><span class="legend-box" style="background:#e8f5e9;"></span>Niedrig</div>
-          <div class="legend-item"><span class="legend-box" style="background:#fff3e0;"></span>Mittel/Hoch</div>
-          <div class="legend-item"><span class="legend-box" style="background:#ffebee;"></span>Dringend</div>
-        </div>
-        <div class="legend-group">
-          <div class="legend-label">Status:</div>
-          <div class="legend-item">Geplant / In Bearbeitung / Erledigt / Abgesagt</div>
-        </div>
-      </div>
-    </div>
+    <!-- Legend removed -->
 
     <!-- Listenansicht -->
     <div v-if="viewMode === 'list'" class="list-view">
@@ -2201,8 +2159,8 @@ function seedMockData() {
 }
 
 /* Priority row backgrounds */
-.priority-row-niedrig { background: white; }
-.priority-row-mittel { background: white; }
+.priority-row-niedrig { background: #e3f2fd; }
+.priority-row-mittel { background: #e3f2fd; }
 .priority-row-hoch { background: #fff8e1; }
 .priority-row-dringend { background: #ffebee; }
 
