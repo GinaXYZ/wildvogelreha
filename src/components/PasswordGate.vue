@@ -3,23 +3,11 @@
     <div class="gate-inner">
       <h2>Passwort</h2>
 
-      <div class="mode-switch">
-        <button :class="{active: mode==='account'}" @click="mode='account'">Account Login</button>
-        <button :class="{active: mode==='simple'}" @click="mode='simple'">Einfaches Passwort</button>
-      </div>
-
-      <div v-if="mode === 'account'" class="account-login">
+      <div class="account-login">
         <input v-model="username" placeholder="Benutzername" />
         <input v-model="password" type="password" placeholder="Passwort" @keyup.enter="tryUnlockAccount" />
         <div class="actions">
           <button @click="tryUnlockAccount">Login</button>
-        </div>
-      </div>
-
-      <div v-else class="simple-login">
-        <input v-model="input" @keyup.enter="tryUnlockSimple" placeholder="Gib das Passwort ein" />
-        <div class="actions">
-          <button @click="tryUnlockSimple">Öffnen</button>
         </div>
       </div>
 
@@ -32,23 +20,10 @@
 import { ref } from 'vue';
 import { useAuthStore } from './auth.js';
 
-const input = ref('');
 const username = ref('');
 const password = ref('');
 const error = ref('');
-const mode = ref('account'); // 'account' or 'simple'
 const authStore = useAuthStore();
-
-async function tryUnlockSimple() {
-  const SECRET = 'passwort';
-  if (input.value === SECRET) {
-    sessionStorage.setItem('site_unlocked', 'true');
-    error.value = '';
-    window.dispatchEvent(new CustomEvent('site-unlocked'));
-  } else {
-    error.value = 'Falsches Passwort';
-  }
-}
 
 async function tryUnlockAccount() {
   error.value = '';
