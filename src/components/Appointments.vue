@@ -1323,8 +1323,14 @@ function exportCSV() {
     url += `?start_date=${first}&end_date=${last}`;
     filename += `_${first}_to_${last}`;
   } else if (mode === 'list') {
+    // Request a large limit so the server returns all appointments for list mode
+    const sep = url.includes('?') ? '&' : '?';
+    url += `${sep}limit=10000`;
     filename += `_list`;
   } else {
+    // Default to exporting all appointments by requesting a large limit
+    const sep = url.includes('?') ? '&' : '?';
+    url += `${sep}limit=10000`;
     filename += `_all`;
   }
 
