@@ -281,10 +281,6 @@
               <option value="monatlich">Monatlich</option>
             </select>
           </div>
-          <div class="form-row">
-            <label>Notizen</label>
-            <textarea v-model="formData.notes" placeholder="Zusätzliche Notizen"></textarea>
-          </div>
           <div class="modal-actions">
             <button type="button" @click="closeModals" class="btn-cancel">Abbrechen</button>
             <button type="submit" class="btn-save">{{ showEditModal ? 'Speichern' : 'Erstellen' }}</button>
@@ -583,7 +579,7 @@ function getEmptyFormData() {
     room: '', // <--- Raumnummer
     recurring: false,
     recurring_interval: 'woechentlich',
-    notes: ''
+    // notes entfernt
   };
 }
 
