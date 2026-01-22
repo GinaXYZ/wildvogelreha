@@ -197,12 +197,12 @@ async function sendAppointmentEmail(appointment, recipients = []) {
 
 📌 ${appointment.title}
 
+
 📅 Datum:      ${dateFormatted}
 🕐 Zeit:       ${timeRange}
 📂 Kategorie:  ${categoryLabel}
 ⚡ Priorität:  ${priorityLabel}
-
-👥 Team/Project: ${appointment.patient_name || '–'}
+🧭 Raum:       ${appointment.location || '–'}
 👤 Zugewiesen: ${appointment.assigned_firstname ? appointment.assigned_firstname + ' ' + (appointment.assigned_lastname || '') : '–'}
 📊 Status:     ${appointment.status || 'geplant'}
 
@@ -254,10 +254,6 @@ Project Management System
         <tr>
           <td style="padding: 12px 0; border-bottom: 1px solid #f0f0f0; color: #666;">⚡ <strong>Priorität</strong></td>
           <td style="padding: 12px 0; border-bottom: 1px solid #f0f0f0; color: #333;">${priorityLabel}</td>
-        </tr>
-        <tr>
-          <td style="padding: 12px 0; border-bottom: 1px solid #f0f0f0; color: #666;">🐦 <strong>Patient</strong></td>
-          <td style="padding: 12px 0; border-bottom: 1px solid #f0f0f0; color: #333;">${appointment.patient_name || '–'}</td>
         </tr>
         <tr>
           <td style="padding: 12px 0; border-bottom: 1px solid #f0f0f0; color: #666;">👤 <strong>Zugewiesen an</strong></td>
