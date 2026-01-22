@@ -217,6 +217,10 @@
             <label>Beschreibung</label>
             <textarea v-model="formData.description" placeholder="Details zum Termin"></textarea>
           </div>
+          <div class="form-row">
+            <label>Raum</label>
+            <input v-model="formData.room" type="text" placeholder="Raumnummer oder Ort">
+          </div>
           <div class="form-row-group">
             <div class="form-row">
               <label>Datum *</label>
@@ -576,6 +580,7 @@ function getEmptyFormData() {
     priority: 'mittel',
     status: 'geplant',
     assigned_to: '',
+    room: '', // <--- Raumnummer
     recurring: false,
     recurring_interval: 'woechentlich',
     notes: ''
