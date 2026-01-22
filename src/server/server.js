@@ -1394,7 +1394,7 @@ app.post('/api/appointments', authenticateToken, requireStaff, async (req, res) 
   const { 
     title, description, appointment_date, appointment_time, end_time,
     category, priority, status, patient_id, assigned_to,
-    recurring, recurring_interval, notes 
+    recurring, recurring_interval, notes, room
   } = req.body;
 
   if (!title || !appointment_date || !appointment_time) {
@@ -1412,13 +1412,13 @@ app.post('/api/appointments', authenticateToken, requireStaff, async (req, res) 
       INSERT INTO appointments 
       (title, description, appointment_date, appointment_time, end_time,
        category, priority, status, patient_id, assigned_to,
-       recurring, recurring_interval, notes, created_by)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       room, recurring, recurring_interval, notes, created_by)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       safeTitle, safeDescription, appointment_date, appointment_time, end_time || null,
       category || 'sonstiges', priority || 'mittel', status || 'geplant',
       patient_id || null, assigned_to || null,
-      recurring || false, recurring_interval || null, safeNotes, req.user.id
+      room || null, recurring || false, recurring_interval || null, safeNotes, req.user.id
     ]);
     
     await logAudit('CREATE', 'appointment', result.insertId, req.user.id, { title: safeTitle });
@@ -1460,7 +1460,7 @@ app.put('/api/appointments/:id', authenticateToken, requireStaff, async (req, re
   const { 
     title, description, appointment_date, appointment_time, end_time,
     category, priority, status, patient_id, assigned_to,
-    recurring, recurring_interval, notes 
+    recurring, recurring_interval, notes, room
   } = req.body;
 
   // Sanitize
@@ -1473,12 +1473,12 @@ app.put('/api/appointments/:id', authenticateToken, requireStaff, async (req, re
       UPDATE appointments SET
         title = ?, description = ?, appointment_date = ?, appointment_time = ?, end_time = ?,
         category = ?, priority = ?, status = ?, patient_id = ?, assigned_to = ?,
-        recurring = ?, recurring_interval = ?, notes = ?
+        room = ?, recurring = ?, recurring_interval = ?, notes = ?
       WHERE id = ?
     `, [
       safeTitle, safeDescription, appointment_date, appointment_time, end_time,
       category, priority, status, patient_id || null, assigned_to || null,
-      recurring, recurring_interval, safeNotes, id
+      room || null, recurring, recurring_interval, safeNotes, id
     ]);
     
     if (result.affectedRows === 0) {
