@@ -957,21 +957,24 @@ function closeModals() {
 async function showAppointmentBubble(event, apt) {
   event.stopPropagation();
   const rect = event.currentTarget.getBoundingClientRect();
-  appointmentBubble.value = { visible: true, x: rect.left + rect.width / 2, y: rect.bottom + 8, content: apt.description || apt.notes || '', id: apt.id };
+  appointmentBubble.value = { visible: true, x: rect.left + rect.width / 2, y: rect.top, content: apt.description || apt.notes || '', id: apt.id };
   await nextTick();
   const b = bubbleRef.value;
   if (b && b.getBoundingClientRect) {
     const br = b.getBoundingClientRect();
+    // Bei fixed positioning: Blase zentriert über dem Klick-Element
     let left = rect.left + rect.width / 2 - br.width / 2;
-    let top = rect.bottom + 8;
-    let placement = 'below';
-    if (top + br.height + 8 > window.innerHeight) {
-      top = rect.top - br.height - 8;
-      placement = 'above';
+    let top = rect.top - br.height - 12; // Platz für Pfeil
+    let placement = 'above';
+    // Wenn zu nah am oberen Rand: Pfeil nach unten
+    if (top < 8) {
+      top = rect.bottom + 8;
+      placement = 'below';
     }
+    // Links/Rechts begrenzen
     left = Math.max(8, Math.min(left, window.innerWidth - br.width - 8));
     appointmentBubble.value.x = left;
-    appointmentBubble.value.y = Math.max(8, top);
+    appointmentBubble.value.y = top;
     appointmentBubble.value.placement = placement;
   }
   await nextTick();
@@ -2719,7 +2722,7 @@ function seedMockData() {
   z-index: 20000;
 }
 .speech-bubble {
-  position: absolute;
+  position: fixed;
   width: 320px;
   max-width: calc(100vw - 24px);
   background: white;
