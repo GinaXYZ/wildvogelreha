@@ -202,7 +202,7 @@ async function sendAppointmentEmail(appointment, recipients = []) {
 🕐 Zeit:       ${timeRange}
 📂 Kategorie:  ${categoryLabel}
 ⚡ Priorität:  ${priorityLabel}
-🧭 Raum:       ${appointment.room || '–'}
+🧭 Raum:       ${appointment.room}
 👤 Zugewiesen: ${appointment.assigned_firstname ? appointment.assigned_firstname + ' ' + (appointment.assigned_lastname || '') : '–'}
 📊 Status:     ${appointment.status || 'geplant'}
 
