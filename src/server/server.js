@@ -257,7 +257,7 @@ Project Management System
         </tr>
         <tr>
           <td style="padding: 12px 0; border-bottom: 1px solid #f0f0f0; color: #666;">🧭 <strong>Raum</strong></td>
-          <td style="padding: 12px 0; border-bottom: 1px solid #f0f0f0; color: #333;">${appointment.location || '–'}</td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #f0f0f0; color: #333;">${appointment.room || '–'}</td>
         </tr>
         <tr>
           <td style="padding: 12px 0; border-bottom: 1px solid #f0f0f0; color: #666;">👤 <strong>Zugewiesen an</strong></td>
