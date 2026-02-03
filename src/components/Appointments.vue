@@ -289,29 +289,31 @@
       </div>
     </div>
 
-    <!-- Sprechblase für Termine (Wochenansicht) -->
-    <div v-if="appointmentBubble.visible" class="speech-bubble-overlay" @click.self="closeAppointmentBubble">
-      <div class="speech-bubble" ref="bubbleRef" :class="{ 'arrow-bottom': appointmentBubble.placement === 'above', 'arrow-top': appointmentBubble.placement === 'below' }" :style="{ top: appointmentBubble.y + 'px', left: appointmentBubble.x + 'px' }">
-        <button class="bubble-close" @click="closeAppointmentBubble">✖</button>
-        <div class="bubble-content">
-          <div class="bubble-fields">
-            <div><strong>Datum:</strong> {{ bubbleApt ? formatDate(bubbleApt.appointment_date) : '-' }}</div>
-            <div><strong>Zeit:</strong> {{ bubbleApt ? (formatTime(bubbleApt.appointment_time) + (bubbleApt.end_time ? ' - ' + formatTime(bubbleApt.end_time) : '')) : '-' }}</div>
-            <div><strong>Titel:</strong> {{ bubbleApt ? bubbleApt.title : '-' }}</div>
-            <div><strong>Kategorie:</strong> {{ bubbleApt ? getCategoryLabel(bubbleApt.category) : '-' }}</div>
-            <div><strong>Priorität:</strong> {{ bubbleApt ? getPriorityLabel(bubbleApt.priority) : '-' }}</div>
-            <!-- Patient entfernt per UX-Anforderung -->
-            <div><strong>Zugewiesen:</strong> {{ bubbleApt ? (bubbleApt.assigned_firstname ? bubbleApt.assigned_firstname + ' ' + (bubbleApt.assigned_lastname||'') : '-') : '-' }}</div>
-            <div><strong>Status:</strong> {{ bubbleApt ? bubbleApt.status : '-' }}</div>
-          </div>
-          <!-- Inline-Beschreibungsfeld entfernt (nicht verwendet) -->
-          <div class="bubble-actions">
-            <button @click="openEditFromBubble">Bearbeiten</button>
-            <button @click="() => deleteAppointmentFromBubble(appointmentBubble.id)">Löschen</button>
+    <!-- Sprechblase für Termine (Wochenansicht) - Teleport to body to avoid zoom issues -->
+    <Teleport to="body">
+      <div v-if="appointmentBubble.visible" class="speech-bubble-overlay" @click.self="closeAppointmentBubble">
+        <div class="speech-bubble" ref="bubbleRef" :class="{ 'arrow-top': appointmentBubble.placement === 'below', 'arrow-bottom': appointmentBubble.placement === 'above' }" :style="{ top: appointmentBubble.y + 'px', left: appointmentBubble.x + 'px' }">
+          <button class="bubble-close" @click="closeAppointmentBubble">✖</button>
+          <div class="bubble-content">
+            <div class="bubble-fields">
+              <div><strong>Datum:</strong> {{ bubbleApt ? formatDate(bubbleApt.appointment_date) : '-' }}</div>
+              <div><strong>Zeit:</strong> {{ bubbleApt ? (formatTime(bubbleApt.appointment_time) + (bubbleApt.end_time ? ' - ' + formatTime(bubbleApt.end_time) : '')) : '-' }}</div>
+              <div><strong>Titel:</strong> {{ bubbleApt ? bubbleApt.title : '-' }}</div>
+              <div><strong>Kategorie:</strong> {{ bubbleApt ? getCategoryLabel(bubbleApt.category) : '-' }}</div>
+              <div><strong>Priorität:</strong> {{ bubbleApt ? getPriorityLabel(bubbleApt.priority) : '-' }}</div>
+              <!-- Patient entfernt per UX-Anforderung -->
+              <div><strong>Zugewiesen:</strong> {{ bubbleApt ? (bubbleApt.assigned_firstname ? bubbleApt.assigned_firstname + ' ' + (bubbleApt.assigned_lastname||'') : '-') : '-' }}</div>
+              <div><strong>Status:</strong> {{ bubbleApt ? bubbleApt.status : '-' }}</div>
+            </div>
+            <!-- Inline-Beschreibungsfeld entfernt (nicht verwendet) -->
+            <div class="bubble-actions">
+              <button @click="openEditFromBubble">Bearbeiten</button>
+              <button @click="() => deleteAppointmentFromBubble(appointmentBubble.id)">Löschen</button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </Teleport>
     <!-- Slot-Modal für überlaufende Termine in einem Zeitfenster -->
     <div v-if="slotModal.visible" class="modal-overlay" @click.self="closeSlotModal">
       <div class="modal">
@@ -957,24 +959,25 @@ function closeModals() {
 async function showAppointmentBubble(event, apt) {
   event.stopPropagation();
   const rect = event.currentTarget.getBoundingClientRect();
-  appointmentBubble.value = { visible: true, x: rect.left + rect.width / 2, y: rect.top, content: apt.description || apt.notes || '', id: apt.id };
+  // Initial position
+  appointmentBubble.value = { visible: true, x: 0, y: 0, content: apt.description || apt.notes || '', id: apt.id, placement: 'below' };
   await nextTick();
   const b = bubbleRef.value;
   if (b && b.getBoundingClientRect) {
     const br = b.getBoundingClientRect();
-    // Bei fixed positioning: Blase zentriert über dem Klick-Element
+    // Standard: Blase UNTERHALB des Elements, Pfeil zeigt nach oben auf das Element
     let left = rect.left + rect.width / 2 - br.width / 2;
-    let top = rect.top - br.height - 12; // Platz für Pfeil
-    let placement = 'above';
-    // Wenn zu nah am oberen Rand: Pfeil nach unten
-    if (top < 8) {
-      top = rect.bottom + 8;
-      placement = 'below';
+    let top = rect.bottom + 12; // Unterhalb mit Abstand für Pfeil
+    let placement = 'below';
+    // Wenn zu wenig Platz unten: nach oben verschieben
+    if (top + br.height + 8 > window.innerHeight) {
+      top = rect.top - br.height - 12;
+      placement = 'above';
     }
     // Links/Rechts begrenzen
     left = Math.max(8, Math.min(left, window.innerWidth - br.width - 8));
     appointmentBubble.value.x = left;
-    appointmentBubble.value.y = top;
+    appointmentBubble.value.y = Math.max(8, top);
     appointmentBubble.value.placement = placement;
   }
   await nextTick();
@@ -2711,8 +2714,10 @@ function seedMockData() {
   .list-inner > .list-pagination { margin-top: 0.9rem; margin-bottom: 2.2rem; }
 }
 </style>
-<style scoped>
-/* Sprechblasen-Stile für Termine (Overlay + Blase) */
+
+<!-- Global styles for Teleported speech bubble (outside scoped component) -->
+<style>
+/* Sprechblasen-Stile für Termine (Overlay + Blase) - GLOBAL weil per Teleport in body */
 .speech-bubble-overlay {
   position: fixed;
   top: 0;
@@ -2720,6 +2725,7 @@ function seedMockData() {
   right: 0;
   bottom: 0;
   z-index: 20000;
+  pointer-events: auto;
 }
 .speech-bubble {
   position: fixed;
@@ -2815,6 +2821,25 @@ function seedMockData() {
   justify-content: flex-end;
   margin-top: 0.8rem;
 }
+.speech-bubble .bubble-actions button {
+  padding: 0.5rem 1rem;
+  border: 1px solid #0c4b47;
+  background: #0c4b47;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.2s;
+}
+.speech-bubble .bubble-actions button:hover {
+  background: #083532;
+}
+.speech-bubble .bubble-fields div {
+  margin-bottom: 0.3rem;
+}
+</style>
+
+<style scoped>
 </style>
 
 <style scoped>
